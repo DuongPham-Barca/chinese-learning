@@ -17,8 +17,8 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6">
-      <Link href="/dashboard" className="text-sm text-gray-500 hover:underline mb-4 block">
-        ← Dashboard
+      <Link href="/" className="text-sm text-gray-500 hover:underline mb-4 block">
+        ← Trang chủ
       </Link>
       <h1 className="text-2xl font-bold mb-6">{level.toUpperCase().replace("COMMUNICATION", "GIAO TIẾP")}</h1>
       <div className="space-y-4">

@@ -1,26 +1,148 @@
+import Image from "next/image"
 import Link from "next/link"
+import SiteNavbar from "@/components/site-navbar"
+import styles from "./home.module.css"
+
+type IconName = "users" | "layers" | "mic" | "star" | "headphones" | "trophy" | "book" | "chart" | "sparkles" | "check"
+
+function Icon({ name }: { name: IconName }) {
+  const paths: Record<IconName, React.ReactNode> = {
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    layers: <><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></>,
+    mic: <><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></>,
+    star: <path d="m12 2.5 2.85 5.78 6.38.93-4.61 4.49 1.09 6.35L12 17.05l-5.71 3 1.09-6.35-4.61-4.49 6.38-.93L12 2.5Z"/>,
+    headphones: <><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M18 19h1a1 1 0 0 0 1-1v-4h-3v4a1 1 0 0 0 1 1ZM6 19H5a1 1 0 0 1-1-1v-4h3v4a1 1 0 0 1-1 1Z"/></>,
+    trophy: <><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4"/></>,
+    book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H11V5H6.5A2.5 2.5 0 0 0 4 7.5v12Z"/><path d="M20 19.5a2.5 2.5 0 0 0-2.5-2.5H13V5h4.5A2.5 2.5 0 0 1 20 7.5v12Z"/></>,
+    chart: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></>,
+    sparkles: <><path d="m12 3-1 3.3a3 3 0 0 1-2 2L5.7 9.4 9 10.5a3 3 0 0 1 2 2l1 3.3 1-3.3a3 3 0 0 1 2-2l3.3-1.1L15 8.3a3 3 0 0 1-2-2L12 3Z"/><path d="m5 15-.5 1.5A2 2 0 0 1 3 18l1.5.5A2 2 0 0 1 6 20l.5-1.5A2 2 0 0 1 8 17l-1.5-.5A2 2 0 0 1 5 15Z"/></>,
+    check: <path d="m5 12 4 4L19 6"/>,
+  }
+
+  return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
+}
+
+const stats: Array<[IconName, string, string]> = [
+  ["users", "10K+", "Người học"],
+  ["layers", "1000+", "Flashcards"],
+  ["mic", "500+", "Bài Dictation"],
+  ["star", "95%", "Tỷ lệ hài lòng"],
+]
+
+const features: Array<[IconName, string, string]> = [
+  ["layers", "Flashcard thông minh", "Hệ thống lặp lại ngắt quãng (Spaced Repetition) giúp ghi nhớ từ vựng lâu hơn."],
+  ["headphones", "Luyện nghe chép chính tả", "Luyện phản xạ nghe với Dictation theo từng cấp độ HSK."],
+  ["trophy", "Game hóa học tập", "Điểm kinh nghiệm, chuỗi ngày học và bảng xếp hạng tạo động lực mỗi ngày."],
+]
+
+const levels = [
+  ["HSK1", "15 bài học", "150 từ vựng", "Nền tảng phát âm & chữ Hán", 1],
+  ["HSK2", "20 bài học", "300 từ vựng", "Giao tiếp cơ bản hằng ngày", 2],
+  ["HSK3", "35 bài học", "650 từ vựng", "Hoàn thành — mở khóa HSK4", 3],
+  ["HSK4", "45 bài học", "1200 từ vựng", "Ngữ pháp trung cấp vững chắc", 4],
+  ["HSK5", "55 bài học", "2500 từ vựng", "Đọc hiểu văn bản chuyên sâu", 5],
+  ["HSK6", "70 bài học", "5000 từ vựng", "Trình độ thành thạo cao cấp", 5],
+  ["Giao Tiếp", "40 bài học", "800 từ vựng", "Phản xạ thực tế mỗi ngày", 5],
+] as const
+
+const processSteps: Array<[IconName, string, string]> = [
+  ["book", "Học từ vựng", "Tiếp cận từ mới theo chủ đề."],
+  ["layers", "Ôn Flashcard", "Ghi nhớ dài hạn với SRS."],
+  ["mic", "Luyện Dictation", "Rèn phản xạ nghe chuẩn xác."],
+  ["chart", "Kiểm tra & Theo dõi", "Đo tiến độ mỗi tuần."],
+]
+
+const reviews = [
+  ["“Flashcard giúp mình nhớ từ vựng nhanh hơn hẳn. Sau 3 tháng đã tự tin giao tiếp cơ bản.”", "MA", "Minh Anh", "Sinh viên HSK4"],
+  ["“Bài Dictation cực kỳ hữu ích, khả năng nghe của mình tiến bộ rõ rệt chỉ trong vài tuần.”", "QH", "Quang Huy", "Nhân viên văn phòng"],
+  ["“Giao diện đẹp, gọn, có chuỗi ngày học nên rất tạo động lực. Mình học đều mỗi ngày.”", "TV", "Thảo Vy", "Đang luyện HSK5"],
+]
+
+function SectionHeading({ badge, title, subtitle }: { badge: string; title: string; subtitle: string }) {
+  return (
+    <div className={styles.sectionHeading}>
+      <span>{badge}</span>
+      <h2>{title}</h2>
+      <p>{subtitle}</p>
+    </div>
+  )
+}
+
+function Brand() {
+  return <Link href="/" className={styles.brand}><span>中</span><strong>ChineseDict</strong></Link>
+}
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-5xl font-bold mb-4">ChineseDict</h1>
-      <p className="text-lg text-gray-600 mb-8 text-center max-w-md">
-        Học tiếng Trung chủ động — Flashcard & Dictation trong tay bạn
-      </p>
-      <div className="flex gap-4">
-        <Link
-          href="/login"
-          className="bg-[#3B82F6] text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition"
-        >
-          Bắt đầu học miễn phí
-        </Link>
-        <Link
-          href="/login"
-          className="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition"
-        >
-          Đăng nhập
-        </Link>
-      </div>
-    </div>
+    <main className={styles.page}>
+      <SiteNavbar active="home" />
+
+      <header id="home" className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <span className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</span>
+          <h1>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</h1>
+          <p>Hệ thống học tiếng Trung hiện đại với Flashcard thông minh, Dictation, AI hỗ trợ ghi nhớ từ vựng và giáo trình HSK đầy đủ.</p>
+          <div className={styles.heroButtons}><Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link><a href="#roadmap" className={styles.secondaryButton}>Khám phá giáo trình</a></div>
+          <div className={styles.bullets}>
+            {["Hơn 10,000 học viên", "Luyện Dictation mỗi ngày", "Flashcard thông minh", "Theo dõi tiến độ học tập"].map((item) => <span key={item}><i><Icon name="check" /></i>{item}</span>)}
+          </div>
+        </div>
+        <div className={styles.heroVisual}>
+          <Image src="/chinesedict-home-hero.png" fill priority sizes="(max-width: 760px) 92vw, 540px" alt="Học viên đang học tiếng Trung với ChineseDict" />
+          <div className={styles.streak}><i><Icon name="sparkles" /></i><span><small>Chuỗi học liên tục</small><strong>7 ngày 🔥</strong></span></div>
+        </div>
+      </header>
+
+      <section className={styles.stats} aria-label="Thống kê ChineseDict">
+        {stats.map(([icon, value, label]) => <div className={styles.statCard} key={label}><i><Icon name={icon} /></i><strong>{value}</strong><span>{label}</span></div>)}
+      </section>
+
+      <section id="features" className={styles.section}>
+        <SectionHeading badge="TÍNH NĂNG" title="Tất cả những gì bạn cần để học tiếng Trung" subtitle="Bộ công cụ toàn diện, thiết kế theo phương pháp học ngôn ngữ hiện đại." />
+        <div className={styles.featureGrid}>
+          {features.map(([icon, title, description]) => <article className={styles.featureCard} key={title}><i><Icon name={icon} /></i><h3>{title}</h3><p>{description}</p></article>)}
+        </div>
+      </section>
+
+      <section id="roadmap" className={`${styles.section} ${styles.roadmap}`}>
+        <SectionHeading badge="LỘ TRÌNH" title="Lộ trình học" subtitle="Đi từ nền tảng đến thành thạo với 7 cấp độ được thiết kế bài bản." />
+        <div className={styles.levelGrid}>
+          {levels.map(([level, lessons, words, description, dots]) => (
+            <article className={styles.levelCard} key={level}>
+              <div className={styles.levelTop}><strong>{level}</strong><span>{[1,2,3,4,5].map((dot) => <i className={dot <= dots ? styles.dotActive : ""} key={dot} />)}</span></div>
+              <small>{lessons}</small><small>{words}</small><p>{description}</p><Link href={level.startsWith("HSK") ? `/courses/${level.toLowerCase()}` : "/login"}>Bắt đầu học →</Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.process}`}>
+        <SectionHeading badge="QUY TRÌNH" title="Học hiệu quả trong 4 bước" subtitle="Một quy trình khép kín, giúp bạn tiến bộ đều mỗi ngày." />
+        <div className={styles.timeline}>
+          {processSteps.map(([icon, title, description], index) => <article key={title}><div className={styles.stepIcon}><Icon name={icon} /><b>{index + 1}</b></div><h3>{title}</h3><p>{description}</p></article>)}
+        </div>
+      </section>
+
+      <section id="testimonials" className={`${styles.section} ${styles.testimonials}`}>
+        <SectionHeading badge="HỌC VIÊN NÓI GÌ" title="Được tin dùng bởi hàng ngàn người học" subtitle="Câu chuyện thật từ cộng đồng ChineseDict." />
+        <div className={styles.reviewGrid}>
+          {reviews.map(([review, initials, name, role]) => <article className={styles.reviewCard} key={name}><div className={styles.stars}>★★★★★</div><p>{review}</p><footer><i>{initials}</i><span><strong>{name}</strong><small>{role}</small></span></footer></article>)}
+        </div>
+      </section>
+
+      <section className={styles.cta}>
+        <div><h2>Sẵn sàng bắt đầu hành trình học<br /> tiếng Trung?</h2><p>Tham gia cùng hàng ngàn học viên đang chinh phục HSK mỗi ngày với ChineseDict.</p><span><Link href="/login">Bắt đầu miễn phí <b>→</b></Link><a href="#roadmap">Xem giáo trình</a></span></div>
+      </section>
+
+      <footer id="footer" className={styles.footer}>
+        <div className={styles.footerGrid}>
+          <div className={styles.footerBrand}><Brand /><p>Nền tảng học tiếng Trung hiện đại — Flashcard, Dictation, và giáo trình HSK đầy đủ.</p><div className={styles.socials}><span>f</span><span>◎</span><span>▶</span><span>◯</span></div></div>
+          <div><h3>ChineseDict</h3><a href="#home">Giới thiệu</a><a href="#footer">Liên hệ</a><a href="#footer">Blog</a></div>
+          <div><h3>Sản phẩm</h3><a href="#features">Flashcard</a><a href="#features">Dictation</a><a href="#roadmap">HSK</a></div>
+          <div><h3>Hỗ trợ</h3><a href="#footer">FAQ</a><a href="#footer">Chính sách</a><a href="#footer">Điều khoản</a></div>
+        </div>
+        <div className={styles.copyright}><span>© 2026 ChineseDict. All rights reserved.</span><span>Made with care for Chinese learners.</span></div>
+      </footer>
+    </main>
   )
 }
