@@ -1,5 +1,35 @@
+"use client"
+
+import { motion, type Variants } from "framer-motion"
 import { AdminButton, PageHeader, StatCard } from "@/components/admin/admin-ui"
 import styles from "./dashboard.module.css"
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.09, delayChildren: 0.12 },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+  },
+}
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 16, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+  },
+}
 
 function RevenueChart() {
   return <section className={styles.chartCard}><header><h2>Biểu đồ Doanh thu (30 ngày)</h2><span><i />Doanh thu</span></header><div className={styles.lineChart}><svg viewBox="0 0 620 250" preserveAspectRatio="none"><defs><linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2563eb" stopOpacity=".28"/><stop offset="1" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs><path className={styles.gridLine} d="M0 50H620M0 100H620M0 150H620M0 200H620"/><path className={styles.area} d="M0 208 62 184 124 157 186 170 248 91 310 121 372 67 434 96 496 47 558 60 620 25V235H0Z"/><path className={styles.line} d="M0 208 62 184 124 157 186 170 248 91 310 121 372 67 434 96 496 47 558 60 620 25"/><circle cx="372" cy="67" r="5" /></svg><div className={styles.tooltip}><small>24 Oct</small><strong>2.450.000đ</strong></div></div><footer><span>1 OCT</span><span>8 OCT</span><span>15 OCT</span><span>22 OCT</span><span>30 OCT</span></footer></section>
@@ -21,5 +51,25 @@ function SystemHealthCard() {
 }
 
 export default function AdminDashboardPage() {
-  return <><PageHeader title="Tổng quan" subtitle={<>Xin chào Admin 👋. Chào mừng bạn trở lại bảng điều khiển.</>} actions={<><AdminButton icon="calendar" secondary>30 NGÀY QUA</AdminButton><AdminButton icon="download">XUẤT BÁO CÁO</AdminButton></>} /><section className={styles.statsGrid}><StatCard icon="users" label="Người dùng" value="12,540" meta="+8%" /><StatCard icon="book" label="Bài học" value="72" meta="Hiện hành" /><StatCard icon="wallet" label="Doanh thu tháng" value="12.5Md" meta="+12.4%" /><StatCard icon="alert" label="Chờ duyệt" value="18" meta="Cần xử lý" tone="red" /></section><section className={styles.chartsGrid}><RevenueChart /><BarChart /></section><section className={styles.bottomGrid}><ActivityCard /><SystemHealthCard /></section></>
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <motion.div variants={itemVariants}>
+        <PageHeader title="Tổng quan" subtitle={<>Xin chào Admin 👋. Chào mừng bạn trở lại bảng điều khiển.</>} actions={<><AdminButton icon="calendar" secondary>30 NGÀY QUA</AdminButton><AdminButton icon="download">XUẤT BÁO CÁO</AdminButton></>} />
+      </motion.div>
+      <motion.section className={styles.statsGrid} variants={containerVariants}>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="users" label="Người dùng" value="12,540" meta="+8%" /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="book" label="Bài học" value="72" meta="Hiện hành" /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="wallet" label="Doanh thu tháng" value="12.5Md" meta="+12.4%" /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="alert" label="Chờ duyệt" value="18" meta="Cần xử lý" tone="red" /></motion.div>
+      </motion.section>
+      <motion.section className={styles.chartsGrid} variants={containerVariants}>
+        <motion.div variants={cardVariants}><RevenueChart /></motion.div>
+        <motion.div variants={cardVariants}><BarChart /></motion.div>
+      </motion.section>
+      <motion.section className={styles.bottomGrid} variants={containerVariants}>
+        <motion.div variants={cardVariants}><ActivityCard /></motion.div>
+        <motion.div variants={cardVariants}><SystemHealthCard /></motion.div>
+      </motion.section>
+    </motion.div>
+  )
 }

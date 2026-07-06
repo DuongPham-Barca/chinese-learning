@@ -1,6 +1,19 @@
+"use client"
+
+import { motion } from "framer-motion"
 import AdminIcon from "@/components/admin/admin-icons"
 import { AdminButton, AdminTable, PageHeader, Pagination } from "@/components/admin/admin-ui"
 import styles from "./lessons.module.css"
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } },
+}
 
 const lessons = [
   { id:"#L101",level:"HSK1",order:"01",title:"Chào hỏi cơ bản",subtitle:"Basic Greetings & Introductions",vocab:12,sentences:8,free:true,date:"24/05/2024" },
@@ -15,5 +28,15 @@ function FiltersCard() {
 }
 
 export default function AdminLessonsPage() {
-  return <><PageHeader eyebrow={<span>Dashboard › <b>Bài học</b></span>} title="Bài học" actions={<AdminButton icon="plus">Thêm bài học</AdminButton>} /><FiltersCard /><section className={styles.tableCard}><AdminTable><thead><tr><th>ID</th><th>Cấp độ</th><th>Thứ tự</th><th>Tiêu đề bài học</th><th>Nội dung</th><th>Free</th><th>Cập nhật</th><th>Actions</th></tr></thead><tbody>{lessons.map((lesson) => <tr key={lesson.id}><td><b>{lesson.id}</b></td><td><span className={styles.levelBadge}>{lesson.level}</span></td><td>{lesson.order}</td><td><div className={styles.lessonTitle}><strong>{lesson.title}</strong>{lesson.featured && <i>★</i>}{lesson.draft && <em>DRAFT</em>}<small>{lesson.subtitle}</small></div></td><td><span className={styles.contentCounts}>☆ {lesson.vocab}　☵ {lesson.sentences}</span></td><td>{lesson.free ? <span className={styles.freeYes}>✓ Yes</span> : <span className={styles.freeNo}>⊗ No</span>}</td><td>{lesson.date}</td><td><div className={styles.actions}><button type="button" aria-label="Xem"><AdminIcon name="eye" /></button><button type="button" aria-label="Sửa"><AdminIcon name="edit" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Đang xem 1 đến 10 trong số 48 bài học</span><Pagination /></footer></section></>
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <motion.div variants={itemVariants}>
+        <PageHeader eyebrow={<span>Dashboard › <b>Bài học</b></span>} title="Bài học" actions={<AdminButton icon="plus">Thêm bài học</AdminButton>} />
+      </motion.div>
+      <motion.div variants={itemVariants}><FiltersCard /></motion.div>
+      <motion.div variants={itemVariants}>
+        <section className={styles.tableCard}><AdminTable><thead><tr><th>ID</th><th>Cấp độ</th><th>Thứ tự</th><th>Tiêu đề bài học</th><th>Nội dung</th><th>Free</th><th>Cập nhật</th><th>Actions</th></tr></thead><tbody>{lessons.map((lesson) => <tr key={lesson.id}><td><b>{lesson.id}</b></td><td><span className={styles.levelBadge}>{lesson.level}</span></td><td>{lesson.order}</td><td><div className={styles.lessonTitle}><strong>{lesson.title}</strong>{lesson.featured && <i>★</i>}{lesson.draft && <em>DRAFT</em>}<small>{lesson.subtitle}</small></div></td><td><span className={styles.contentCounts}>☆ {lesson.vocab}　☵ {lesson.sentences}</span></td><td>{lesson.free ? <span className={styles.freeYes}>✓ Yes</span> : <span className={styles.freeNo}>⊗ No</span>}</td><td>{lesson.date}</td><td><div className={styles.actions}><button type="button" aria-label="Xem"><AdminIcon name="eye" /></button><button type="button" aria-label="Sửa"><AdminIcon name="edit" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Đang xem 1 đến 10 trong số 48 bài học</span><Pagination /></footer></section>
+      </motion.div>
+    </motion.div>
+  )
 }

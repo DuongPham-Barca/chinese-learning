@@ -1,0 +1,351 @@
+.overlay {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.modal {
+  position: relative;
+  width: min(720px, calc(100vw - 40px));
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.15);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 0;
+}
+.header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.header p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.closeBtn {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #94a3b8;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.closeBtn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+.closeBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px 28px 28px;
+}
+
+/* ─── QR Section ─── */
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qrBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 220px;
+  gap: 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #94a3b8;
+}
+.qrIcon {
+  width: 48px;
+  height: 48px;
+}
+.qrBox span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.qrNote {
+  margin: 14px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ─── Info Section ─── */
+
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.planSummary {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+.planSummary h3,
+.bankInfo h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.summaryItem span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.summaryItem strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.summaryPrice {
+  color: #2563eb !important;
+}
+
+.bankInfo {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.bankRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.bankRow + .bankRow {
+  border-top: 1px solid #f1f5f9;
+}
+.bankRow span:first-child {
+  width: 90px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+.bankRow strong {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.transferCode {
+  flex: 1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: "SF Mono", Consolas, monospace;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+
+.copyBtn {
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #2563eb;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.copyBtn:hover {
+  background: #eef6ff;
+  border-color: #bfd4f0;
+}
+
+/* ─── Actions ─── */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmBtn {
+  width: 100%;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #4f8df7);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.confirmBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+}
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #475569;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cancelBtn:hover {
+  border-color: #bfd4f0;
+  background: #f8fafc;
+}
+
+/* ─── Success State ─── */
+
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 40px;
+  text-align: center;
+}
+
+.successIcon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 50%;
+  color: #16a34a;
+  background: #f0fdf4;
+}
+.successIcon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.successState h2 {
+  margin: 20px 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.successState p {
+  margin: 0;
+  max-width: 400px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.doneButton {
+  height: 44px;
+  margin-top: 24px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #4f8df7);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.doneButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 640px) {
+  .body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+  .header {
+    padding: 20px 20px 0;
+  }
+  .qrBox {
+    width: 180px;
+    height: 180px;
+  }
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bankRow {
+    flex-wrap: wrap;
+  }
+  .bankRow span:first-child {
+    width: 100%;
+  }
+  .successState {
+    padding: 48px 24px;
+  }
+}

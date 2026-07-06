@@ -1,5 +1,18 @@
+"use client"
+
+import { motion } from "framer-motion"
 import { AdminButton, AdminTable, PageHeader, Pagination, PaymentStatusBadge, StatCard } from "@/components/admin/admin-ui"
 import styles from "./payments.module.css"
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } },
+}
 
 const transactions = [
   { id:"#PAY-99281",name:"Nguyễn Văn An",email:"an.nguyen@email.com",initials:"NA",amount:"500.000đ",content:"AN Nguyen CD-PREMIUM-1Y",date:"12/10/2023 14:32",status:"Pending" as const },
@@ -17,5 +30,19 @@ function PaymentInfoCards() {
 }
 
 export default function AdminPaymentsPage() {
-  return <><PageHeader title="Thanh toán" subtitle="Quản lý các giao dịch đăng ký gói học viên Premium" actions={<><AdminButton icon="filter" secondary>Lọc dữ liệu</AdminButton><AdminButton icon="download">Xuất báo cáo</AdminButton></>} /><section className={styles.statsGrid}><StatCard icon="wallet" label="TỔNG DOANH THU" value="428.500k" meta="+12%" /><StatCard icon="clock" label="ĐANG CHỜ XỬ LÝ" value="12.400k" meta="24 chờ duyệt" tone="orange" /><StatCard icon="check" label="ĐÃ PHÊ DUYỆT" value="395.200k" meta="382 thành công" tone="green" /><StatCard icon="alert" label="ĐÃ TỪ CHỐI" value="20.900k" meta="15 từ chối" tone="red" /></section><TransactionTable /><PaymentInfoCards /></>
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <motion.div variants={itemVariants}>
+        <PageHeader title="Thanh toán" subtitle="Quản lý các giao dịch đăng ký gói học viên Premium" actions={<><AdminButton icon="filter" secondary>Lọc dữ liệu</AdminButton><AdminButton icon="download">Xuất báo cáo</AdminButton></>} />
+      </motion.div>
+      <motion.section className={styles.statsGrid} variants={containerVariants}>
+        <motion.div variants={itemVariants}><StatCard icon="wallet" label="TỔNG DOANH THU" value="428.500k" meta="+12%" /></motion.div>
+        <motion.div variants={itemVariants}><StatCard icon="clock" label="ĐANG CHỜ XỬ LÝ" value="12.400k" meta="24 chờ duyệt" tone="orange" /></motion.div>
+        <motion.div variants={itemVariants}><StatCard icon="check" label="ĐÃ PHÊ DUYỆT" value="395.200k" meta="382 thành công" tone="green" /></motion.div>
+        <motion.div variants={itemVariants}><StatCard icon="alert" label="ĐÃ TỪ CHỐI" value="20.900k" meta="15 từ chối" tone="red" /></motion.div>
+      </motion.section>
+      <motion.div variants={itemVariants}><TransactionTable /></motion.div>
+      <motion.div variants={itemVariants}><PaymentInfoCards /></motion.div>
+    </motion.div>
+  )
 }

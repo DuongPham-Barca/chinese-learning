@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SiteNavbar from "@/components/site-navbar"
+import LoadingSpinner from "@/components/loading-spinner"
 import styles from "./leaderboard.module.css"
 
 type Period = "week" | "month" | "all"
@@ -74,13 +75,19 @@ function AchievementCard({ icon, title, color }: { icon: IconName; title: string
 }
 
 export default function LeaderboardPage() {
+  const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<Period>("week")
   const [refreshing, setRefreshing] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(timer)
+  }, [])
 
   function refresh() {
     setRefreshing(true)
     window.setTimeout(() => setRefreshing(false), 600)
   }
 
-  return <main className={styles.page}><SiteNavbar active="leaderboard" /><div className={styles.container}><LeaderboardHeader refreshing={refreshing} onRefresh={refresh} /><LeaderboardTabs period={period} onChange={setPeriod} /><PodiumCard /><CurrentUserCard /><section className={styles.list}>{leaderboard.map((player) => <LeaderboardItem player={player} key={player.rank} />)}<button type="button" className={styles.viewMore}>Xem tất cả</button></section><WeeklyChallengeCard /><section className={styles.achievements}><h2>Huy hiệu thành tích</h2><div><AchievementCard icon="flame" title="Chuỗi 30 ngày" color="#f59e0b" /><AchievementCard icon="medal" title="10,000 EXP" color="#2563eb" /><AchievementCard icon="badge" title="HSK3 Master" color="#16a34a" /></div></section></div></main>
+  return <main className={styles.page}><SiteNavbar active="leaderboard" />{loading ? <LoadingSpinner /> : <div className={styles.container}><LeaderboardHeader refreshing={refreshing} onRefresh={refresh} /><LeaderboardTabs period={period} onChange={setPeriod} /><PodiumCard /><CurrentUserCard /><section className={styles.list}>{leaderboard.map((player) => <LeaderboardItem player={player} key={player.rank} />)}<button type="button" className={styles.viewMore}>Xem tất cả</button></section><WeeklyChallengeCard /><section className={styles.achievements}><h2>Huy hiệu thành tích</h2><div><AchievementCard icon="flame" title="Chuỗi 30 ngày" color="#f59e0b" /><AchievementCard icon="medal" title="10,000 EXP" color="#2563eb" /><AchievementCard icon="badge" title="HSK3 Master" color="#16a34a" /></div></section></div>}</main>
 }

@@ -134,6 +134,13 @@
   font-weight: 600;
 }
 
+.planDesc {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .features {
   display: flex;
   flex-direction: column;
@@ -194,6 +201,31 @@
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
 }
 .ctaPrimary:hover { color: #fff; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); }
+
+/* ───── Info Box ───── */
+
+.infoBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(640px, calc(100% - 40px));
+  margin: 28px auto 0;
+  padding: 14px 18px;
+  border: 1px solid #bfd4f0;
+  border-radius: 12px;
+  color: #1e40af;
+  background: #eef6ff;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.infoBox svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.infoBox span {
+  flex: 1;
+}
 
 /* ───── Sections ───── */
 

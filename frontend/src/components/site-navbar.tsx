@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import ProUpgradeTrigger from "@/components/pro-upgrade/pro-upgrade-trigger"
+import AccountDropdown from "@/components/account-dropdown"
 import { useProUpgrade } from "@/lib/pro-upgrade-provider"
 import styles from "./site-navbar.module.css"
 
@@ -12,8 +13,8 @@ const SECTION_IDS = ["home", "features", "roadmap", "footer"]
 export default function SiteNavbar({ active: initialActive = "home" }: { active?: string }) {
   const { user } = useProUpgrade()
   const pathname = usePathname()
+  const router = useRouter()
   const isPricing = pathname === "/pricing"
-  const initials = user.name.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase()
   const [activeSection, setActiveSection] = useState(initialActive)
 
   useEffect(() => {
@@ -40,11 +41,14 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
 
   const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     const target = document.getElementById(sectionId)
-    if (!target) return
+    if (!target) {
+      router.push(`/#${sectionId}`)
+      return
+    }
     e.preventDefault()
     target.scrollIntoView({ behavior: "smooth" })
     setActiveSection(sectionId)
-  }, [])
+  }, [router])
 
   const isActive = (id: string) => activeSection === id ? styles.active : ""
 
@@ -59,7 +63,7 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
           <Link className={isActive("leaderboard")} href="/leaderboard">Bảng xếp hạng</Link>
           <Link className={isPricing ? styles.active : ""} href="/pricing">Thanh toán</Link>
         </div>
-        <div className={styles.navActions}>{user.isLoggedIn ? <><span className={styles.userChip}><i>{initials}</i>{user.name}</span>{user.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Đăng nhập</Link><Link href="/login" className={styles.primaryButton}>Bắt đầu học <b>→</b></Link></>}</div>
+        <div className={styles.navActions}>{user.isLoggedIn ? <><AccountDropdown />{user.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Đăng nhập</Link><Link href="/login" className={styles.primaryButton}>Bắt đầu học <b>→</b></Link></>}</div>
         <details className={styles.mobileMenu}>
           <summary aria-label="Mở menu"><span /><span /><span /></summary>
           <div>

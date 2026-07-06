@@ -1,0 +1,290 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.trigger:hover {
+  border-color: var(--border);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chevron {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  color: #94a3b8;
+  transition: transform 0.2s;
+}
+.chevron svg {
+  width: 14px;
+  height: 14px;
+}
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12), 0 8px 20px rgba(15, 23, 42, 0.06);
+  animation: slideIn 0.2s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.header div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.header strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.header > div > span:not(.badge) {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerAvatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.freeBadge {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.proBadge {
+  color: #b45309;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.menu {
+  padding: 6px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: #0f172a;
+  text-decoration: none;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.menuItem:hover {
+  background: #f8fafc;
+}
+.menuItem div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.menuItem strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.menuItem div > span {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 8px;
+  color: #2563eb;
+  background: #eef6ff;
+}
+.menuIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.divider {
+  height: 1px;
+  margin: 0 6px;
+  background: #f1f5f9;
+}
+
+.logoutItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 0 0 16px 16px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ef4444;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.logoutItem:hover {
+  background: #fef2f2;
+}
+.logoutItem .menuIcon {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.overlay {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.3);
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.confirmBox {
+  width: 360px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+}
+.confirmBox h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.confirmBox p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.cancelBtn,
+.confirmBtn {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn {
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  background: #fff;
+}
+.cancelBtn:hover {
+  background: #f8fafc;
+}
+
+.confirmBtn {
+  border: 0;
+  color: #fff;
+  background: #ef4444;
+}
+.confirmBtn:hover {
+  background: #dc2626;
+}

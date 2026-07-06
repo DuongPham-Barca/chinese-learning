@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import SiteNavbar from "@/components/site-navbar"
+import LoadingSpinner from "@/components/loading-spinner"
+import QrPaymentModal from "@/components/qr-payment-modal"
 import styles from "./pricing.module.css"
 
 type PlanId = "2months" | "6months" | "12months"
@@ -17,63 +20,61 @@ type Plan = {
   badge: string | null
   features: string[]
   buttonLabel: string
+  description: string
+  durationMonths: number
 }
+
+const allFeatures = [
+  "Mở khóa toàn bộ bài học HSK",
+  "Luyện phát âm với AI",
+  "Không giới hạn câu luyện tập",
+  "Theo dõi tiến độ học tập",
+  "Sử dụng đầy đủ tính năng Pro",
+]
 
 const plans: Plan[] = [
   {
     id: "2months",
-    title: "2 tháng",
+    title: "Gói 2 tháng",
     price: "49.000",
     originalPrice: null,
     savings: null,
     popular: false,
     badge: null,
-    features: [
-      "Toàn bộ bài học HSK",
-      "Luyện phát âm AI",
-      "Bài tập không giới hạn",
-      "Thống kê học tập",
-    ],
-    buttonLabel: "Chọn gói",
+    features: allFeatures,
+    buttonLabel: "Chọn gói 2 tháng",
+    description: "Phù hợp để trải nghiệm ngắn hạn",
+    durationMonths: 2,
   },
   {
     id: "6months",
-    title: "6 tháng",
+    title: "Gói 6 tháng",
     price: "119.000",
     originalPrice: "147.000",
     savings: "Tiết kiệm 20%",
     popular: true,
-    badge: "🔥 Phổ biến nhất",
-    features: [
-      "Toàn bộ bài học HSK",
-      "Luyện phát âm AI",
-      "Bài tập không giới hạn",
-      "Thống kê học tập",
-      "Flashcard & Dictation",
-    ],
-    buttonLabel: "Nâng cấp ngay",
+    badge: "Phổ biến nhất",
+    features: allFeatures,
+    buttonLabel: "Chọn gói 6 tháng",
+    description: "Lựa chọn cân bằng cho việc học đều đặn",
+    durationMonths: 6,
   },
   {
     id: "12months",
-    title: "12 tháng",
+    title: "Gói 12 tháng",
     price: "189.000",
     originalPrice: "294.000",
     savings: "Tiết kiệm 35%",
     popular: false,
-    badge: "⭐ Tiết kiệm nhất",
-    features: [
-      "Toàn bộ bài học HSK",
-      "Luyện phát âm AI",
-      "Bài tập không giới hạn",
-      "Thống kê học tập",
-      "Flashcard & Dictation",
-      "Ưu tiên hỗ trợ",
-    ],
-    buttonLabel: "Chọn gói",
+    badge: "Tiết kiệm nhất",
+    features: allFeatures,
+    buttonLabel: "Chọn gói 12 tháng",
+    description: "Tiết kiệm nhất cho hành trình dài hạn",
+    durationMonths: 12,
   },
 ]
 
-const comparisonRows: [string, boolean, boolean][] = [
+const freeVsPro: [string, boolean, boolean][] = [
   ["Bài học HSK", false, true],
   ["Từ vựng HSK", true, true],
   ["Luyện phát âm AI", false, true],
@@ -84,7 +85,7 @@ const comparisonRows: [string, boolean, boolean][] = [
 ]
 
 const steps: [string, string][] = [
-  ["Chọn gói", "Chọn gói phù hợp với nhu cầu học của bạn."],
+  ["Chọn gói", "Chọn thời hạn sử dụng phù hợp với nhu cầu của bạn."],
   ["Chuyển khoản", "Quét mã QR hoặc chuyển khoản ngân hàng."],
   ["Kích hoạt", "Tài khoản Pro được kích hoạt trong vòng 24h."],
 ]
@@ -95,6 +96,12 @@ const faq: [string, string][] = [
   ["Có hoàn tiền không?", "Chúng tôi có chính sách hoàn tiền trong vòng 7 ngày nếu bạn không hài lòng với dịch vụ."],
   ["Thanh toán bằng hình thức nào?", "Chúng tôi chấp nhận thanh toán qua chuyển khoản ngân hàng nội địa (Vietcombank, VietQR)."],
 ]
+
+function calcExpiry(months: number): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() + months)
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -107,12 +114,28 @@ const itemVariants = {
 }
 
 export default function PricingPage() {
+  const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const selected = plans.find((p) => p.id === selectedPlan)
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const selectedForModal = (() => {
+    const s = plans.find((p) => p.id === selectedPlan)
+    return s ? { id: s.id, title: s.title, price: s.price, durationMonths: s.durationMonths, expiry: calcExpiry(s.durationMonths) } : null
+  })()
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading) {
+    return <main className={styles.page}><SiteNavbar /><LoadingSpinner /></main>
+  }
 
   return (
     <main className={styles.page}>
+      <SiteNavbar />
+      <QrPaymentModal open={paymentModalOpen} plan={selectedForModal} onClose={() => setPaymentModalOpen(false)} />
       <motion.div
         className={styles.hero}
         variants={containerVariants}
@@ -125,9 +148,9 @@ export default function PricingPage() {
             <path d="M6 22h12" />
           </svg>
         </motion.div>
-        <motion.h1 variants={itemVariants}>Nâng cấp ChineseDict Pro</motion.h1>
+        <motion.h1 variants={itemVariants}>Gia hạn gói Pro</motion.h1>
         <motion.p variants={itemVariants}>
-          Mở khóa toàn bộ nội dung học tiếng Trung và tiếp tục hành trình học của bạn.
+          Chọn thời hạn sử dụng phù hợp. Tất cả các gói đều mở khóa đầy đủ tính năng Pro.
         </motion.p>
       </motion.div>
 
@@ -156,6 +179,7 @@ export default function PricingPage() {
               )}
             </div>
             {plan.savings && <span className={styles.savings}>{plan.savings}</span>}
+            <p className={styles.planDesc}>{plan.description}</p>
             <ul className={styles.features}>
               {plan.features.map((f) => (
                 <li key={f}>
@@ -171,7 +195,7 @@ export default function PricingPage() {
             <button
               type="button"
               className={`${styles.ctaButton} ${plan.popular ? styles.ctaPrimary : ""}`}
-              onClick={() => setSelectedPlan(plan.id)}
+                onClick={() => { setSelectedPlan(plan.id); setPaymentModalOpen(true) }}
             >
               {plan.buttonLabel}
             </button>
@@ -179,29 +203,6 @@ export default function PricingPage() {
         ))}
       </motion.div>
 
-      <motion.section
-        className={styles.section}
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>So sánh gói</motion.h2>
-        <motion.div variants={itemVariants} className={styles.comparison}>
-          <div className={styles.comparisonHeader}>
-            <span>Tính năng</span>
-            <span>Free</span>
-            <span className={styles.proCol}>Pro</span>
-          </div>
-          {comparisonRows.map(([feature, free, pro]) => (
-            <div className={styles.comparisonRow} key={feature}>
-              <span>{feature}</span>
-              <span>{free ? <i className={styles.checkInline}><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></i> : <span className={styles.dash}>&mdash;</span>}</span>
-              <span className={styles.proCol}>{pro ? <i className={styles.checkInline}><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></i> : <span className={styles.dash}>&mdash;</span>}</span>
-            </div>
-          ))}
-        </motion.div>
-      </motion.section>
 
       <motion.section
         className={styles.section}
@@ -210,17 +211,19 @@ export default function PricingPage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
-        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>Cách thanh toán</motion.h2>
-        <motion.div variants={containerVariants} className={styles.steps}>
-          {steps.map(([title, desc], i) => (
-            <motion.div key={title} variants={itemVariants} className={styles.step}>
-              <div className={styles.stepNumber}>{i + 1}</div>
-              <div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
-              </div>
-              {i < steps.length - 1 && <div className={styles.stepArrow}><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg></div>}
-            </motion.div>
+        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>So sánh Free vs Pro</motion.h2>
+        <motion.div variants={itemVariants} className={styles.comparison}>
+          <div className={styles.comparisonHeader}>
+            <span>Tính năng</span>
+            <span>Free</span>
+            <span className={styles.proCol}>Pro</span>
+          </div>
+          {freeVsPro.map(([feature, free, pro]) => (
+            <div className={styles.comparisonRow} key={feature}>
+              <span>{feature}</span>
+              <span>{free ? <i className={styles.checkInline}><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></i> : <span className={styles.dash}>&mdash;</span>}</span>
+              <span className={styles.proCol}>{pro ? <i className={styles.checkInline}><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></i> : <span className={styles.dash}>&mdash;</span>}</span>
+            </div>
           ))}
         </motion.div>
       </motion.section>
@@ -253,24 +256,6 @@ export default function PricingPage() {
         </motion.p>
       </motion.section>
 
-      {selected && (
-        <motion.div
-          className={styles.stickyBar}
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        >
-          <div className={styles.stickyInner}>
-            <div>
-              <strong>{selected.title}</strong>
-              <span>{selected.price}đ {selected.savings && ` · ${selected.savings}`}</span>
-            </div>
-            <button type="button" className={styles.stickyButton} onClick={() => { /* payment flow */ }}>
-              Tiếp tục thanh toán
-            </button>
-          </div>
-        </motion.div>
-      )}
     </main>
   )
 }

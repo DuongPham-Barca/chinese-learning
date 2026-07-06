@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 export type MockUpgradeUser = {
   id: string
   name: string
+  email: string
   isLoggedIn: boolean
   isPro: boolean
 }
@@ -18,6 +19,7 @@ type ProUpgradeContextValue = {
 const mockUser: MockUpgradeUser = {
   id: "u123456",
   name: "Dương Hải",
+  email: "duonghai@example.com",
   isLoggedIn: true,
   isPro: false,
 }
