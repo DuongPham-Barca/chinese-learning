@@ -1,4 +1,5 @@
 import Link from "next/link"
+import ProUpgradeTrigger from "@/components/pro-upgrade/pro-upgrade-trigger"
 import styles from "./hsk1/hsk1.module.css"
 
 type IconName = "arrow" | "bell" | "user" | "book" | "translate" | "fire" | "check" | "play" | "lock" | "layers" | "shield" | "devices"
@@ -94,8 +95,8 @@ function LessonItem({ lesson, index, level }: { lesson: Lesson; index: number; l
       </div>
       {lesson.state === "completed" && <span className={styles.chevron}>›</span>}
       {lesson.state === "current" && <Link className={styles.continueButton} href={level === "hsk1" ? "/courses/hsk1/lesson-1" : `/lessons/${level}/${index + 1}`}>Tiếp tục học →</Link>}
-      {lesson.state === "pro" && <Link className={styles.unlockText} href="#upgrade">Nâng cấp để mở khóa</Link>}
-      {lesson.state === "locked" && <span className={styles.lockedBadge}>Locked</span>}
+      {lesson.state === "pro" && <ProUpgradeTrigger className={styles.unlockText} unlockedHref={`/lessons/${level}/${index + 1}`} loggedOutLabel="Đăng nhập để học" upgradeLabel="Nâng cấp để mở khóa" proLabel="Bắt đầu học" />}
+      {lesson.state === "locked" && <ProUpgradeTrigger className={styles.lockedUpgrade} unlockedHref={`/lessons/${level}/${index + 1}`} loggedOutLabel="Đăng nhập để học" upgradeLabel="Nâng cấp để mở khóa" proLabel="Bắt đầu học" />}
     </article>
   )
 }
@@ -107,7 +108,7 @@ function ProCtaCard({ config }: { config: LevelConfig }) {
       <div className={styles.cube}><Icon name="layers" /></div>
       <h2>Mở khóa toàn bộ {levelName}</h2>
       <p>Truy cập đầy đủ {config.totalLessons} bài học, flashcard thông minh, luyện nghe dictation và theo dõi tiến trình không giới hạn.</p>
-      <div className={styles.ctaButtons}><Link href="#upgrade">Nâng cấp Pro</Link><Link href="#upgrade">Xem bảng giá</Link></div>
+      <div className={styles.ctaButtons}><ProUpgradeTrigger /><Link href="#upgrade">Xem bảng giá</Link></div>
       <div className={styles.benefits}><span><Icon name="shield" />Bảo hành 7 ngày</span><span><Icon name="devices" />Học trên mọi thiết bị</span></div>
     </section>
   )
