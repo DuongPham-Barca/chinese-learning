@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 125%;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }

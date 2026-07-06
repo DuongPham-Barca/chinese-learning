@@ -1,8 +1,7 @@
 "use client"
 
-import { createContext, type ReactNode, useContext, useMemo, useState } from "react"
+import { createContext, type ReactNode, useContext, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import ProUpgradeModal from "@/components/pro-upgrade/pro-upgrade-modal"
 
 export type MockUpgradeUser = {
   id: string
@@ -14,7 +13,6 @@ export type MockUpgradeUser = {
 type ProUpgradeContextValue = {
   user: MockUpgradeUser
   openUpgrade: (unlockedHref?: string) => void
-  closeUpgrade: () => void
 }
 
 const mockUser: MockUpgradeUser = {
@@ -28,7 +26,6 @@ const ProUpgradeContext = createContext<ProUpgradeContextValue | null>(null)
 
 export function ProUpgradeProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
 
   const value = useMemo<ProUpgradeContextValue>(() => ({
     user: mockUser,
@@ -41,12 +38,11 @@ export function ProUpgradeProvider({ children }: { children: ReactNode }) {
         if (unlockedHref) router.push(unlockedHref)
         return
       }
-      setOpen(true)
+      router.push("/pricing")
     },
-    closeUpgrade: () => setOpen(false),
   }), [router])
 
-  return <ProUpgradeContext.Provider value={value}>{children}<ProUpgradeModal open={open} user={mockUser} onClose={() => setOpen(false)} /></ProUpgradeContext.Provider>
+  return <ProUpgradeContext.Provider value={value}>{children}</ProUpgradeContext.Provider>
 }
 
 export function useProUpgrade() {

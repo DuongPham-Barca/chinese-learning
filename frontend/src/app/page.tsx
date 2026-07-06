@@ -1,6 +1,20 @@
+"use client"
+
+import { useReducedMotion } from "framer-motion"
+import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import SiteNavbar from "@/components/site-navbar"
+import {
+  containerVariants,
+  sectionVariants,
+  itemVariants,
+  cardVariants,
+  heroContainerVariants,
+  heroItemVariants,
+  fadeInVariants,
+  sectionViewport,
+} from "./animations"
 import styles from "./home.module.css"
 
 type IconName = "users" | "layers" | "mic" | "star" | "headphones" | "trophy" | "book" | "chart" | "sparkles" | "check"
@@ -42,7 +56,6 @@ const levels = [
   ["HSK4", "45 bài học", "1200 từ vựng", "Ngữ pháp trung cấp vững chắc", 4],
   ["HSK5", "55 bài học", "2500 từ vựng", "Đọc hiểu văn bản chuyên sâu", 5],
   ["HSK6", "70 bài học", "5000 từ vựng", "Trình độ thành thạo cao cấp", 5],
-  ["Giao Tiếp", "40 bài học", "800 từ vựng", "Phản xạ thực tế mỗi ngày", 5],
 ] as const
 
 const processSteps: Array<[IconName, string, string]> = [
@@ -60,11 +73,11 @@ const reviews = [
 
 function SectionHeading({ badge, title, subtitle }: { badge: string; title: string; subtitle: string }) {
   return (
-    <div className={styles.sectionHeading}>
+    <motion.div variants={itemVariants} className={styles.sectionHeading}>
       <span>{badge}</span>
       <h2>{title}</h2>
       <p>{subtitle}</p>
-    </div>
+    </motion.div>
   )
 }
 
@@ -73,68 +86,173 @@ function Brand() {
 }
 
 export default function HomePage() {
+  const prefersReducedMotion = useReducedMotion()
+
   return (
     <main className={styles.page}>
-      <SiteNavbar active="home" />
+      <SiteNavbar />
 
-      <header id="home" className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <span className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</span>
-          <h1>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</h1>
-          <p>Hệ thống học tiếng Trung hiện đại với Flashcard thông minh, Dictation, AI hỗ trợ ghi nhớ từ vựng và giáo trình HSK đầy đủ.</p>
-          <div className={styles.heroButtons}><Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link><a href="#roadmap" className={styles.secondaryButton}>Khám phá giáo trình</a></div>
-          <div className={styles.bullets}>
+      <motion.header
+        id="home"
+        className={styles.hero}
+        variants={heroContainerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={heroItemVariants} className={styles.heroCopy}>
+          <motion.span variants={heroItemVariants} className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</motion.span>
+          <motion.h1 variants={heroItemVariants}>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</motion.h1>
+          <motion.p variants={heroItemVariants}>Hệ thống học tiếng Trung hiện đại với Flashcard thông minh, Dictation, AI hỗ trợ ghi nhớ từ vựng và giáo trình HSK đầy đủ.</motion.p>
+          <motion.div variants={heroItemVariants} className={styles.heroButtons}><Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link><a href="#roadmap" className={styles.secondaryButton}>Khám phá giáo trình</a></motion.div>
+          <motion.div variants={heroItemVariants} className={styles.bullets}>
             {["Hơn 10,000 học viên", "Luyện Dictation mỗi ngày", "Flashcard thông minh", "Theo dõi tiến độ học tập"].map((item) => <span key={item}><i><Icon name="check" /></i>{item}</span>)}
-          </div>
-        </div>
-        <div className={styles.heroVisual}>
+          </motion.div>
+        </motion.div>
+        <motion.div variants={heroItemVariants} className={styles.heroVisual}>
           <Image src="/chinesedict-home-hero.png" fill priority sizes="(max-width: 760px) 92vw, 540px" alt="Học viên đang học tiếng Trung với ChineseDict" />
-          <div className={styles.streak}><i><Icon name="sparkles" /></i><span><small>Chuỗi học liên tục</small><strong>7 ngày 🔥</strong></span></div>
-        </div>
-      </header>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0, transition: { delay: 1.5, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] } },
+            }}
+            className={styles.streak}
+          ><i><Icon name="sparkles" /></i><span><small>Chuỗi học liên tục</small><strong>7 ngày 🔥</strong></span></motion.div>
+        </motion.div>
+      </motion.header>
 
-      <section className={styles.stats} aria-label="Thống kê ChineseDict">
-        {stats.map(([icon, value, label]) => <div className={styles.statCard} key={label}><i><Icon name={icon} /></i><strong>{value}</strong><span>{label}</span></div>)}
-      </section>
+      <motion.section
+        className={styles.stats}
+        aria-label="Thống kê ChineseDict"
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
+        {stats.map(([icon, value, label]) => (
+          <motion.div variants={cardVariants} className={styles.statCard} key={label}>
+            <i><Icon name={icon} /></i>
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </motion.div>
+        ))}
+      </motion.section>
 
-      <section id="features" className={styles.section}>
+      <motion.section
+        id="features"
+        className={styles.section}
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
         <SectionHeading badge="TÍNH NĂNG" title="Tất cả những gì bạn cần để học tiếng Trung" subtitle="Bộ công cụ toàn diện, thiết kế theo phương pháp học ngôn ngữ hiện đại." />
-        <div className={styles.featureGrid}>
-          {features.map(([icon, title, description]) => <article className={styles.featureCard} key={title}><i><Icon name={icon} /></i><h3>{title}</h3><p>{description}</p></article>)}
-        </div>
-      </section>
-
-      <section id="roadmap" className={`${styles.section} ${styles.roadmap}`}>
-        <SectionHeading badge="LỘ TRÌNH" title="Lộ trình học" subtitle="Đi từ nền tảng đến thành thạo với 7 cấp độ được thiết kế bài bản." />
-        <div className={styles.levelGrid}>
-          {levels.map(([level, lessons, words, description, dots]) => (
-            <article className={styles.levelCard} key={level}>
-              <div className={styles.levelTop}><strong>{level}</strong><span>{[1,2,3,4,5].map((dot) => <i className={dot <= dots ? styles.dotActive : ""} key={dot} />)}</span></div>
-              <small>{lessons}</small><small>{words}</small><p>{description}</p><Link href={level.startsWith("HSK") ? `/courses/${level.toLowerCase()}` : "/login"}>Bắt đầu học →</Link>
-            </article>
+        <motion.div variants={containerVariants} className={styles.featureGrid}>
+          {features.map(([icon, title, description]) => (
+            <motion.article
+              variants={cardVariants}
+              whileHover={prefersReducedMotion ? undefined : { y: -4, boxShadow: "0 12px 28px rgba(37,99,235,0.12)" }}
+              className={styles.featureCard}
+              key={title}
+              id={title === "Luyện nghe chép chính tả" ? "dictation" : undefined}
+            >
+              <i><Icon name={icon} /></i>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </motion.article>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
-      <section className={`${styles.section} ${styles.process}`}>
+      <motion.section
+        id="roadmap"
+        className={`${styles.section} ${styles.roadmap}`}
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
+        <SectionHeading badge="LỘ TRÌNH" title="Lộ trình học" subtitle="Đi từ nền tảng đến thành thạo với 7 cấp độ được thiết kế bài bản." />
+        <motion.div variants={containerVariants} className={styles.levelGrid}>
+          {levels.map(([level, lessons, words, description, dots]) => (
+            <motion.article
+              variants={cardVariants}
+              whileHover={prefersReducedMotion ? undefined : { y: -4, boxShadow: "0 12px 28px rgba(37,99,235,0.15)" }}
+              className={styles.levelCard}
+              key={level}
+            >
+              <div className={styles.levelTop}><strong>{level}</strong><span>{[1,2,3,4,5].map((dot) => <i className={dot <= dots ? styles.dotActive : ""} key={dot} />)}</span></div>
+              <small>{lessons}</small><small>{words}</small>
+              <p>{description}</p>
+              <Link href={level.startsWith("HSK") ? `/courses/${level.toLowerCase()}` : "/login"}>Bắt đầu học →</Link>
+            </motion.article>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      <motion.section
+        className={`${styles.section} ${styles.process}`}
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
         <SectionHeading badge="QUY TRÌNH" title="Học hiệu quả trong 4 bước" subtitle="Một quy trình khép kín, giúp bạn tiến bộ đều mỗi ngày." />
-        <div className={styles.timeline}>
-          {processSteps.map(([icon, title, description], index) => <article key={title}><div className={styles.stepIcon}><Icon name={icon} /><b>{index + 1}</b></div><h3>{title}</h3><p>{description}</p></article>)}
-        </div>
-      </section>
+        <motion.div variants={containerVariants} className={styles.timeline}>
+          {processSteps.map(([icon, title, description], index) => (
+            <motion.article variants={cardVariants} key={title}>
+              <div className={styles.stepIcon}><Icon name={icon} /><b>{index + 1}</b></div>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </motion.article>
+          ))}
+        </motion.div>
+      </motion.section>
 
-      <section id="testimonials" className={`${styles.section} ${styles.testimonials}`}>
+      <motion.section
+        id="testimonials"
+        className={`${styles.section} ${styles.testimonials}`}
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
         <SectionHeading badge="HỌC VIÊN NÓI GÌ" title="Được tin dùng bởi hàng ngàn người học" subtitle="Câu chuyện thật từ cộng đồng ChineseDict." />
-        <div className={styles.reviewGrid}>
-          {reviews.map(([review, initials, name, role]) => <article className={styles.reviewCard} key={name}><div className={styles.stars}>★★★★★</div><p>{review}</p><footer><i>{initials}</i><span><strong>{name}</strong><small>{role}</small></span></footer></article>)}
-        </div>
-      </section>
+        <motion.div variants={containerVariants} className={styles.reviewGrid}>
+          {reviews.map(([review, initials, name, role]) => (
+            <motion.article
+              variants={cardVariants}
+              whileHover={prefersReducedMotion ? undefined : { y: -4, boxShadow: "0 12px 28px rgba(37,99,235,0.12)" }}
+              className={styles.reviewCard}
+              key={name}
+            >
+              <div className={styles.stars}>★★★★★</div>
+              <p>{review}</p>
+              <footer><i>{initials}</i><span><strong>{name}</strong><small>{role}</small></span></footer>
+            </motion.article>
+          ))}
+        </motion.div>
+      </motion.section>
 
-      <section className={styles.cta}>
+      <motion.section
+        className={styles.cta}
+        variants={fadeInVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
         <div><h2>Sẵn sàng bắt đầu hành trình học<br /> tiếng Trung?</h2><p>Tham gia cùng hàng ngàn học viên đang chinh phục HSK mỗi ngày với ChineseDict.</p><span><Link href="/login">Bắt đầu miễn phí <b>→</b></Link><a href="#roadmap">Xem giáo trình</a></span></div>
-      </section>
+      </motion.section>
 
-      <footer id="footer" className={styles.footer}>
+      <motion.footer
+        id="footer"
+        className={styles.footer}
+        variants={fadeInVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={sectionViewport}
+      >
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}><Brand /><p>Nền tảng học tiếng Trung hiện đại — Flashcard, Dictation, và giáo trình HSK đầy đủ.</p><div className={styles.socials}><span>f</span><span>◎</span><span>▶</span><span>◯</span></div></div>
           <div><h3>ChineseDict</h3><a href="#home">Giới thiệu</a><a href="#footer">Liên hệ</a><a href="#footer">Blog</a></div>
@@ -142,7 +260,7 @@ export default function HomePage() {
           <div><h3>Hỗ trợ</h3><a href="#footer">FAQ</a><a href="#footer">Chính sách</a><a href="#footer">Điều khoản</a></div>
         </div>
         <div className={styles.copyright}><span>© 2026 ChineseDict. All rights reserved.</span><span>Made with care for Chinese learners.</span></div>
-      </footer>
+      </motion.footer>
     </main>
   )
 }
