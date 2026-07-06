@@ -49,7 +49,7 @@ function LearningInfoCard() {
 }
 
 type ModuleCardProps = {
-  type: "flashcard" | "dictation"
+  type: "flashcard" | "pronunciation" | "dictation"
   image: string
   title: string
   badge: string
@@ -60,6 +60,7 @@ type ModuleCardProps = {
 
 function LearningModuleCard({ type, image, title, badge, description, duration, href }: ModuleCardProps) {
   const isFlashcard = type === "flashcard"
+  const isPronunciation = type === "pronunciation"
   return (
     <article className={styles.moduleCard}>
       <div className={styles.moduleImage}><Image src={image} fill sizes="260px" alt={`Minh họa ${title}`} /></div>
@@ -68,9 +69,9 @@ function LearningModuleCard({ type, image, title, badge, description, duration, 
       {isFlashcard ? (
         <ul className={styles.checklist}><li><Icon name="check" />Chào hỏi, cảm ơn, tạm biệt</li><li><Icon name="check" />Kèm âm thanh bản xứ</li></ul>
       ) : (
-        <div className={styles.warning}><Icon name="warning" /><span>Nên hoàn thành phần Flashcard để có kết quả luyện tập tốt nhất.</span></div>
+        <div className={styles.warning}><Icon name="warning" /><span>{isPronunciation ? "Nên hoàn thành Flashcard trước khi luyện phát âm." : "Nên hoàn thành phần Flashcard để có kết quả luyện tập tốt nhất."}</span></div>
       )}
-      <footer className={styles.moduleFooter}><span><Icon name="clock" />{duration}</span><Link className={isFlashcard ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Ôn tập lại" : "Bắt đầu luyện"}</Link></footer>
+      <footer className={styles.moduleFooter}><span><Icon name="clock" />{duration}</span><Link className={isFlashcard || isPronunciation ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Ôn tập lại" : "Bắt đầu luyện"}</Link></footer>
     </article>
   )
 }
@@ -92,6 +93,7 @@ export default function LessonOverviewPage() {
         <LearningInfoCard />
         <section className={styles.contentGrid}>
           <LearningModuleCard type="flashcard" image="/lesson-flashcard.png" title="Flashcard" badge="Đã hoàn thành" description="Học 10 từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh." duration="8 phút" href="/courses/hsk1/lesson-1/flashcards" />
+          <LearningModuleCard type="pronunciation" image="/lesson-dictation.png" title="Luyện phát âm" badge="Mới" description="Đọc câu tiếng Trung và nhận điểm phát âm theo AI." duration="10 phút" href="/lessons/hsk1/1/pronunciation" />
           <LearningModuleCard type="dictation" image="/lesson-dictation.png" title="Dictation & Sắp xếp" badge="Chưa bắt đầu" description="Luyện nghe và ghép câu hoàn chỉnh từ 5 đoạn hội thoại thực tế." duration="12 phút" href="/courses/hsk1/lesson-1/dictation" />
         </section>
       </div>

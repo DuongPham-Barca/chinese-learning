@@ -33,6 +33,17 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
           </Link>
         </div>
         <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">🎤 Luyện phát âm — Pronunciation</h2>
+          <p className="text-gray-500 mb-4">Đọc câu tiếng Trung và nhận điểm phát âm theo AI</p>
+          <Link
+            href={`/lessons/${level}/${id}/pronunciation`}
+            className="inline-block bg-[#3B82F6] text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+          >
+            Bắt đầu
+          </Link>
+          <span className="ml-2 inline-block text-xs font-semibold text-[#f59e0b] bg-[#fffbeb] px-2 py-0.5 rounded-full align-middle">Mới</span>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-2">✍️ Luyện câu — Dictation</h2>
           <p className="text-gray-500 mb-4">{lesson.sentences.length} câu luyện tập</p>
           <Link

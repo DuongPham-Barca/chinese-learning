@@ -1,0 +1,690 @@
+.page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at 50% 0%, #dbeafe40, #fffdf7);
+  --blue: #2563eb;
+  --blue-hover: #1d4ed8;
+  --secondary: #3b82f6;
+  --accent: #60a5fa;
+  --success: #22c55e;
+  --success-bg: #f0fdf4;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --error: #ef4444;
+  --error-bg: #fef2f2;
+  --text: #0f172a;
+  --body: #475569;
+  --muted: #94a3b8;
+  --border: #e2e8f0;
+  --cream: #fffdf7;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--text);
+  padding-bottom: 32px;
+}
+
+/* Top bar */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #ffffffec;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.exitBtn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+  line-height: 1;
+}
+.exitBtn:hover { background: #f1f5f9; }
+.progressLabel {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+.expLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning);
+}
+.expIcon { font-size: 18px; }
+
+.progressTrackOuter {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 20px;
+  overflow: hidden;
+}
+.progressTrackInner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--secondary), var(--accent));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+/* Sentence Card */
+.sentenceCard {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 3px #0000000f, 0 4px 12px #00000008;
+  margin-bottom: 20px;
+}
+.sentenceLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.chineseText {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.pinyinText {
+  font-size: 16px;
+  color: var(--body);
+  margin-bottom: 8px;
+}
+.meaningText {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.audioActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.audioBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.audioBtn:hover {
+  border-color: var(--secondary);
+  background: #eff6ff;
+  color: var(--blue);
+}
+.audioBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.audioBtnPrimary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.audioBtnPrimary:hover {
+  background: var(--blue-hover);
+  border-color: var(--blue-hover);
+  color: white;
+}
+
+/* Recording Area */
+.recordingArea {
+  background: white;
+  border-radius: 20px;
+  padding: 32px 20px;
+  box-shadow: 0 1px 3px #0000000f, 0 4px 12px #00000008;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.micOuter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.micButton {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 2;
+  font-size: 36px;
+}
+.micIdle {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: var(--blue);
+  box-shadow: 0 4px 16px #2563eb20;
+}
+.micIdle:hover {
+  box-shadow: 0 6px 24px #2563eb30;
+  transform: scale(1.04);
+}
+.micRecording {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  color: var(--error);
+  box-shadow: 0 4px 16px #ef444430;
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+.micProcessing {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: var(--muted);
+  cursor: default;
+}
+.micRecorded {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: var(--success);
+  cursor: default;
+}
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 4px 16px #ef444430; }
+  50% { box-shadow: 0 4px 32px #ef444460; }
+}
+.pulseRing {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 3px solid var(--error);
+  animation: pulseExpand 1.5s ease-out infinite;
+  z-index: 1;
+}
+@keyframes pulseExpand {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.recordingStatus {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--body);
+  margin-bottom: 8px;
+}
+.recordingTimer {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--error);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Waveform */
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 40px;
+  margin: 16px 0;
+}
+.waveformBar {
+  width: 4px;
+  background: var(--secondary);
+  border-radius: 2px;
+  animation: waveAnim 0.6s ease-in-out infinite alternate;
+}
+@keyframes waveAnim {
+  0% { height: 8px; }
+  100% { height: 36px; }
+}
+
+/* Playback Bar */
+.playbackBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+.playbackBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--blue);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+.playbackBtn:hover { background: var(--blue-hover); }
+.playbackTimeline {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.playbackTimelineFill {
+  height: 100%;
+  background: var(--secondary);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+.playbackDuration {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.actionBtn {
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.actionBtnPrimary {
+  background: var(--blue);
+  color: white;
+}
+.actionBtnPrimary:hover { background: var(--blue-hover); }
+.actionBtnOutline {
+  background: transparent;
+  color: var(--body);
+  border: 1.5px solid var(--border);
+}
+.actionBtnOutline:hover {
+  border-color: var(--secondary);
+  color: var(--blue);
+  background: #eff6ff;
+}
+.actionBtnSuccess {
+  background: var(--success);
+  color: white;
+}
+.actionBtnSuccess:hover { background: #16a34a; }
+
+/* Processing overlay */
+.processingArea {
+  text-align: center;
+  padding: 40px 20px;
+}
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.processingText {
+  font-size: 16px;
+  color: var(--body);
+  font-weight: 500;
+}
+
+/* Error States */
+.errorCard {
+  background: #fef2f2;
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.errorIcon { font-size: 40px; margin-bottom: 12px; }
+.errorTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--error);
+  margin-bottom: 6px;
+}
+.errorDesc {
+  font-size: 14px;
+  color: var(--body);
+  margin-bottom: 16px;
+}
+.errorBtn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  background: var(--error);
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.errorBtn:hover { background: #dc2626; }
+
+/* Feedback Result */
+.resultCard {
+  background: white;
+  border-radius: 20px;
+  padding: 28px 20px;
+  box-shadow: 0 1px 3px #0000000f, 0 4px 12px #00000008;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.scoreRing {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 16px;
+}
+.scoreRing svg {
+  transform: rotate(-90deg);
+}
+.scoreRingBg {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 8;
+}
+.scoreRingFill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease;
+}
+.scoreValue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.scoreNumber {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+.scorePercent {
+  font-size: 16px;
+  font-weight: 600;
+}
+.scoreLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--body);
+  margin-top: 4px;
+}
+.scoreExcellent { color: var(--success); }
+.scoreGood { color: var(--blue); }
+.scoreNeedsWork { color: var(--warning); }
+.scoreBad { color: var(--error); }
+
+/* Detail Scores */
+.detailScores {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.detailCard {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+}
+.detailIcon { font-size: 24px; margin-bottom: 6px; }
+.detailLabel {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.detailValue {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Character Feedback */
+.charFeedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.charChip {
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  position: relative;
+}
+.charChip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px #00000015;
+}
+.charCorrect {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: #15803d;
+}
+.charNeedsWork {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+  color: #b45309;
+}
+.charIncorrect {
+  background: var(--error-bg);
+  border-color: var(--error);
+  color: #b91c1c;
+}
+
+.charDetail {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.charDetailWord {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.charDetailRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.charDetailLabel {
+  color: var(--muted);
+  font-weight: 500;
+  min-width: 80px;
+}
+.charDetailValue {
+  color: var(--text);
+  font-weight: 600;
+}
+.charDetailValueCorrect { color: var(--success); }
+.charDetailValueWrong { color: var(--error); }
+.charFeedbackText {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fffbeb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #92400e;
+  line-height: 1.5;
+}
+.charDetailClose {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--body);
+  transition: background 0.2s;
+}
+.charDetailClose:hover { background: #f1f5f9; }
+
+/* Message Card */
+.messageCard {
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px #0000000f, 0 4px 12px #00000008;
+}
+.messageEmoji { font-size: 40px; margin-bottom: 8px; }
+.messageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.messageDesc {
+  font-size: 15px;
+  color: var(--body);
+  margin-bottom: 20px;
+}
+.expToast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--warning), #d97706);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  animation: expPop 0.5s ease;
+}
+@keyframes expPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Progress Dots */
+.progressDots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 24px 0;
+}
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+.dotActive {
+  background: var(--blue);
+  box-shadow: 0 0 0 3px #2563eb30;
+  transform: scale(1.2);
+}
+.dotCompleted {
+  background: var(--success);
+}
+
+/* Completion Screen */
+.completionScreen {
+  text-align: center;
+  padding: 40px 20px;
+}
+.completionEmoji { font-size: 64px; margin-bottom: 16px; }
+.completionTitle {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+.completionStats {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 1px 3px #0000000f, 0 4px 12px #00000008;
+  margin-bottom: 24px;
+}
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.statRow:last-child { border-bottom: none; }
+.statLabel {
+  font-size: 15px;
+  color: var(--body);
+}
+.statValue {
+  font-size: 17px;
+  font-weight: 700;
+}
+.expReward {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--warning), #d97706);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .chineseText { font-size: 28px; }
+  .scoreRing { width: 120px; height: 120px; }
+  .scoreNumber { font-size: 30px; }
+  .detailScores { gap: 8px; }
+  .detailCard { padding: 12px 8px; }
+  .detailValue { font-size: 20px; }
+  .audioBtn { font-size: 13px; padding: 6px 12px; }
+}
