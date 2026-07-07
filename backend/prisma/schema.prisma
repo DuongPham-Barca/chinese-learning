@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -18,18 +18,59 @@ enum LevelType {
   COMMUNICATION
 }
 
-model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  email     String?  @unique
-  avatarUrl String?
-  expPoints Int      @default(0) @map("exp_points")
-  isPremium Boolean  @default(false) @map("is_premium")
-  createdAt DateTime @default(now()) @map("created_at")
+enum Role {
+  USER
+  ADMIN
+}
 
-  accounts Account[]
-  sessions Session[]
-  progress Progress[]
+enum SubStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum SubscriptionPlan {
+  TWO_MONTHS    @map("2months")
+  SIX_MONTHS    @map("6months")
+  TWELVE_MONTHS @map("12months")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  username          String    @unique
+  email             String?   @unique
+  avatarUrl         String?
+  expPoints         Int       @default(0) @map("exp_points")
+  isPremium         Boolean   @default(false) @map("is_premium")
+  role              Role      @default(USER)
+  subscriptionUntil DateTime?
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  accounts      Account[]
+  sessions      Session[]
+  progress      Progress[]
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id              String           @id @default(cuid())
+  userId          String
+  planId          SubscriptionPlan
+  amount          Int
+  status          SubStatus        @default(PENDING)
+  transferContent String
+  startedAt       DateTime?
+  expiresAt       DateTime?
+  confirmedAt     DateTime?
+  confirmedBy     String?
+  createdAt       DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([planId])
+  @@index([createdAt])
 }
 
 model Account {
@@ -84,25 +125,25 @@ model Lesson {
 }
 
 model Vocabulary {
-  id        String @id @default(cuid())
-  lessonId  String @map("lesson_id")
+  id        String  @id @default(cuid())
+  lessonId  String  @map("lesson_id")
   hanzi     String
   pinyin    String
-  meaningVi String @map("meaning_vi")
+  meaningVi String  @map("meaning_vi")
   audioUrl  String? @map("audio_url")
 
-  lesson   Lesson    @relation(fields: [lessonId], references: [id])
+  lesson   Lesson     @relation(fields: [lessonId], references: [id])
   progress Progress[]
 }
 
 model Sentence {
-  id         String @id @default(cuid())
-  lessonId   String @map("lesson_id")
-  sentenceVi String @map("sentence_vi")
-  sentenceZh String @map("sentence_zh")
+  id         String  @id @default(cuid())
+  lessonId   String  @map("lesson_id")
+  sentenceVi String  @map("sentence_vi")
+  sentenceZh String  @map("sentence_zh")
   audioUrl   String? @map("audio_url")
 
-  lesson   Lesson    @relation(fields: [lessonId], references: [id])
+  lesson   Lesson     @relation(fields: [lessonId], references: [id])
   progress Progress[]
 }
 
@@ -116,10 +157,10 @@ model Progress {
   expGained  Int      @default(0) @map("exp_gained")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson   Lesson     @relation(fields: [lessonId], references: [id])
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson   Lesson      @relation(fields: [lessonId], references: [id])
   vocab    Vocabulary? @relation(fields: [vocabId], references: [id])
-  sentence Sentence?  @relation(fields: [sentenceId], references: [id])
+  sentence Sentence?   @relation(fields: [sentenceId], references: [id])
 
   @@map("progress")
 }
