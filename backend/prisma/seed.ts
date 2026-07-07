@@ -1,4 +1,5 @@
 import { LevelType, PrismaClient, Role } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -203,18 +204,21 @@ const lessons: LessonSeed[] = [
 
 async function seedAdmin() {
   const subscriptionUntil = new Date('2099-12-31T00:00:00.000Z')
+  const passwordHash = await bcrypt.hash('123456', 12)
 
   await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: {
-      username: 'Admin',
+      username: 'admin',
+      passwordHash,
       role: Role.ADMIN,
       isPremium: true,
       subscriptionUntil,
     },
     create: {
-      username: 'Admin',
+      username: 'admin',
       email: 'admin@example.com',
+      passwordHash,
       role: Role.ADMIN,
       isPremium: true,
       subscriptionUntil,

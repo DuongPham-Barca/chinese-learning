@@ -22,6 +22,12 @@ function AdminTopbar({ onMenu }: { onMenu: () => void }) {
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  if (pathname === "/admin/login") {
+    return <>{children}</>
+  }
+
   return <div className={styles.adminPage}><div className={styles.adminShell}><AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /><section className={styles.workspace}><AdminTopbar onMenu={() => setSidebarOpen(true)} /><div className={styles.content}>{children}</div></section></div></div>
 }

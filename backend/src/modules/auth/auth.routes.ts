@@ -1,4 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
+import { Role } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { Router } from 'express'
 import { z } from 'zod'
 import {
@@ -17,6 +19,11 @@ const router = Router()
 
 const googleTokenSchema = z.object({
   access_token: z.string(),
+})
+
+const adminLoginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
 })
 
 const googleUserSchema = z.object({
@@ -52,6 +59,35 @@ function clearTemporaryCookies(res: import('express').Response): void {
   res.append('Set-Cookie', `oauth_state=; Path=/api/auth/google; Max-Age=0; HttpOnly; SameSite=Lax${secure}`)
   res.append('Set-Cookie', `oauth_verifier=; Path=/api/auth/google; Max-Age=0; HttpOnly; SameSite=Lax${secure}`)
 }
+
+router.post('/admin/login', asyncHandler(async (req, res) => {
+  const credentials = adminLoginSchema.safeParse(req.body)
+  if (!credentials.success) {
+    return res.status(401).json({ error: 'Invalid username or password' })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { username: credentials.data.username },
+  })
+
+  if (
+    !user
+    || user.role !== Role.ADMIN
+    || !user.passwordHash
+    || !(await bcrypt.compare(credentials.data.password, user.passwordHash))
+  ) {
+    return res.status(401).json({ error: 'Invalid username or password' })
+  }
+
+  setAuthCookie(res, createAuthToken({ userId: user.id, email: user.email }))
+  res.json({
+    user: {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    },
+  })
+}))
 
 router.get('/google', (req, res) => {
   const { clientId, callbackUrl } = getGoogleConfig(req)
@@ -113,6 +149,10 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
   if (!googleUser.email_verified) return res.status(403).json({ error: 'Google email is not verified' })
 
   const existingUser = await prisma.user.findUnique({ where: { email: googleUser.email } })
+  if (existingUser?.role === Role.ADMIN) {
+    return res.status(403).json({ error: 'Admin accounts must use username and password' })
+  }
+
   const user = existingUser
     ? await prisma.user.update({
         where: { id: existingUser.id },
