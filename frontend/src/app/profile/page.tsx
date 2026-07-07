@@ -1,9 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import axios from "axios"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import SiteNavbar from "@/components/site-navbar"
+import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 import { useProUpgrade } from "@/lib/pro-upgrade-provider"
 import styles from "./profile.module.css"
 
@@ -19,8 +22,6 @@ const genders = ["Nam", "Nữ", "Khác"]
 const countries = ["Việt Nam", "Trung Quốc", "Đài Loan", "Khác"]
 
 type ProfileData = {
-  fullName: string
-  email: string
   phone: string
   dob: string
   gender: string
@@ -31,8 +32,6 @@ type ProfileData = {
 }
 
 const profileMock: ProfileData = {
-  fullName: "Dương Hải",
-  email: "duonghai@example.com",
   phone: "",
   dob: "",
   gender: "Nam",
@@ -43,11 +42,23 @@ const profileMock: ProfileData = {
 }
 
 export default function ProfilePage() {
-  const { user } = useProUpgrade()
+  const { user: authUser, refresh } = useAuth()
+  const { user: upgradeUser } = useProUpgrade()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [data, setData] = useState<ProfileData>(profileMock)
+  const [usernameDraft, setUsernameDraft] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [removeAvatar, setRemoveAvatar] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    }
+  }, [avatarPreview])
 
   useEffect(() => {
     if (toast) {
@@ -60,14 +71,75 @@ export default function ProfilePage() {
     setData((prev) => ({ ...prev, [field]: value }))
   }, [])
 
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setToast("Ảnh phải có định dạng JPG, PNG hoặc WebP.")
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setToast("Ảnh phải có dung lượng không quá 5MB.")
+      return
+    }
+
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+    setRemoveAvatar(false)
+  }
+
+  const handleRemoveAvatar = () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    setAvatarFile(null)
+    setAvatarPreview(null)
+    setRemoveAvatar(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!data.fullName.trim()) return
+    if (!authUser) {
+      router.replace("/login")
+      return
+    }
+    const username = (usernameDraft ?? authUser.username).trim()
+    if (!username) return
+
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 800))
-    setSaving(false)
-    setToast("Cập nhật hồ sơ thành công.")
+    try {
+      const formData = new FormData()
+      formData.append("username", username)
+      if (avatarFile) formData.append("avatar", avatarFile)
+      else if (removeAvatar) formData.append("avatar", "")
+
+      await api.put("/auth/me", formData)
+      await refresh()
+      setUsernameDraft(null)
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      setRemoveAvatar(false)
+      setToast("Cập nhật hồ sơ thành công.")
+    } catch (error) {
+      if (axios.isAxiosError<{ error?: string }>(error)) {
+        if (error.response?.status === 401) router.replace("/login")
+        setToast(error.response?.data.error || "Không thể cập nhật hồ sơ.")
+      } else {
+        setToast("Không thể cập nhật hồ sơ.")
+      }
+    } finally {
+      setSaving(false)
+    }
   }
+
+  const avatarUrl = removeAvatar ? null : avatarPreview || authUser?.avatarUrl
+  const initials = (usernameDraft ?? authUser?.username ?? "U")
+    .split(" ")
+    .map((part) => part[0])
+    .slice(-2)
+    .join("")
+    .toUpperCase()
 
   return (
     <main className={styles.page}>
@@ -83,12 +155,25 @@ export default function ProfilePage() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Ảnh đại diện</h2>
             <div className={styles.avatarRow}>
-              <span className={styles.avatar}>
-                {user.name.split(" ").map((p) => p[0]).slice(-2).join("").toUpperCase()}
+              <span
+                className={styles.avatar}
+                style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
+              >
+                {!avatarUrl && initials}
               </span>
-              <div>
-                <button type="button" className={styles.secondaryBtn}>Thay đổi ảnh</button>
-                <span className={styles.helper}>PNG / JPG<br />Maximum 2MB</span>
+              <div className={styles.avatarControls}>
+                <input
+                  ref={fileInputRef}
+                  className={styles.fileInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                />
+                <div className={styles.avatarButtons}>
+                  <button type="button" className={styles.secondaryBtn} onClick={() => fileInputRef.current?.click()}>Thay đổi ảnh</button>
+                  {avatarUrl && <button type="button" className={styles.removeAvatarBtn} onClick={handleRemoveAvatar}>Xóa ảnh</button>}
+                </div>
+                <span className={styles.helper}>PNG / JPG / WebP<br />Tối đa 5MB</span>
               </div>
             </div>
           </section>
@@ -101,11 +186,11 @@ export default function ProfilePage() {
             <div className={styles.grid}>
               <label className={styles.field}>
                 <span>Họ và tên</span>
-                <input type="text" value={data.fullName} onChange={(e) => update("fullName", e.target.value)} required />
+                <input type="text" value={usernameDraft ?? authUser?.username ?? ""} onChange={(e) => setUsernameDraft(e.target.value)} required />
               </label>
               <label className={styles.field}>
                 <span>Email</span>
-                <input type="email" value={data.email} disabled />
+                <input type="email" value={authUser?.email || ""} disabled />
                 <small>Không thể thay đổi email khi đăng nhập bằng Google</small>
               </label>
               <label className={styles.field}>
@@ -163,7 +248,7 @@ export default function ProfilePage() {
         <section className={styles.membershipCard}>
           <div className={styles.membershipInfo}>
             <h2>Gói thành viên</h2>
-            {user.isPro ? (
+            {upgradeUser.isPro ? (
               <>
                 <p className={styles.planName}>Pro</p>
                 <p className={styles.expiry}>Hết hạn: 20/12/2027</p>
@@ -176,13 +261,13 @@ export default function ProfilePage() {
             )}
           </div>
           <Link href="/pricing" className={styles.upgradeBtn}>
-            {user.isPro ? "Gia hạn" : "Nâng cấp lên Pro"}
+            {upgradeUser.isPro ? "Gia hạn" : "Nâng cấp lên Pro"}
           </Link>
         </section>
 
         {/* Actions */}
         <div className={styles.actions}>
-          <button type="submit" className={styles.primaryBtn} disabled={saving} form="profile-form" onClick={handleSubmit}>
+          <button type="submit" className={styles.primaryBtn} disabled={saving} form="profile-form">
             {saving ? <><span className={styles.spinner} /> Đang lưu...</> : "Lưu thay đổi"}
           </button>
           <button type="button" className={styles.secondaryBtn} onClick={() => router.back()}>Hủy</button>

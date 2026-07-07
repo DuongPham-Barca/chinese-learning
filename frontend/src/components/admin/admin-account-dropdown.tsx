@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-provider"
 import { motion, AnimatePresence } from "framer-motion"
 import styles from "./admin-account-dropdown.module.css"
 
@@ -74,6 +75,7 @@ function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm
 
 export default function AdminAccountDropdown() {
   const router = useRouter()
+  const { logout: logoutAuth } = useAuth()
   const [open, setOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -99,10 +101,15 @@ export default function AdminAccountDropdown() {
     }
   }, [open, close])
 
-  function logout() {
+  async function logout() {
     setConfirmOpen(false)
     close()
-    router.push("/login")
+    try {
+      await logoutAuth()
+    } finally {
+      router.replace("/admin/login")
+      router.refresh()
+    }
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { API_BASE_URL } from "@/lib/api"
 import styles from "./login.module.css"
 
 function GoogleIcon() {
@@ -16,8 +16,6 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const router = useRouter()
-
   return (
     <main className={styles.page}>
       <section className={styles.hero} aria-label="Giới thiệu ChineseDict">
@@ -66,7 +64,11 @@ export default function LoginPage() {
               <p>Đăng nhập bằng tài khoản Google để tiếp tục hành trình học tiếng Trung.</p>
             </header>
 
-            <button type="button" className={styles.googleButton} onClick={() => router.push("/")}>
+            <button
+              type="button"
+              className={styles.googleButton}
+              onClick={() => window.location.assign(`${API_BASE_URL}/auth/google`)}
+            >
               <GoogleIcon />
               <span>Tiếp tục với Google</span>
             </button>

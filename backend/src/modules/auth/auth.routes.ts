@@ -1,18 +1,27 @@
 import { createHash, randomBytes } from 'crypto'
-import { Role } from '@prisma/client'
+import { Prisma, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { Router } from 'express'
+import { Router, type RequestHandler } from 'express'
+import multer from 'multer'
 import { z } from 'zod'
 import {
-  clearAuthCookie,
-  createAuthToken,
+  clearAuthCookies,
   createOAuthSecret,
   getUserId,
   readCookies,
   secretsMatch,
-  setAuthCookie,
 } from '../../lib/auth'
+import {
+  issueAuthSession,
+  revokeRefreshSession,
+  rotateAuthSession,
+} from '../../lib/auth-session'
 import { asyncHandler } from '../../lib/async-handler'
+import {
+  AvatarUploadError,
+  isAvatarContentType,
+  uploadAvatar,
+} from '../../lib/cloudflare-r2'
 import { prisma } from '../../lib/prisma'
 
 const router = Router()
@@ -25,6 +34,82 @@ const adminLoginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
 })
+
+const usernameSchema = z.string().trim().min(1).max(50)
+const maxAvatarSize = 5 * 1024 * 1024
+const publicUserSelect = {
+  id: true,
+  email: true,
+  username: true,
+  avatarUrl: true,
+  role: true,
+  subscriptionUntil: true,
+  isPremium: true,
+} satisfies Prisma.UserSelect
+
+type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>
+
+function serializePublicUser(user: PublicUser) {
+  const { avatarUrl, ...rest } = user
+  return { ...rest, avatar: avatarUrl }
+}
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: maxAvatarSize,
+    files: 1,
+    fields: 2,
+  },
+  fileFilter: (_req, file, callback) => {
+    if (!isAvatarContentType(file.mimetype)) {
+      callback(new AvatarUploadError('Avatar must be a JPG, PNG, or WebP image'))
+      return
+    }
+
+    callback(null, true)
+  },
+})
+
+const requireCurrentUser: RequestHandler = (req, res, next) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  res.locals.userId = userId
+  next()
+}
+
+const parseAvatarUpload: RequestHandler = (req, res, next) => {
+  if (!req.is('multipart/form-data')) {
+    next()
+    return
+  }
+
+  avatarUpload.single('avatar')(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError) {
+      const message = error.code === 'LIMIT_FILE_SIZE'
+        ? 'Avatar must be 5MB or smaller'
+        : 'Invalid avatar upload'
+      res.status(400).json({ error: message })
+      return
+    }
+
+    if (error instanceof AvatarUploadError) {
+      res.status(400).json({ error: error.message })
+      return
+    }
+
+    if (error) {
+      next(error)
+      return
+    }
+
+    next()
+  })
+}
 
 const googleUserSchema = z.object({
   email: z.string().email(),
@@ -79,7 +164,7 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password' })
   }
 
-  setAuthCookie(res, createAuthToken({ userId: user.id, email: user.email }))
+  await issueAuthSession(res, user)
   res.json({
     user: {
       id: user.id,
@@ -87,6 +172,15 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
       role: user.role,
     },
   })
+}))
+
+router.post('/refresh', asyncHandler(async (req, res) => {
+  if (!(await rotateAuthSession(req, res))) {
+    clearAuthCookies(res)
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  res.status(204).end()
 }))
 
 router.get('/google', (req, res) => {
@@ -156,7 +250,7 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
   const user = existingUser
     ? await prisma.user.update({
         where: { id: existingUser.id },
-        data: { avatarUrl: googleUser.picture || existingUser.avatarUrl },
+        data: { avatarUrl: existingUser.avatarUrl || googleUser.picture || null },
       })
     : await prisma.user.create({
         data: {
@@ -166,7 +260,7 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
         },
       })
 
-  setAuthCookie(res, createAuthToken({ userId: user.id, email: user.email }))
+  await issueAuthSession(res, user)
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`)
 }))
 
@@ -183,6 +277,8 @@ router.get('/me', asyncHandler(async (req, res) => {
       avatarUrl: true,
       expPoints: true,
       isPremium: true,
+      role: true,
+      subscriptionUntil: true,
     },
   })
 
@@ -190,9 +286,92 @@ router.get('/me', asyncHandler(async (req, res) => {
   res.json({ user })
 }))
 
-router.post('/logout', (_req, res) => {
-  clearAuthCookie(res)
+router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req, res) => {
+  const userId = res.locals.userId as string
+  const body = req.body as Record<string, unknown> | undefined
+  const hasUsername = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'username'))
+  const hasAvatar = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'avatar'))
+  let username: string | undefined
+
+  if (hasUsername) {
+    const parsedUsername = usernameSchema.safeParse(body?.username)
+    if (!parsedUsername.success) {
+      return res.status(400).json({ error: 'Username must be between 1 and 50 characters' })
+    }
+    username = parsedUsername.data
+
+    const usernameOwner = await prisma.user.findUnique({ where: { username } })
+    if (usernameOwner && usernameOwner.id !== userId) {
+      return res.status(409).json({ error: 'Username is already in use' })
+    }
+  }
+
+  const removeAvatar = hasAvatar && (body?.avatar === null || body?.avatar === '')
+  if (hasAvatar && !removeAvatar && !req.file) {
+    return res.status(400).json({ error: 'Avatar must be uploaded as an image file' })
+  }
+
+  if (!hasUsername && !req.file && !removeAvatar) {
+    return res.status(400).json({ error: 'No valid profile fields provided' })
+  }
+
+  const data: Prisma.UserUpdateInput = {}
+  if (username !== undefined) data.username = username
+
+  if (req.file) {
+    if (!isAvatarContentType(req.file.mimetype)) {
+      return res.status(400).json({ error: 'Avatar must be a JPG, PNG, or WebP image' })
+    }
+
+    try {
+      data.avatarUrl = await uploadAvatar(userId, req.file.buffer, req.file.mimetype)
+    } catch (error) {
+      if (error instanceof AvatarUploadError) {
+        return res.status(400).json({ error: error.message })
+      }
+      throw error
+    }
+  } else if (removeAvatar) {
+    data.avatarUrl = null
+  }
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: publicUserSelect,
+    })
+    res.json(serializePublicUser(user))
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return res.status(409).json({ error: 'Username is already in use' })
+      }
+      if (error.code === 'P2025') {
+        return res.status(401).json({ error: 'Unauthorized' })
+      }
+    }
+    throw error
+  }
+}))
+
+router.delete('/me', requireCurrentUser, asyncHandler(async (_req, res) => {
+  const result = await prisma.user.deleteMany({
+    where: { id: res.locals.userId as string },
+  })
+
+  if (result.count === 0) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  clearAuthCookies(res)
+  res.json({ success: true })
+}))
+
+router.post('/logout', asyncHandler(async (req, res) => {
+  await revokeRefreshSession(req)
+  clearAuthCookies(res)
   res.status(204).end()
-})
+}))
 
 export default router

@@ -1,8 +1,10 @@
-import { randomBytes, timingSafeEqual } from 'crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'crypto'
 import type { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 
 const AUTH_COOKIE = 'auth_token'
+const REFRESH_COOKIE = 'refresh_token'
+export const REFRESH_TOKEN_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000
 
 export interface AuthTokenPayload {
   userId: string
@@ -16,7 +18,15 @@ export function getJwtSecret(): string {
 }
 
 export function createAuthToken(payload: AuthTokenPayload): string {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '15m' })
+}
+
+export function createRefreshToken(): string {
+  return randomBytes(48).toString('base64url')
+}
+
+export function hashRefreshToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
 }
 
 export function readCookies(req: Request): Record<string, string> {
@@ -40,8 +50,10 @@ export function getUserId(req: Request): string | null {
   if (!token) return null
 
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AuthTokenPayload
-    return payload.userId
+    const payload = jwt.verify(token, getJwtSecret())
+    return typeof payload !== 'string' && typeof payload.userId === 'string'
+      ? payload.userId
+      : null
   } catch {
     return null
   }
@@ -57,12 +69,30 @@ function cookieSecurityAttributes(): string {
 }
 
 export function setAuthCookie(res: Response, token: string): void {
-  const maxAge = 7 * 24 * 60 * 60
+  const maxAge = 15 * 60
   res.append('Set-Cookie', `${AUTH_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}${cookieSecurityAttributes()}`)
+}
+
+export function getRefreshToken(req: Request): string | null {
+  return readCookies(req)[REFRESH_COOKIE] || null
+}
+
+export function setRefreshCookie(res: Response, token: string): void {
+  const maxAge = Math.floor(REFRESH_TOKEN_LIFETIME_MS / 1000)
+  res.append('Set-Cookie', `${REFRESH_COOKIE}=${encodeURIComponent(token)}; Path=/api/auth; Max-Age=${maxAge}${cookieSecurityAttributes()}`)
 }
 
 export function clearAuthCookie(res: Response): void {
   res.append('Set-Cookie', `${AUTH_COOKIE}=; Path=/; Max-Age=0${cookieSecurityAttributes()}`)
+}
+
+export function clearRefreshCookie(res: Response): void {
+  res.append('Set-Cookie', `${REFRESH_COOKIE}=; Path=/api/auth; Max-Age=0${cookieSecurityAttributes()}`)
+}
+
+export function clearAuthCookies(res: Response): void {
+  clearAuthCookie(res)
+  clearRefreshCookie(res)
 }
 
 export function createOAuthSecret(): string {

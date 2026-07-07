@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, type CSSProperties } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-provider"
 import { useProUpgrade } from "@/lib/pro-upgrade-provider"
 import styles from "./account-dropdown.module.css"
 
@@ -80,14 +81,20 @@ function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm
 }
 
 export default function AccountDropdown() {
-  const { user } = useProUpgrade()
+  const { user: upgradeUser } = useProUpgrade()
+  const { user: authUser, logout: logoutAuth } = useAuth()
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
-  const initials = user.name.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase()
+  const displayName = authUser?.username || upgradeUser.name
+  const displayEmail = authUser?.email || upgradeUser.email
+  const initials = displayName.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase()
+  const avatarStyle: CSSProperties | undefined = authUser?.avatarUrl
+    ? { backgroundImage: `url(${authUser.avatarUrl})`, backgroundPosition: "center", backgroundSize: "cover" }
+    : undefined
 
   const close = useCallback(() => setOpen(false), [])
 
@@ -109,27 +116,32 @@ export default function AccountDropdown() {
     }
   }, [open, close])
 
-  function logout() {
+  async function logout() {
     setConfirmOpen(false)
     close()
-    router.push("/login")
+    try {
+      await logoutAuth()
+    } finally {
+      router.replace("/login")
+      router.refresh()
+    }
   }
 
   return (
     <>
       <button type="button" ref={triggerRef} className={styles.trigger} onClick={() => setOpen((v) => !v)} aria-label="Menu tài khoản" aria-expanded={open}>
-        <span className={styles.avatar}><i>{initials}</i></span>
-        <span className={styles.name}>{user.name}</span>
+        <span className={styles.avatar} style={avatarStyle}><i>{authUser?.avatarUrl ? "" : initials}</i></span>
+        <span className={styles.name}>{displayName}</span>
         <span className={`${styles.chevron} ${open ? styles.chevronUp : ""}`}><MenuIcon name="chevron" /></span>
       </button>
       {open && (
         <div ref={dropdownRef} className={styles.dropdown}>
           <div className={styles.header}>
-            <span className={styles.headerAvatar}>{initials}</span>
+            <span className={styles.headerAvatar} style={avatarStyle}>{authUser?.avatarUrl ? "" : initials}</span>
             <div>
-              <strong>{user.name}</strong>
-              <span>{user.email}</span>
-              <span className={`${styles.badge} ${user.isPro ? styles.proBadge : styles.freeBadge}`}>{user.isPro ? "Pro Member" : "Free Member"}</span>
+              <strong>{displayName}</strong>
+              <span>{displayEmail}</span>
+              <span className={`${styles.badge} ${upgradeUser.isPro ? styles.proBadge : styles.freeBadge}`}>{upgradeUser.isPro ? "Pro Member" : "Free Member"}</span>
             </div>
           </div>
           <div className={styles.menu}>
