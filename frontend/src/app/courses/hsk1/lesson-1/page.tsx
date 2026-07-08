@@ -1,5 +1,10 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import api from "@/lib/api"
+import type { LessonDetail } from "@/types/api"
 import styles from "./lesson.module.css"
 
 type IconName = "arrow" | "check" | "circle" | "book" | "clock" | "warning"
@@ -16,62 +21,63 @@ function Icon({ name }: { name: IconName }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
-function LessonHeader() {
+function LessonHeader({ lesson }: { lesson: LessonDetail }) {
   return (
     <nav className={styles.lessonHeader}>
       <div className={styles.headerInner}>
         <Link href="/courses/hsk1" className={styles.back} aria-label="Quay lại HSK1"><Icon name="arrow" /></Link>
-        <div className={styles.lessonTitle}><strong>Bài 1: Chào hỏi cơ bản</strong><span>HSK1 • 10 từ vựng • 5 câu luyện tập</span></div>
-        <div className={styles.progressCircle}><span>40%</span></div>
+        <div className={styles.lessonTitle}><strong>{lesson.title}</strong><span>HSK1 • {lesson.vocabulary.length} từ vựng • {lesson.sentences.length} câu luyện tập</span></div>
+        <div className={styles.progressCircle}><span>0%</span></div>
       </div>
     </nav>
   )
 }
 
 function LessonProgressCard() {
-  const steps: Array<[string, boolean]> = [["Flashcard", true], ["Dictation", false], ["Trắc nghiệm", false]]
+  const steps: Array<[string, boolean]> = [["Flashcard", false], ["Dictation", false], ["Trắc nghiệm", false]]
   return (
     <section className={styles.progressCard}>
-      <div className={styles.progressHeading}><h1>Tiến độ bài học</h1><div><strong>40%</strong><span>Đã hoàn thành</span></div></div>
+      <div className={styles.progressHeading}><h1>Tiến độ bài học</h1><div><strong>0%</strong><span>Chưa bắt đầu</span></div></div>
       <div className={styles.progressTrack}><span /></div>
       <div className={styles.stepNavigation}>{steps.map(([label, active]) => <div className={active ? styles.activeStep : ""} key={label}><i><Icon name={active ? "check" : "circle"} /></i><span>{label}</span></div>)}</div>
     </section>
   )
 }
 
-function LearningInfoCard() {
+function LearningInfoCard({ lesson }: { lesson: LessonDetail }) {
   return (
     <section className={styles.infoCard}>
       <i><Icon name="book" /></i>
-      <p>Bạn sẽ học: <strong>10 từ vựng</strong>, <strong>5 câu hội thoại</strong>, <strong>2 mẫu ngữ pháp</strong>. <span>Thời gian ước tính: <b>20 phút</b>.</span></p>
+      <p>Bạn sẽ học: <strong>{lesson.vocabulary.length} từ vựng</strong>, <strong>{lesson.sentences.length} câu luyện tập</strong>. <span>Thời gian ước tính: <b>~{lesson.vocabulary.length + lesson.sentences.length} phút</b>.</span></p>
     </section>
   )
 }
 
-type ModuleCardProps = {
-  type: "flashcard" | "pronunciation" | "dictation"
-  image: string
-  title: string
-  badge: string
-  description: string
-  duration: string
-  href: string
-}
-
-function LearningModuleCard({ type, image, title, badge, description, duration, href }: ModuleCardProps) {
+function LearningModuleCard({ type, lesson, level, lessonOrder }: { type: "flashcard" | "pronunciation" | "dictation"; lesson: LessonDetail; level: string; lessonOrder: number }) {
   const isFlashcard = type === "flashcard"
   const isPronunciation = type === "pronunciation"
+  const href = type === "pronunciation"
+    ? `/lessons/${level}/${lesson.id}/pronunciation`
+    : `/courses/${level}/lesson-${lessonOrder}/${type}`
+  const labels = {
+    flashcard: { title: "Flashcard", badge: "Mới", description: `Học ${lesson.vocabulary.length} từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh.`, duration: `${Math.max(5, lesson.vocabulary.length)} phút` },
+    pronunciation: { title: "Luyện phát âm", badge: "Mới", description: "Đọc câu tiếng Trung và nhận điểm phát âm theo AI.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
+    dictation: { title: "Dictation & Sắp xếp", badge: "Mới", description: "Luyện nghe và ghép câu hoàn chỉnh từ các đoạn hội thoại thực tế.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
+  }
+  const { title, badge, description, duration } = labels[type]
+  const imgSrc = type === "flashcard" ? "/lesson-flashcard.png" : "/lesson-dictation.png"
+
   return (
     <article className={styles.moduleCard}>
-      <div className={styles.moduleImage}><Image src={image} fill sizes="260px" alt={`Minh họa ${title}`} /></div>
-      <div className={styles.moduleHeading}><h2>{title}</h2><span className={isFlashcard ? styles.completeBadge : styles.pendingBadge}>{badge}</span></div>
+      <div className={styles.moduleImage}><Image src={imgSrc} fill sizes="260px" alt={`Minh họa ${title}`} /></div>
+      <div className={styles.moduleHeading}><h2>{title}</h2><span className={styles.pendingBadge}>{badge}</span></div>
       <p className={styles.moduleDescription}>{description}</p>
       {isFlashcard ? (
-        <ul className={styles.checklist}><li><Icon name="check" />Chào hỏi, cảm ơn, tạm biệt</li><li><Icon name="check" />Kèm âm thanh bản xứ</li></ul>
+        <ul className={styles.checklist}><li><Icon name="check" />{lesson.vocabulary.slice(0, 3).map(v => v.hanzi).join(", ")}{lesson.vocabulary.length > 3 ? "..." : ""}</li><li><Icon name="check" />Kèm âm thanh bản xứ</li></ul>
       ) : (
         <div className={styles.warning}><Icon name="warning" /><span>{isPronunciation ? "Nên hoàn thành Flashcard trước khi luyện phát âm." : "Nên hoàn thành phần Flashcard để có kết quả luyện tập tốt nhất."}</span></div>
       )}
-      <footer className={styles.moduleFooter}><span><Icon name="clock" />{duration}</span><Link className={isFlashcard || isPronunciation ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Ôn tập lại" : "Bắt đầu luyện"}</Link></footer>
+      <footer className={styles.moduleFooter}><span><Icon name="clock" />{duration}</span><Link className={isFlashcard || isPronunciation ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Bắt đầu học" : "Bắt đầu luyện"}</Link></footer>
     </article>
   )
 }
@@ -79,22 +85,37 @@ function LearningModuleCard({ type, image, title, badge, description, duration, 
 function StickyContinueBar() {
   return (
     <aside className={styles.stickyBar}>
-      <div className={styles.stickyInner}><div><span>Trạng thái hiện tại</span><strong>Chưa bắt đầu: Dictation &amp; Sắp xếp</strong></div><Link href="/courses/hsk1/lesson-1/dictation">Tiếp tục học <b>→</b></Link></div>
+      <div className={styles.stickyInner}><div><span>Trạng thái hiện tại</span><strong>Chưa bắt đầu</strong></div><Link href="/courses/hsk1/lesson-1/dictation">Bắt đầu luyện tập <b>→</b></Link></div>
     </aside>
   )
 }
 
 export default function LessonOverviewPage() {
+  const [lesson, setLesson] = useState<LessonDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get("/lessons?level=HSK1").then((res) => {
+      const found = res.data.lessons.find((l: { lessonOrder: number }) => l.lessonOrder === 1)
+      if (found) {
+        api.get(`/lessons/${found.id}`).then((r) => setLesson(r.data.lesson))
+      }
+    }).finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <main className={styles.page}><div className={styles.container}><p>Đang tải...</p></div></main>
+  if (!lesson) return <main className={styles.page}><div className={styles.container}><p>Không tìm thấy bài học.</p></div></main>
+
   return (
     <main className={styles.page}>
-      <LessonHeader />
+      <LessonHeader lesson={lesson} />
       <div className={styles.container}>
         <LessonProgressCard />
-        <LearningInfoCard />
+        <LearningInfoCard lesson={lesson} />
         <section className={styles.contentGrid}>
-          <LearningModuleCard type="flashcard" image="/lesson-flashcard.png" title="Flashcard" badge="Đã hoàn thành" description="Học 10 từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh." duration="8 phút" href="/courses/hsk1/lesson-1/flashcards" />
-          <LearningModuleCard type="pronunciation" image="/lesson-dictation.png" title="Luyện phát âm" badge="Mới" description="Đọc câu tiếng Trung và nhận điểm phát âm theo AI." duration="10 phút" href="/lessons/hsk1/1/pronunciation" />
-          <LearningModuleCard type="dictation" image="/lesson-dictation.png" title="Dictation & Sắp xếp" badge="Chưa bắt đầu" description="Luyện nghe và ghép câu hoàn chỉnh từ 5 đoạn hội thoại thực tế." duration="12 phút" href="/courses/hsk1/lesson-1/dictation" />
+          <LearningModuleCard type="flashcard" lesson={lesson} level="hsk1" lessonOrder={1} />
+          <LearningModuleCard type="pronunciation" lesson={lesson} level="hsk1" lessonOrder={1} />
+          <LearningModuleCard type="dictation" lesson={lesson} level="hsk1" lessonOrder={1} />
         </section>
       </div>
       <StickyContinueBar />

@@ -2,6 +2,8 @@
 
 import { use, useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import api from "@/lib/api"
+import type { Sentence as APISentence } from "@/types/api"
 import styles from "./pronunciation.module.css"
 
 /* ---------- types ---------- */
@@ -34,14 +36,7 @@ interface Sentence {
   meaning: string
 }
 
-/* ---------- mock data ---------- */
-const SENTENCES: Sentence[] = [
-  { chinese: "我是学生。", pinyin: "wǒ shì xué shēng", meaning: "Tôi là sinh viên." },
-  { chinese: "你叫什么名字？", pinyin: "nǐ jiào shén me míng zì", meaning: "Bạn tên là gì?" },
-  { chinese: "我很喜欢中文。", pinyin: "wǒ hěn xǐ huān zhōng wén", meaning: "Tôi rất thích tiếng Trung." },
-  { chinese: "今天天气很好。", pinyin: "jīn tiān tiān qì hěn hǎo", meaning: "Hôm nay thời tiết rất đẹp." },
-  { chinese: "我要去中国。", pinyin: "wǒ yào qù zhōng guó", meaning: "Tôi muốn đi Trung Quốc." },
-]
+const EMPTY_SENTENCE: Sentence = { chinese: "", pinyin: "", meaning: "" }
 
 function mockCheckPronunciation(sentence: Sentence): Promise<PronResult> {
   return new Promise((r) =>
@@ -175,14 +170,38 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
   const [selectedWord, setSelectedWord] = useState<WordResult | null>(null)
   const [expEarned, setExpEarned] = useState(0)
   const [completedResults, setCompletedResults] = useState<PronResult[]>([])
+  const [sentences, setSentences] = useState<Sentence[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const playbackRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null)
   const hasSpokenRef = useRef(false)
 
-  const sentence = SENTENCES[currentQ]
-  const totalQ = SENTENCES.length
+  useEffect(() => {
+    let active = true
+    api.get(`/sentences/${id}`)
+      .then((res) => {
+        if (!active) return
+        const data: Sentence[] = (res.data.sentences as APISentence[]).map((s) => ({
+          chinese: s.sentenceZh,
+          pinyin: "",
+          meaning: s.sentenceVi,
+        }))
+        setSentences(data)
+      })
+      .catch(() => {
+        if (active) setLoadError("Không thể tải dữ liệu luyện phát âm.")
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
+  }, [id])
+
+  const sentence = sentences[currentQ] ?? EMPTY_SENTENCE
+  const totalQ = sentences.length
   const progressPct = ((currentQ + (recState === "result" ? 1 : 0)) / totalQ) * 100
 
   /* ---- cleanup ---- */
@@ -314,14 +333,13 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
     } else {
       setCurrentQ((q) => q + 1)
     }
-  }, [currentQ, result])
+  }, [currentQ, result, totalQ])
 
   /* ---- playback cleanup on unmount ---- */
   useEffect(() => {
     return () => {
       if (playbackRef.current) clearInterval(playbackRef.current)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* ---- render helpers ---- */
@@ -695,6 +713,9 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
       </div>
     )
   }
+
+  if (loading) return <main className={styles.page}><div className={styles.container}><p>Đang tải dữ liệu luyện phát âm...</p></div></main>
+  if (loadError || sentences.length === 0) return <main className={styles.page}><div className={styles.container}><p>{loadError || "Bài học chưa có câu luyện tập nào."}</p><button type="button" onClick={() => router.push(`/lessons/${level}/${id}`)}>Quay lại bài học</button></div></main>
 
   return (
     <main className={styles.page}>

@@ -2,23 +2,12 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+import api from "@/lib/api"
+import type { Vocabulary } from "@/types/api"
 import styles from "./flashcards.module.css"
 
 type IconName = "close" | "more" | "volume" | "rotate" | "check" | "clock"
 type Flashcard = { hanzi: string; pinyin: string; meaning: string; example: string }
-
-const flashcards: Flashcard[] = [
-  { hanzi: "谢谢", pinyin: "xiè xie", meaning: "Cảm ơn", example: "谢谢你的帮助！" },
-  { hanzi: "再见", pinyin: "zài jiàn", meaning: "Tạm biệt", example: "再见，明天见！" },
-  { hanzi: "你好", pinyin: "nǐ hǎo", meaning: "Xin chào", example: "你好，很高兴认识你。" },
-  { hanzi: "请", pinyin: "qǐng", meaning: "Xin mời", example: "请坐！" },
-  { hanzi: "对不起", pinyin: "duì bu qǐ", meaning: "Xin lỗi", example: "对不起，我来晚了。" },
-  { hanzi: "没关系", pinyin: "méi guān xi", meaning: "Không sao", example: "没关系，别担心。" },
-  { hanzi: "是", pinyin: "shì", meaning: "Là, phải", example: "我是学生。" },
-  { hanzi: "不", pinyin: "bù", meaning: "Không", example: "我不是老师。" },
-  { hanzi: "我", pinyin: "wǒ", meaning: "Tôi", example: "我叫明。" },
-  { hanzi: "你", pinyin: "nǐ", meaning: "Bạn", example: "你好吗？" },
-]
 
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -69,28 +58,47 @@ function FlashcardStats({ known, review, remaining }: { known: number; review: n
 }
 
 export default function FlashcardStudyPage() {
-  const [current, setCurrent] = useState(2)
-  const [known, setKnown] = useState(2)
-  const [review, setReview] = useState(1)
+  const [vocab, setVocab] = useState<Vocabulary[]>([])
+  const [loading, setLoading] = useState(true)
+  const [current, setCurrent] = useState(0)
+  const [known, setKnown] = useState(0)
+  const [review, setReview] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const card = flashcards[current]
-  const progress = Math.round(((current + 1) / flashcards.length) * 100)
+
+  useEffect(() => {
+    api.get("/lessons?level=HSK1").then((res) => {
+      const found = res.data.lessons.find((l: { lessonOrder: number }) => l.lessonOrder === 1)
+      if (found) {
+        api.get(`/vocabulary/${found.id}`).then((r) => setVocab(r.data.vocabulary))
+      }
+    }).finally(() => setLoading(false))
+  }, [])
+
+  const flashcards: Flashcard[] = vocab.map((v) => ({
+    hanzi: v.hanzi,
+    pinyin: v.pinyin,
+    meaning: v.meaningVi,
+    example: v.hanzi + "。",
+  }))
+
+  const card = flashcards[current] ?? flashcards[0]
+  const progress = flashcards.length > 0 ? Math.round(((current + 1) / flashcards.length) * 100) : 0
   const remaining = Math.max(flashcards.length - known - review, 0)
 
   const moveNext = useCallback(() => {
     setCurrent((value) => Math.min(value + 1, flashcards.length - 1))
     setFlipped(false)
-  }, [])
+  }, [flashcards.length])
 
   const markKnown = useCallback(() => {
     setKnown((value) => Math.min(value + 1, flashcards.length))
     moveNext()
-  }, [moveNext])
+  }, [moveNext, flashcards.length])
 
   const markReview = useCallback(() => {
     setReview((value) => Math.min(value + 1, flashcards.length))
     moveNext()
-  }, [moveNext])
+  }, [moveNext, flashcards.length])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -111,6 +119,22 @@ export default function FlashcardStudyPage() {
     window.speechSynthesis.speak(utterance)
   }
 
+  if (loading) return <main className={styles.page}><div className={styles.studyShell}><div style={{ padding: "2rem", textAlign: "center", color: "#666" }}>Đang tải...</div></div></main>
+  if (flashcards.length === 0) return <main className={styles.page}><div className={styles.studyShell}><div style={{ padding: "2rem", textAlign: "center", color: "#666" }}>Chưa có từ vựng nào.</div></div></main>
+  if (current >= flashcards.length) {
+    return (
+      <main className={styles.page}>
+        <section className={styles.studyShell}>
+          <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC] p-6">
+            <h2 className="text-2xl font-bold mb-4">Hoàn thành! 🎉</h2>
+            <p className="mb-4">Đã thuộc: {known} | Cần ôn: {review}</p>
+            <Link href="/courses/hsk1/lesson-1" className="text-[#3B82F6] hover:underline">← Quay lại bài học</Link>
+          </div>
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className={styles.page}>
       <section className={styles.studyShell}>
@@ -121,7 +145,7 @@ export default function FlashcardStudyPage() {
           <div className={styles.bottomArea}>
             <FlashcardActions onReview={markReview} onKnown={markKnown} />
             <FlashcardStats known={known} review={review} remaining={remaining} />
-            <footer className={styles.footerInfo}><span>▣ Độ chính xác: 67%</span><span><Icon name="clock" />Thời gian còn lại: 4 phút</span></footer>
+            <footer className={styles.footerInfo}><span>▣ Độ chính xác: {flashcards.length > 0 ? Math.round((known / (known + review || 1)) * 100) : 0}%</span><span><Icon name="clock" />Thời gian còn lại: {Math.max(1, flashcards.length - current)} phút</span></footer>
           </div>
         </div>
       </section>

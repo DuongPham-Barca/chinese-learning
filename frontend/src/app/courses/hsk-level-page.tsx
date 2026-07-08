@@ -1,16 +1,11 @@
+"use client"
+
 import Link from "next/link"
-import ProUpgradeTrigger from "@/components/pro-upgrade/pro-upgrade-trigger"
+import { useEffect, useState } from "react"
+import api from "@/lib/api"
 import styles from "./hsk1/hsk1.module.css"
 
 type IconName = "arrow" | "bell" | "user" | "book" | "translate" | "fire" | "check" | "play" | "lock" | "layers" | "shield" | "devices"
-type LessonState = "completed" | "current" | "pro" | "locked"
-
-type Lesson = {
-  title: string
-  state: LessonState
-  tag?: string
-  subtitle?: string
-}
 
 export type HSKLevel = "hsk1" | "hsk2" | "hsk3" | "hsk4" | "hsk5" | "hsk6"
 
@@ -20,25 +15,24 @@ type LevelConfig = {
   description: string
   totalLessons: number
   vocabulary: number
-  titles: string[]
 }
 
-const levelConfigs: Record<HSKLevel, LevelConfig> = {
-  hsk1: { name: "HSK1 — Cơ bản", band: "CẤP ĐỘ SƠ CẤP", totalLessons: 10, vocabulary: 120, description: "Làm quen với phát âm, từ vựng và các mẫu câu tiếng Trung cơ bản. Nền tảng vững chắc cho hành trình chinh phục tiếng Trung của bạn.", titles: ["Chào hỏi cơ bản", "Số đếm và tuổi", "Giới thiệu bản thân", "Thời gian và ngày tháng", "Đồ ăn và thức uống", "Mua sắm cơ bản", "Gia đình và phương hướng", "Hoạt động hằng ngày", "Sở thích cá nhân", "Ôn tập HSK1"] },
-  hsk2: { name: "HSK2 — Sơ cấp", band: "CẤP ĐỘ SƠ CẤP", totalLessons: 20, vocabulary: 300, description: "Mở rộng vốn từ và làm chủ các mẫu câu giao tiếp quen thuộc trong cuộc sống hằng ngày.", titles: ["Chào hỏi nâng cao", "Lịch trình hằng ngày", "Hỏi đường và phương tiện", "Thời tiết và mùa", "Ăn uống tại nhà hàng", "Mua sắm và giá cả", "Sức khỏe cơ bản", "Trường học và công việc", "Du lịch ngắn ngày", "Ôn tập HSK2"] },
-  hsk3: { name: "HSK3 — Trung cấp", band: "CẤP ĐỘ TRUNG CẤP", totalLessons: 35, vocabulary: 650, description: "Phát triển khả năng giao tiếp độc lập, đọc hiểu và diễn đạt trong nhiều tình huống thực tế.", titles: ["Kinh nghiệm cá nhân", "Kế hoạch tương lai", "Môi trường công sở", "Du lịch và văn hóa", "Sức khỏe và thể thao", "Cảm xúc và quan điểm", "Các mối quan hệ", "Công nghệ đời sống", "Đọc hiểu trung cấp", "Ôn tập HSK3"] },
-  hsk4: { name: "HSK4 — Trung cao cấp", band: "CẤP ĐỘ TRUNG CAO", totalLessons: 45, vocabulary: 1200, description: "Củng cố ngữ pháp trung cấp, tăng tốc độ đọc hiểu và giao tiếp tự nhiên, mạch lạc hơn.", titles: ["Giao tiếp nơi làm việc", "Giáo dục và phát triển", "Văn hóa và truyền thống", "Kinh tế đời sống", "Môi trường và xã hội", "Sức khỏe tinh thần", "Truyền thông hiện đại", "Phân tích quan điểm", "Đọc hiểu chuyên sâu", "Ôn tập HSK4"] },
-  hsk5: { name: "HSK5 — Cao cấp", band: "CẤP ĐỘ CAO CẤP", totalLessons: 55, vocabulary: 2500, description: "Đọc hiểu văn bản dài, trình bày quan điểm rõ ràng và sử dụng tiếng Trung linh hoạt trong học tập, công việc.", titles: ["Ngôn ngữ báo chí", "Văn học hiện đại", "Kinh doanh và quản lý", "Khoa học và khám phá", "Lịch sử Trung Hoa", "Nghệ thuật và thẩm mỹ", "Tranh luận xã hội", "Thành ngữ thông dụng", "Đọc hiểu học thuật", "Ôn tập HSK5"] },
-  hsk6: { name: "HSK6 — Thành thạo", band: "CẤP ĐỘ THÀNH THẠO", totalLessons: 70, vocabulary: 5000, description: "Hoàn thiện năng lực ngôn ngữ cao cấp, xử lý văn bản phức tạp và diễn đạt chính xác, tự nhiên.", titles: ["Phân tích văn học", "Ngôn ngữ học thuật", "Kinh tế vĩ mô", "Triết học phương Đông", "Ngoại giao và quốc tế", "Khoa học chuyên sâu", "Văn hóa đương đại", "Biên tập và tóm tắt", "Đọc hiểu nâng cao", "Ôn tập HSK6"] },
+const levelMeta: Record<HSKLevel, LevelConfig> = {
+  hsk1: { name: "HSK1 — Cơ bản", band: "CẤP ĐỘ SƠ CẤP", totalLessons: 0, vocabulary: 150, description: "Làm quen với phát âm, từ vựng và các mẫu câu tiếng Trung cơ bản. Nền tảng vững chắc cho hành trình chinh phục tiếng Trung của bạn." },
+  hsk2: { name: "HSK2 — Sơ cấp", band: "CẤP ĐỘ SƠ CẤP", totalLessons: 0, vocabulary: 300, description: "Mở rộng vốn từ và làm chủ các mẫu câu giao tiếp quen thuộc trong cuộc sống hằng ngày." },
+  hsk3: { name: "HSK3 — Trung cấp", band: "CẤP ĐỘ TRUNG CẤP", totalLessons: 0, vocabulary: 650, description: "Phát triển khả năng giao tiếp độc lập, đọc hiểu và diễn đạt trong nhiều tình huống thực tế." },
+  hsk4: { name: "HSK4 — Trung cao cấp", band: "CẤP ĐỘ TRUNG CAO", totalLessons: 0, vocabulary: 1200, description: "Củng cố ngữ pháp trung cấp, tăng tốc độ đọc hiểu và giao tiếp tự nhiên, mạch lạc hơn." },
+  hsk5: { name: "HSK5 — Cao cấp", band: "CẤP ĐỘ CAO CẤP", totalLessons: 0, vocabulary: 2500, description: "Đọc hiểu văn bản dài, trình bày quan điểm rõ ràng và sử dụng tiếng Trung linh hoạt trong học tập, công việc." },
+  hsk6: { name: "HSK6 — Thành thạo", band: "CẤP ĐỘ THÀNH THẠO", totalLessons: 0, vocabulary: 5000, description: "Hoàn thiện năng lực ngôn ngữ cao cấp, xử lý văn bản phức tạp và diễn đạt chính xác, tự nhiên." },
 }
 
-function getLessons(config: LevelConfig): Lesson[] {
-  return config.titles.map((title, index) => {
-    if (index < 2) return { title, state: "completed", tag: "Miễn phí", subtitle: "100% hoàn thành" }
-    if (index === 2) return { title, state: "current", tag: "Miễn phí", subtitle: "Đang học · 40%" }
-    if (index === 3) return { title, state: "pro", tag: "Pro", subtitle: "Mở khóa bằng nâng cấp" }
-    return { title, state: "locked" }
-  })
+type LessonFromAPI = {
+  id: string
+  levelType: string
+  lessonOrder: number
+  title: string
+  isFree: boolean
+  _count: { vocabulary: number; sentences: number }
 }
 
 function Icon({ name }: { name: IconName }) {
@@ -72,62 +66,56 @@ function AppNavbar({ level }: { level: HSKLevel }) {
   )
 }
 
-function ProgressCard({ config }: { config: LevelConfig }) {
-  const progress = Math.round((3 / config.totalLessons) * 100)
-  const stats: Array<[IconName, string, string]> = [["book", "ĐÃ HỌC", "3 bài"], ["translate", "TỪ VỰNG", `${config.vocabulary} từ`], ["fire", "CHUỖI HỌC", "5 ngày"]]
+function ProgressCard({ lessons }: { lessons: LessonFromAPI[] }) {
+  const totalLessons = lessons.length
+  const totalVocab = lessons.reduce((s, l) => s + l._count.vocabulary, 0)
+  const completedCount = 0
+  const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
+  const stats: Array<[IconName, string, string]> = [["book", "ĐÃ HỌC", `${completedCount} bài`], ["translate", "TỪ VỰNG", `${totalVocab} từ`], ["fire", "CHUỖI HỌC", "5 ngày"]]
   return (
     <section className={styles.progressCard}>
-      <div className={styles.progressTop}><div><h2>Tiến độ học tập</h2><p>3/{config.totalLessons} bài đã hoàn thành ({progress}%)</p></div><Link href="#current">Tiếp tục: Bài 3</Link></div>
+      <div className={styles.progressTop}><div><h2>Tiến độ học tập</h2><p>{completedCount}/{totalLessons} bài đã hoàn thành ({progress}%)</p></div></div>
       <div className={styles.progressTrack}><span style={{ width: `${progress}%` }} /></div>
       <div className={styles.progressStats}>{stats.map(([icon,label,value]) => <div key={label}><i><Icon name={icon} /></i><span><small>{label}</small><strong>{value}</strong></span></div>)}</div>
     </section>
   )
 }
 
-function LessonItem({ lesson, index, level }: { lesson: Lesson; index: number; level: HSKLevel }) {
-  const icon: IconName = lesson.state === "completed" ? "check" : lesson.state === "current" ? "play" : "lock"
+function LessonItem({ lesson, level }: { lesson: LessonFromAPI; level: HSKLevel }) {
+  const href = `/lessons/${level}/${lesson.id}`
   return (
-    <article id={lesson.state === "current" ? "current" : undefined} className={`${styles.lessonItem} ${styles[lesson.state]}`}>
-      <div className={styles.lessonIcon}><Icon name={icon} /></div>
+    <article className={`${styles.lessonItem} ${styles.current}`}>
+      <div className={styles.lessonIcon}><Icon name="play" /></div>
       <div className={styles.lessonInfo}>
-        <div className={styles.lessonTitle}><h3>{lesson.title}</h3>{lesson.tag && <span className={lesson.tag === "Pro" ? styles.proBadge : ""}>{lesson.tag}</span>}{lesson.state === "current" && <span>Từ vựng</span>}</div>
-        {lesson.subtitle && <p>{lesson.subtitle}</p>}
+        <div className={styles.lessonTitle}><h3>Bài {lesson.lessonOrder}: {lesson.title}</h3>{lesson.isFree ? <span>Miễn phí</span> : <span className={styles.proBadge}>Pro</span>}</div>
+        <p>{lesson._count.vocabulary} từ vựng · {lesson._count.sentences} câu</p>
       </div>
-      {lesson.state === "completed" && <span className={styles.chevron}>›</span>}
-      {lesson.state === "current" && <Link className={styles.continueButton} href={level === "hsk1" ? "/courses/hsk1/lesson-1" : `/lessons/${level}/${index + 1}`}>Tiếp tục học →</Link>}
-      {lesson.state === "pro" && <ProUpgradeTrigger className={styles.unlockText} unlockedHref={`/lessons/${level}/${index + 1}`} loggedOutLabel="Đăng nhập để học" upgradeLabel="Nâng cấp để mở khóa" proLabel="Bắt đầu học" />}
-      {lesson.state === "locked" && <ProUpgradeTrigger className={styles.lockedUpgrade} unlockedHref={`/lessons/${level}/${index + 1}`} loggedOutLabel="Đăng nhập để học" upgradeLabel="Nâng cấp để mở khóa" proLabel="Bắt đầu học" />}
+      <Link className={styles.continueButton} href={href}>Bắt đầu học →</Link>
     </article>
   )
 }
 
-function ProCtaCard({ config }: { config: LevelConfig }) {
-  const levelName = config.name.split(" — ")[0]
-  return (
-    <section id="upgrade" className={styles.proCta}>
-      <div className={styles.cube}><Icon name="layers" /></div>
-      <h2>Mở khóa toàn bộ {levelName}</h2>
-      <p>Truy cập đầy đủ {config.totalLessons} bài học, flashcard thông minh, luyện nghe dictation và theo dõi tiến trình không giới hạn.</p>
-      <div className={styles.ctaButtons}><ProUpgradeTrigger /><Link href="#upgrade">Xem bảng giá</Link></div>
-      <div className={styles.benefits}><span><Icon name="shield" />Bảo hành 7 ngày</span><span><Icon name="devices" />Học trên mọi thiết bị</span></div>
-    </section>
-  )
-}
-
 export default function HSKLevelPage({ level }: { level: HSKLevel }) {
-  const config = levelConfigs[level]
-  const lessons = getLessons(config)
+  const config = levelMeta[level]
+  const [lessons, setLessons] = useState<LessonFromAPI[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get(`/lessons?level=${level.toUpperCase()}`).then((res) => {
+      setLessons(res.data.lessons)
+    }).finally(() => setLoading(false))
+  }, [level])
+
   return (
     <main className={styles.page}>
       <AppNavbar level={level} />
       <div className={styles.container}>
-        <header className={styles.header}><span>{config.band}</span><h1>{config.name}</h1><strong>{config.totalLessons} bài học</strong><p>{config.description}</p></header>
-        <ProgressCard config={config} />
+        <header className={styles.header}><span>{config.band}</span><h1>{config.name}</h1><strong>{lessons.length || '...'} bài học</strong><p>{config.description}</p></header>
+        <ProgressCard lessons={lessons} />
         <section className={styles.lessonSection}>
-          <div className={styles.listHeading}><h2>Danh sách bài học</h2><span>Đang cập nhật...</span></div>
-          <div className={styles.lessonList}>{lessons.map((lesson,index) => <LessonItem lesson={lesson} index={index} level={level} key={lesson.title} />)}</div>
+          <div className={styles.listHeading}><h2>Danh sách bài học</h2><span>{loading ? 'Đang tải...' : `${lessons.length} bài`}</span></div>
+          <div className={styles.lessonList}>{lessons.map((lesson) => <LessonItem lesson={lesson} level={level} key={lesson.id} />)}</div>
         </section>
-        <ProCtaCard config={config} />
       </div>
     </main>
   )
