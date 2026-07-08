@@ -12,6 +12,7 @@ export interface AuthUser {
   dailyTarget: number
   expPoints: number
   isPremium: boolean
+  subscriptionUntil: string | null
 }
 
 export interface LeaderboardUser {
@@ -27,6 +28,7 @@ export interface LessonSummary {
   lessonOrder: number
   title: string
   isFree: boolean
+  isLocked: boolean
   _count: {
     vocabulary: number
     sentences: number

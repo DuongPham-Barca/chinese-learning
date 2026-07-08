@@ -2,6 +2,7 @@
 
 import { createContext, type ReactNode, useContext, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-provider"
 
 export type MockUpgradeUser = {
   id: string
@@ -16,33 +17,37 @@ type ProUpgradeContextValue = {
   openUpgrade: (unlockedHref?: string) => void
 }
 
-const mockUser: MockUpgradeUser = {
-  id: "u123456",
-  name: "Dương Hải",
-  email: "duonghai@example.com",
-  isLoggedIn: true,
-  isPro: false,
-}
-
 const ProUpgradeContext = createContext<ProUpgradeContextValue | null>(null)
 
 export function ProUpgradeProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const { user: authUser } = useAuth()
+  const isPro = Boolean(
+    authUser?.isPremium
+    && (!authUser.subscriptionUntil || new Date(authUser.subscriptionUntil) > new Date()),
+  )
+  const user = useMemo<MockUpgradeUser>(() => ({
+    id: authUser?.id ?? "",
+    name: authUser?.username ?? "",
+    email: authUser?.email ?? "",
+    isLoggedIn: Boolean(authUser),
+    isPro,
+  }), [authUser, isPro])
 
   const value = useMemo<ProUpgradeContextValue>(() => ({
-    user: mockUser,
+    user,
     openUpgrade: (unlockedHref?: string) => {
-      if (!mockUser.isLoggedIn) {
-        router.push("/auth/login?next=upgrade")
+      if (!user.isLoggedIn) {
+        router.push("/login?next=/pricing")
         return
       }
-      if (mockUser.isPro) {
+      if (user.isPro) {
         if (unlockedHref) router.push(unlockedHref)
         return
       }
       router.push("/pricing")
     },
-  }), [router])
+  }), [router, user])
 
   return <ProUpgradeContext.Provider value={value}>{children}</ProUpgradeContext.Provider>
 }

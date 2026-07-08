@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { asyncHandler } from '../../lib/async-handler'
+import { canAccessLesson, FREE_LESSON_LIMIT, hasActivePremium, lessonLockedResponse } from '../../lib/lesson-access'
 import { prisma } from '../../lib/prisma'
 
 const router = Router()
@@ -14,7 +15,14 @@ router.get('/', asyncHandler(async (req, res) => {
       _count: { select: { vocabulary: true, sentences: true } },
     },
   })
-  res.json({ lessons })
+  const hasPremium = await hasActivePremium(req)
+  res.json({
+    lessons: lessons.map((lesson) => ({
+      ...lesson,
+      isFree: lesson.lessonOrder <= FREE_LESSON_LIMIT,
+      isLocked: lesson.lessonOrder > FREE_LESSON_LIMIT && !hasPremium,
+    })),
+  })
 }))
 
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -23,7 +31,10 @@ router.get('/:id', asyncHandler(async (req, res) => {
     include: { vocabulary: true, sentences: true },
   })
   if (!lesson) return res.status(404).json({ error: 'Lesson not found' })
-  res.json({ lesson })
+  if (!(await canAccessLesson(req, lesson.lessonOrder))) {
+    return res.status(403).json(lessonLockedResponse)
+  }
+  res.json({ lesson: { ...lesson, isFree: lesson.lessonOrder <= FREE_LESSON_LIMIT, isLocked: false } })
 }))
 
 export default router

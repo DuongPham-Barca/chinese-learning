@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import api from "@/lib/api"
+import { useProUpgrade } from "@/lib/pro-upgrade-provider"
 import styles from "./hsk1/hsk1.module.css"
 
 type IconName = "arrow" | "bell" | "user" | "book" | "translate" | "fire" | "check" | "play" | "lock" | "layers" | "shield" | "devices"
@@ -32,6 +33,7 @@ type LessonFromAPI = {
   lessonOrder: number
   title: string
   isFree: boolean
+  isLocked: boolean
   _count: { vocabulary: number; sentences: number }
 }
 
@@ -83,6 +85,21 @@ function ProgressCard({ lessons }: { lessons: LessonFromAPI[] }) {
 
 function LessonItem({ lesson, level }: { lesson: LessonFromAPI; level: HSKLevel }) {
   const href = `/lessons/${level}/${lesson.id}`
+  const { openUpgrade } = useProUpgrade()
+
+  if (lesson.isLocked) {
+    return (
+      <article className={`${styles.lessonItem} ${styles.locked}`}>
+        <div className={styles.lessonIcon}><Icon name="lock" /></div>
+        <div className={styles.lessonInfo}>
+          <div className={styles.lessonTitle}><h3>Bài {lesson.lessonOrder}: {lesson.title}</h3><span className={styles.proBadge}>Pro</span></div>
+          <p>{lesson._count.vocabulary} từ vựng · {lesson._count.sentences} câu</p>
+        </div>
+        <button type="button" className={styles.lockedUpgrade} onClick={() => openUpgrade(href)}>Mở khóa bài học</button>
+      </article>
+    )
+  }
+
   return (
     <article className={`${styles.lessonItem} ${styles.current}`}>
       <div className={styles.lessonIcon}><Icon name="play" /></div>
