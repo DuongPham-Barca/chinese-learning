@@ -26,7 +26,7 @@ type Plan = {
 
 const allFeatures = [
   "Mở khóa toàn bộ bài học HSK",
-  "Luyện phát âm với AI",
+  "Luyện phát âm theo câu mẫu",
   "Không giới hạn câu luyện tập",
   "Theo dõi tiến độ học tập",
   "Sử dụng đầy đủ tính năng Pro",
@@ -77,7 +77,7 @@ const plans: Plan[] = [
 const freeVsPro: [string, boolean, boolean][] = [
   ["Bài học HSK", false, true],
   ["Từ vựng HSK", true, true],
-  ["Luyện phát âm AI", false, true],
+  ["Luyện phát âm", false, true],
   ["Luyện nghe", true, true],
   ["Bài tập không giới hạn", false, true],
   ["Theo dõi tiến độ", false, true],

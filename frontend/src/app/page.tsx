@@ -102,7 +102,7 @@ export default function HomePage() {
         <motion.div variants={heroItemVariants} className={styles.heroCopy}>
           <motion.span variants={heroItemVariants} className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</motion.span>
           <motion.h1 variants={heroItemVariants}>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</motion.h1>
-          <motion.p variants={heroItemVariants}>Hệ thống học tiếng Trung hiện đại với Flashcard thông minh, Dictation, AI hỗ trợ ghi nhớ từ vựng và giáo trình HSK đầy đủ.</motion.p>
+          <motion.p variants={heroItemVariants}>Hệ thống học tiếng Trung hiện đại với Flashcard, Dictation, luyện phát âm và giáo trình HSK đầy đủ.</motion.p>
           <motion.div variants={heroItemVariants} className={styles.heroButtons}><Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link><a href="#roadmap" className={styles.secondaryButton}>Khám phá giáo trình</a></motion.div>
           <motion.div variants={heroItemVariants} className={styles.bullets}>
             {["Hơn 10,000 học viên", "Luyện Dictation mỗi ngày", "Flashcard thông minh", "Theo dõi tiến độ học tập"].map((item) => <span key={item}><i><Icon name="check" /></i>{item}</span>)}

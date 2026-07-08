@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { useProUpgrade } from "@/lib/pro-upgrade-provider"
 import styles from "./qr-payment-modal.module.css"
 
 type PlanInfo = {
@@ -20,18 +20,17 @@ type QrPaymentModalProps = {
 }
 
 const bankInfo = {
-  bank: "Vietcombank",
-  accountNumber: "1012345678",
-  accountName: "CONG TY CHINESE DICT",
+  bank: "VietinBank",
+  accountNumber: "105879197642",
+  accountName: "NGUYEN THI KIM CHUNG",
 }
 
 export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalProps) {
-  const { user } = useProUpgrade()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const transferContent = plan ? `PRO-${user.id}-${plan.id}` : ""
+  const transferContent = plan ? "[email - gói]" : ""
 
   const copyToClipboard = useCallback(async (text: string, field: string) => {
     try {
@@ -101,17 +100,15 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
                 <div className={styles.body}>
                   <div className={styles.qrSection}>
                     <div className={styles.qrBox}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={styles.qrIcon}>
-                        <rect x="3" y="3" width="5" height="5" rx="1" />
-                        <rect x="16" y="3" width="5" height="5" rx="1" />
-                        <rect x="3" y="16" width="5" height="5" rx="1" />
-                        <rect x="13" y="13" width="2" height="2" />
-                        <rect x="17" y="13" width="2" height="2" />
-                        <rect x="13" y="17" width="2" height="2" />
-                        <rect x="16" y="16" width="5" height="5" rx="1" />
-                        <path d="M8 3v2M8 19v2M3 8h2M19 8h2M3 16h2M19 16h2M16 3v2" />
-                      </svg>
-                      <span>QR thanh toán</span>
+                      <Image
+                        className={styles.qrImage}
+                        src="/vietinbank-payment-qr.png"
+                        width={420}
+                        height={455}
+                        sizes="(max-width: 640px) 260px, 280px"
+                        alt="Mã QR thanh toán VietinBank của Nguyễn Thị Kim Chung"
+                        priority
+                      />
                     </div>
                     <p className={styles.qrNote}>Vui lòng chuyển khoản đúng nội dung để được xác nhận nhanh hơn.</p>
                   </div>

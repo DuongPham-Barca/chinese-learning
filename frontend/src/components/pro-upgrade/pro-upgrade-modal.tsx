@@ -8,7 +8,7 @@ type IconName = "close" | "crown" | "check"
 
 const benefits = [
   "Mở khóa toàn bộ bài học HSK",
-  "Luyện phát âm với AI",
+  "Luyện phát âm theo câu mẫu",
   "Không giới hạn câu luyện tập",
   "Theo dõi tiến độ chi tiết",
   "Flashcard & Dictation",

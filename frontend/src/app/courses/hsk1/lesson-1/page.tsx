@@ -61,7 +61,7 @@ function LearningModuleCard({ type, lesson, level, lessonOrder }: { type: "flash
     : `/courses/${level}/lesson-${lessonOrder}/${type}`
   const labels = {
     flashcard: { title: "Flashcard", badge: "Mới", description: `Học ${lesson.vocabulary.length} từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh.`, duration: `${Math.max(5, lesson.vocabulary.length)} phút` },
-    pronunciation: { title: "Luyện phát âm", badge: "Mới", description: "Đọc câu tiếng Trung và nhận điểm phát âm theo AI.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
+    pronunciation: { title: "Luyện phát âm", badge: "Mới", description: "Nghe câu mẫu và tự luyện phát âm tiếng Trung.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
     dictation: { title: "Dictation & Sắp xếp", badge: "Mới", description: "Luyện nghe và ghép câu hoàn chỉnh từ các đoạn hội thoại thực tế.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
   }
   const { title, badge, description, duration } = labels[type]
