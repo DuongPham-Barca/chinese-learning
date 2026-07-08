@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client'
 import { Router } from 'express'
 import { asyncHandler } from '../../lib/async-handler'
 import { prisma } from '../../lib/prisma'
@@ -9,8 +10,11 @@ router.get('/', asyncHandler(async (req, res) => {
 
   let dateFilter: Date | undefined
   const now = new Date()
-  if (period === 'week') dateFilter = new Date(now.setDate(now.getDate() - 7))
-  else if (period === 'month') dateFilter = new Date(now.setMonth(now.getMonth() - 1))
+  if (period === 'week') dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  else if (period === 'month') {
+    dateFilter = new Date(now)
+    dateFilter.setMonth(dateFilter.getMonth() - 1)
+  }
 
   if (dateFilter) {
     const scores = await prisma.progress.groupBy({
@@ -22,8 +26,8 @@ router.get('/', asyncHandler(async (req, res) => {
     })
 
     const users = await prisma.user.findMany({
-      where: { id: { in: scores.map((score) => score.userId) } },
-      select: { id: true, username: true, avatarUrl: true },
+      where: { id: { in: scores.map((score) => score.userId) }, role: Role.USER },
+      select: { id: true, username: true, avatarUrl: true, level: true },
     })
     const usersById = new Map(users.map((user) => [user.id, user]))
     const leaderboard = scores.flatMap((score) => {
@@ -35,9 +39,10 @@ router.get('/', asyncHandler(async (req, res) => {
   }
 
   const leaderboard = await prisma.user.findMany({
+    where: { role: Role.USER },
     orderBy: { expPoints: 'desc' },
     take: 50,
-    select: { id: true, username: true, avatarUrl: true, expPoints: true },
+    select: { id: true, username: true, avatarUrl: true, level: true, expPoints: true },
   })
 
   res.json({ leaderboard })

@@ -19,6 +19,7 @@ export interface LeaderboardUser {
   id: string
   username: string
   avatarUrl: string | null
+  level: string
   expPoints: number
 }
 
