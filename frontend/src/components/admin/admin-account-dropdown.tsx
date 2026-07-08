@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-provider"
@@ -59,8 +60,8 @@ function MenuIcon({ name }: { name: string }) {
 
 function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) {
   if (!open) return null
-  return (
-    <div className={styles.overlay} onClick={onCancel}>
+  return createPortal(
+    <div className={styles.overlay} onClick={onCancel} role="presentation">
       <motion.div className={styles.confirmBox} onClick={(e) => e.stopPropagation()} initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.15 }}>
         <h3>Đăng xuất</h3>
         <p>Bạn có chắc chắn muốn đăng xuất?</p>
@@ -69,7 +70,8 @@ function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm
           <button type="button" className={styles.confirmBtn} onClick={onConfirm}>Đăng xuất</button>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

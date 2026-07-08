@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback, type CSSProperties } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-provider"
@@ -66,17 +67,32 @@ function MenuIcon({ name }: { name: string }) {
 
 function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) {
   if (!open) return null
-  return (
-    <div className={styles.overlay} onClick={onCancel}>
+  return createPortal(
+    <div className={styles.overlay} onClick={onCancel} role="presentation">
       <div className={styles.confirmBox} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.iconWrap}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
         <h3>Đăng xuất</h3>
         <p>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?</p>
         <div className={styles.confirmActions}>
           <button type="button" className={styles.cancelBtn} onClick={onCancel}>Hủy</button>
-          <button type="button" className={styles.confirmBtn} onClick={onConfirm}>Đăng xuất</button>
+          <button type="button" className={styles.confirmBtn} onClick={onConfirm}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Đăng xuất
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

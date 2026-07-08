@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import SiteNavbar from "@/components/site-navbar"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-provider"
-import { useProUpgrade } from "@/lib/pro-upgrade-provider"
+
 import styles from "./profile.module.css"
 
 const levels = ["HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6"]
@@ -43,7 +43,7 @@ const profileMock: ProfileData = {
 
 export default function ProfilePage() {
   const { user: authUser, refresh } = useAuth()
-  const { user: upgradeUser } = useProUpgrade()
+
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [data, setData] = useState<ProfileData>(profileMock)
@@ -147,7 +147,7 @@ export default function ProfilePage() {
       <div className={styles.container}>
         <div className={styles.heading}>
           <h1>Hồ sơ cá nhân</h1>
-          <p>Cập nhật thông tin cá nhân và tùy chỉnh tài khoản học tập.</p>
+          <p>Cập nhật thông tin cá nhân</p>
         </div>
 
         <form id="profile-form" onSubmit={handleSubmit} className={styles.card}>
@@ -243,27 +243,6 @@ export default function ProfilePage() {
             </div>
           </section>
         </form>
-
-        {/* Membership */}
-        <section className={styles.membershipCard}>
-          <div className={styles.membershipInfo}>
-            <h2>Gói thành viên</h2>
-            {upgradeUser.isPro ? (
-              <>
-                <p className={styles.planName}>Pro</p>
-                <p className={styles.expiry}>Hết hạn: 20/12/2027</p>
-              </>
-            ) : (
-              <>
-                <p className={styles.planName}>Free</p>
-                <p className={styles.expiry}>Nâng cấp để mở khóa toàn bộ tính năng</p>
-              </>
-            )}
-          </div>
-          <Link href="/pricing" className={styles.upgradeBtn}>
-            {upgradeUser.isPro ? "Gia hạn" : "Nâng cấp lên Pro"}
-          </Link>
-        </section>
 
         {/* Actions */}
         <div className={styles.actions}>
