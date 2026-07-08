@@ -163,6 +163,17 @@
   font-size: 11px;
   color: var(--muted);
 }
+.field input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+.field input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+.field .fieldError {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+}
 
 /* ─── Membership ─── */
 

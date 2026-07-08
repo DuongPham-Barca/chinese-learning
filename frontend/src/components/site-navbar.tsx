@@ -6,12 +6,14 @@ import { usePathname, useRouter } from "next/navigation"
 import ProUpgradeTrigger from "@/components/pro-upgrade/pro-upgrade-trigger"
 import AccountDropdown from "@/components/account-dropdown"
 import { useProUpgrade } from "@/lib/pro-upgrade-provider"
+import { useAuth } from "@/lib/auth-provider"
 import styles from "./site-navbar.module.css"
 
 const SECTION_IDS = ["home", "features", "roadmap", "footer"]
 
 export default function SiteNavbar({ active: initialActive = "home" }: { active?: string }) {
-  const { user } = useProUpgrade()
+  const { user: upgradeUser } = useProUpgrade()
+  const { user: authUser } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const isPricing = pathname === "/pricing"
@@ -63,7 +65,7 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
           <Link className={isActive("leaderboard")} href="/leaderboard">Bảng xếp hạng</Link>
           <Link className={isPricing ? styles.active : ""} href="/pricing">Thanh toán</Link>
         </div>
-        <div className={styles.navActions}>{user.isLoggedIn ? <><AccountDropdown />{user.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Đăng nhập</Link><Link href="/login" className={styles.primaryButton}>Bắt đầu học <b>→</b></Link></>}</div>
+        <div className={styles.navActions}>{authUser ? <><AccountDropdown />{upgradeUser.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Đăng nhập</Link><Link href="/login" className={styles.primaryButton}>Bắt đầu học <b>→</b></Link></>}</div>
         <details className={styles.mobileMenu}>
           <summary aria-label="Mở menu"><span /><span /><span /></summary>
           <div>
@@ -72,8 +74,8 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
             <a className={isActive("features")} href="#features" onClick={(e) => handleNavClick(e, "features")}>Flashcard</a>
             <Link className={isActive("leaderboard")} href="/leaderboard">Bảng xếp hạng</Link>
             <Link className={isPricing ? styles.active : ""} href="/pricing">Thanh toán</Link>
-            {user.isLoggedIn ? (
-              user.isPro ? <span className={styles.mobilePro}>ChineseDict Pro</span> : <ProUpgradeTrigger className={styles.mobileUpgrade} />
+            {authUser ? (
+              upgradeUser.isPro ? <span className={styles.mobilePro}>ChineseDict Pro</span> : <ProUpgradeTrigger className={styles.mobileUpgrade} />
             ) : (
               <Link href="/login">Đăng nhập</Link>
             )}

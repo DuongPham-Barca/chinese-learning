@@ -36,12 +36,69 @@ const adminLoginSchema = z.object({
 })
 
 const usernameSchema = z.string().trim().min(1).max(50)
+const genders = ['Nam', 'Nữ', 'Khác'] as const
+const countries = ['Việt Nam', 'Trung Quốc', 'Đài Loan', 'Khác'] as const
+const learningLevels = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'] as const
+const learningGoals = ['Giao tiếp', 'Thi HSK', 'Công việc', 'Du lịch'] as const
+const dailyTargets = [10, 20, 30, 60] as const
+const profileFieldNames = [
+  'phone',
+  'dob',
+  'gender',
+  'country',
+  'level',
+  'goal',
+  'dailyTarget',
+] as const
+
+const phoneSchema = z.string().trim()
+  .transform((value) => value.replace(/[\s().-]/g, ''))
+  .refine((value) => value === '' || /^\+?\d{8,15}$/.test(value), 'Số điện thoại không hợp lệ')
+  .transform((value) => value || null)
+
+const dateOfBirthSchema = z.string().trim()
+  .refine((value) => {
+    if (value === '') return true
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+
+    const date = new Date(`${value}T00:00:00.000Z`)
+    return !Number.isNaN(date.getTime())
+      && date.toISOString().startsWith(value)
+      && date.getUTCFullYear() >= 1900
+      && date <= new Date()
+  }, 'Ngày sinh không hợp lệ')
+  .transform((value) => value ? new Date(`${value}T00:00:00.000Z`) : null)
+
+const profileUpdateSchema = z.object({
+  phone: phoneSchema,
+  dob: dateOfBirthSchema,
+  gender: z.enum(genders),
+  country: z.enum(countries),
+  level: z.enum(learningLevels),
+  goal: z.enum(learningGoals),
+  dailyTarget: z.coerce.number().int().refine(
+    (value) => dailyTargets.includes(value as typeof dailyTargets[number]),
+    'Mục tiêu học mỗi ngày không hợp lệ',
+  ),
+}).partial()
+const usernameTakenResponse = {
+  error: 'Họ và tên đã được sử dụng',
+  code: 'USERNAME_TAKEN',
+  field: 'username',
+} as const
 const maxAvatarSize = 5 * 1024 * 1024
 const publicUserSelect = {
   id: true,
   email: true,
   username: true,
   avatarUrl: true,
+  phone: true,
+  dateOfBirth: true,
+  gender: true,
+  country: true,
+  level: true,
+  learningGoal: true,
+  dailyTarget: true,
   role: true,
   subscriptionUntil: true,
   isPremium: true,
@@ -59,7 +116,7 @@ const avatarUpload = multer({
   limits: {
     fileSize: maxAvatarSize,
     files: 1,
-    fields: 2,
+    fields: 10,
   },
   fileFilter: (_req, file, callback) => {
     if (!isAvatarContentType(file.mimetype)) {
@@ -275,6 +332,13 @@ router.get('/me', asyncHandler(async (req, res) => {
       username: true,
       email: true,
       avatarUrl: true,
+      phone: true,
+      dateOfBirth: true,
+      gender: true,
+      country: true,
+      level: true,
+      learningGoal: true,
+      dailyTarget: true,
       expPoints: true,
       isPremium: true,
       role: true,
@@ -286,12 +350,37 @@ router.get('/me', asyncHandler(async (req, res) => {
   res.json({ user })
 }))
 
+router.get('/username-availability', requireCurrentUser, asyncHandler(async (req, res) => {
+  const parsedUsername = usernameSchema.safeParse(req.query.username)
+  if (!parsedUsername.success) {
+    return res.status(400).json({
+      error: 'Họ và tên phải có từ 1 đến 50 ký tự',
+      code: 'INVALID_USERNAME',
+      field: 'username',
+    })
+  }
+
+  const usernameOwner = await prisma.user.findFirst({
+    where: {
+      id: { not: res.locals.userId as string },
+      username: { equals: parsedUsername.data, mode: 'insensitive' },
+    },
+    select: { id: true },
+  })
+
+  res.json({ available: !usernameOwner })
+}))
+
 router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req, res) => {
   const userId = res.locals.userId as string
   const body = req.body as Record<string, unknown> | undefined
   const hasUsername = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'username'))
   const hasAvatar = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'avatar'))
+  const hasProfileFields = profileFieldNames.some((field) => (
+    body && Object.prototype.hasOwnProperty.call(body, field)
+  ))
   let username: string | undefined
+  let profileFields: z.infer<typeof profileUpdateSchema> = {}
 
   if (hasUsername) {
     const parsedUsername = usernameSchema.safeParse(body?.username)
@@ -300,10 +389,29 @@ router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req
     }
     username = parsedUsername.data
 
-    const usernameOwner = await prisma.user.findUnique({ where: { username } })
-    if (usernameOwner && usernameOwner.id !== userId) {
-      return res.status(409).json({ error: 'Username is already in use' })
+    const usernameOwner = await prisma.user.findFirst({
+      where: {
+        id: { not: userId },
+        username: { equals: username, mode: 'insensitive' },
+      },
+      select: { id: true },
+    })
+    if (usernameOwner) {
+      return res.status(409).json(usernameTakenResponse)
     }
+  }
+
+  if (hasProfileFields) {
+    const parsedProfile = profileUpdateSchema.safeParse(body)
+    if (!parsedProfile.success) {
+      const issue = parsedProfile.error.issues[0]
+      return res.status(400).json({
+        error: issue?.message || 'Thông tin hồ sơ không hợp lệ',
+        code: 'INVALID_PROFILE_FIELD',
+        field: issue?.path[0],
+      })
+    }
+    profileFields = parsedProfile.data
   }
 
   const removeAvatar = hasAvatar && (body?.avatar === null || body?.avatar === '')
@@ -311,12 +419,19 @@ router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req
     return res.status(400).json({ error: 'Avatar must be uploaded as an image file' })
   }
 
-  if (!hasUsername && !req.file && !removeAvatar) {
+  if (!hasUsername && !hasProfileFields && !req.file && !removeAvatar) {
     return res.status(400).json({ error: 'No valid profile fields provided' })
   }
 
   const data: Prisma.UserUpdateInput = {}
   if (username !== undefined) data.username = username
+  if (profileFields.phone !== undefined) data.phone = profileFields.phone
+  if (profileFields.dob !== undefined) data.dateOfBirth = profileFields.dob
+  if (profileFields.gender !== undefined) data.gender = profileFields.gender
+  if (profileFields.country !== undefined) data.country = profileFields.country
+  if (profileFields.level !== undefined) data.level = profileFields.level
+  if (profileFields.goal !== undefined) data.learningGoal = profileFields.goal
+  if (profileFields.dailyTarget !== undefined) data.dailyTarget = profileFields.dailyTarget
 
   if (req.file) {
     if (!isAvatarContentType(req.file.mimetype)) {
@@ -345,7 +460,7 @@ router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        return res.status(409).json({ error: 'Username is already in use' })
+        return res.status(409).json(usernameTakenResponse)
       }
       if (error.code === 'P2025') {
         return res.status(401).json({ error: 'Unauthorized' })

@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import axios from "axios"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import SiteNavbar from "@/components/site-navbar"
 import api from "@/lib/api"
@@ -46,13 +45,25 @@ export default function ProfilePage() {
 
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [data, setData] = useState<ProfileData>(profileMock)
+  const [dataDraft, setDataDraft] = useState<ProfileData | null>(null)
   const [usernameDraft, setUsernameDraft] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [removeAvatar, setRemoveAvatar] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+
+  const data = dataDraft ?? {
+    phone: authUser?.phone ?? "",
+    dob: authUser?.dateOfBirth?.slice(0, 10) ?? "",
+    gender: authUser?.gender || profileMock.gender,
+    country: authUser?.country || profileMock.country,
+    level: authUser?.level || profileMock.level,
+    goal: authUser?.learningGoal || profileMock.goal,
+    dailyTarget: String(authUser?.dailyTarget || profileMock.dailyTarget),
+  }
 
   useEffect(() => {
     return () => {
@@ -67,9 +78,9 @@ export default function ProfilePage() {
     }
   }, [toast])
 
-  const update = useCallback((field: keyof ProfileData, value: string) => {
-    setData((prev) => ({ ...prev, [field]: value }))
-  }, [])
+  const update = (field: keyof ProfileData, value: string) => {
+    setDataDraft((prev) => ({ ...(prev ?? data), [field]: value }))
+  }
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -105,12 +116,41 @@ export default function ProfilePage() {
       return
     }
     const username = (usernameDraft ?? authUser.username).trim()
-    if (!username) return
+    if (!username) {
+      setUsernameError("Vui lòng nhập họ và tên.")
+      return
+    }
+    if (username.length > 50) {
+      setUsernameError("Họ và tên không được vượt quá 50 ký tự.")
+      return
+    }
+    const normalizedPhone = data.phone.trim().replace(/[\s().-]/g, "")
+    if (normalizedPhone && !/^\+?\d{8,15}$/.test(normalizedPhone)) {
+      setPhoneError("Số điện thoại không hợp lệ.")
+      return
+    }
 
     setSaving(true)
     try {
+      if (username.toLocaleLowerCase() !== authUser.username.toLocaleLowerCase()) {
+        const availability = await api.get<{ available: boolean }>("/auth/username-availability", {
+          params: { username },
+        })
+        if (!availability.data.available) {
+          setUsernameError("Họ và tên đã được sử dụng.")
+          return
+        }
+      }
+
       const formData = new FormData()
       formData.append("username", username)
+      formData.append("phone", data.phone)
+      formData.append("dob", data.dob)
+      formData.append("gender", data.gender)
+      formData.append("country", data.country)
+      formData.append("level", data.level)
+      formData.append("goal", data.goal)
+      formData.append("dailyTarget", data.dailyTarget)
       if (avatarFile) formData.append("avatar", avatarFile)
       else if (removeAvatar) formData.append("avatar", "")
 
@@ -120,11 +160,20 @@ export default function ProfilePage() {
       setAvatarFile(null)
       setAvatarPreview(null)
       setRemoveAvatar(false)
+      setDataDraft(null)
+      setUsernameError(null)
+      setPhoneError(null)
       setToast("Cập nhật hồ sơ thành công.")
     } catch (error) {
-      if (axios.isAxiosError<{ error?: string }>(error)) {
+      if (axios.isAxiosError<{ error?: string; code?: string; field?: string }>(error)) {
         if (error.response?.status === 401) router.replace("/login")
-        setToast(error.response?.data.error || "Không thể cập nhật hồ sơ.")
+        if (error.response?.status === 409 || error.response?.data.code === "USERNAME_TAKEN") {
+          setUsernameError("Họ và tên đã được sử dụng.")
+        } else if (error.response?.data.field === "phone") {
+          setPhoneError(error.response.data.error || "Số điện thoại không hợp lệ.")
+        } else {
+          setToast(error.response?.data.error || "Không thể cập nhật hồ sơ.")
+        }
       } else {
         setToast("Không thể cập nhật hồ sơ.")
       }
@@ -186,7 +235,19 @@ export default function ProfilePage() {
             <div className={styles.grid}>
               <label className={styles.field}>
                 <span>Họ và tên</span>
-                <input type="text" value={usernameDraft ?? authUser?.username ?? ""} onChange={(e) => setUsernameDraft(e.target.value)} required />
+                <input
+                  type="text"
+                  value={usernameDraft ?? authUser?.username ?? ""}
+                  onChange={(e) => {
+                    setUsernameDraft(e.target.value)
+                    setUsernameError(null)
+                  }}
+                  maxLength={50}
+                  aria-invalid={Boolean(usernameError)}
+                  aria-describedby={usernameError ? "username-error" : undefined}
+                  required
+                />
+                {usernameError && <small id="username-error" className={styles.fieldError} role="alert">{usernameError}</small>}
               </label>
               <label className={styles.field}>
                 <span>Email</span>
@@ -195,7 +256,19 @@ export default function ProfilePage() {
               </label>
               <label className={styles.field}>
                 <span>Số điện thoại</span>
-                <input type="tel" value={data.phone} onChange={(e) => update("phone", e.target.value)} placeholder="Nhập số điện thoại" />
+                <input
+                  type="tel"
+                  value={data.phone}
+                  onChange={(e) => {
+                    update("phone", e.target.value)
+                    setPhoneError(null)
+                  }}
+                  placeholder="Nhập số điện thoại"
+                  maxLength={20}
+                  aria-invalid={Boolean(phoneError)}
+                  aria-describedby={phoneError ? "phone-error" : undefined}
+                />
+                {phoneError && <small id="phone-error" className={styles.fieldError} role="alert">{phoneError}</small>}
               </label>
               <label className={styles.field}>
                 <span>Ngày sinh</span>

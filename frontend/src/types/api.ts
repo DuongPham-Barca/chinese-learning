@@ -3,6 +3,13 @@ export interface AuthUser {
   username: string
   email: string | null
   avatarUrl: string | null
+  phone: string | null
+  dateOfBirth: string | null
+  gender: string
+  country: string
+  level: string
+  learningGoal: string
+  dailyTarget: number
   expPoints: number
   isPremium: boolean
 }

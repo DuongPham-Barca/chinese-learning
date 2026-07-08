@@ -40,6 +40,13 @@ model User {
   username          String    @unique
   email             String?   @unique
   avatarUrl         String?
+  phone             String?
+  dateOfBirth       DateTime? @db.Date
+  gender            String    @default("Nam")
+  country           String    @default("Việt Nam")
+  level             LevelType @default(HSK3)
+  learningGoal      String    @default("Giao tiếp") @map("learning_goal")
+  dailyTarget       Int       @default(20) @map("daily_target")
   passwordHash      String?   @map("password_hash")
   expPoints         Int       @default(0) @map("exp_points")
   isPremium         Boolean   @default(false) @map("is_premium")

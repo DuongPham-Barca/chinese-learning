@@ -7,6 +7,19 @@
 - Google OAuth callback: `http://localhost:4000/api/auth/google/callback`.
 - Frontend API URL: `NEXT_PUBLIC_API_URL=http://localhost:4000/api`.
 
+## Database migration
+
+Sau khi pull code có migration mới, chạy lệnh sau từ thư mục gốc của project:
+
+```powershell
+cd backend
+npm.cmd run db:migrate
+```
+
+Script trên sẽ chạy `prisma migrate deploy` và áp dụng các migration chưa có lên Supabase PostgreSQL.
+
+> Trên PowerShell Windows, dùng `npm.cmd` nếu `npm` bị chặn bởi Execution Policy. Trên macOS/Linux có thể chạy `npm run db:migrate`.
+
 Ứng dụng học tiếng Trung (Phân cấp HSK 1 - HSK 6 & Tiếng Trung Giao Tiếp) kết hợp phương pháp học từ vựng qua Flashcard và luyện phản xạ/nghe chép chính tả (Dictation) tương tác cao. Hệ thống tích hợp Gamification (Tính điểm EXP, Bảng xếp hạng) và mô hình Freemium (Thanh toán qua QR Code để mở khóa bài học).
 
 ---
