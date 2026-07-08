@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 
 const AUTH_COOKIE = 'auth_token'
 const REFRESH_COOKIE = 'refresh_token'
+const ADMIN_SESSION_COOKIE = 'admin_session'
 export const REFRESH_TOKEN_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000
 
 export interface AuthTokenPayload {
@@ -77,9 +78,18 @@ export function getRefreshToken(req: Request): string | null {
   return readCookies(req)[REFRESH_COOKIE] || null
 }
 
+export function getAdminSessionToken(req: Request): string | null {
+  return readCookies(req)[ADMIN_SESSION_COOKIE] || null
+}
+
 export function setRefreshCookie(res: Response, token: string): void {
   const maxAge = Math.floor(REFRESH_TOKEN_LIFETIME_MS / 1000)
   res.append('Set-Cookie', `${REFRESH_COOKIE}=${encodeURIComponent(token)}; Path=/api/auth; Max-Age=${maxAge}${cookieSecurityAttributes()}`)
+}
+
+export function setAdminSessionCookie(res: Response, token: string): void {
+  // Deliberately omit Max-Age so closing the browser also ends the admin login.
+  res.append('Set-Cookie', `${ADMIN_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/api${cookieSecurityAttributes()}`)
 }
 
 export function clearAuthCookie(res: Response): void {
@@ -88,6 +98,10 @@ export function clearAuthCookie(res: Response): void {
 
 export function clearRefreshCookie(res: Response): void {
   res.append('Set-Cookie', `${REFRESH_COOKIE}=; Path=/api/auth; Max-Age=0${cookieSecurityAttributes()}`)
+}
+
+export function clearAdminSessionCookie(res: Response): void {
+  res.append('Set-Cookie', `${ADMIN_SESSION_COOKIE}=; Path=/api; Max-Age=0${cookieSecurityAttributes()}`)
 }
 
 export function clearAuthCookies(res: Response): void {

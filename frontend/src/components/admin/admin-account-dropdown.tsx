@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-provider"
 import { motion, AnimatePresence } from "framer-motion"
 import styles from "./admin-account-dropdown.module.css"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
 
 type AdminDropdownItem = {
   icon: string
@@ -76,8 +76,6 @@ function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm
 }
 
 export default function AdminAccountDropdown() {
-  const router = useRouter()
-  const { logout: logoutAuth } = useAuth()
   const [open, setOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -106,11 +104,14 @@ export default function AdminAccountDropdown() {
   async function logout() {
     setConfirmOpen(false)
     close()
+    sessionStorage.removeItem("admin-route-session")
     try {
-      await logoutAuth()
+      await fetch(`${API_BASE_URL}/auth/admin/logout`, {
+        method: "POST",
+        credentials: "include",
+      })
     } finally {
-      router.replace("/admin/login")
-      router.refresh()
+      window.location.replace("/admin/login")
     }
   }
 

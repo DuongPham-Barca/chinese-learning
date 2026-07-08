@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
+import { adminGuard } from './lib/admin-guard'
 import authRoutes from './modules/auth/auth.routes'
 import leaderboardRoutes from './modules/leaderboard/leaderboard.routes'
 import lessonRoutes from './modules/lessons/lessons.routes'
@@ -22,6 +23,8 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+// Defense-in-depth: every current or future /api/admin endpoint is protected centrally.
+app.use('/api/admin', adminGuard)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/vocabulary', vocabRoutes)
 app.use('/api/sentences', sentenceRoutes)

@@ -1,6 +1,6 @@
 import { Role, type User } from '@prisma/client'
 import type { Request, RequestHandler } from 'express'
-import { getUserId } from './auth'
+import { clearAdminSessionCookie, getAdminSessionToken, hashRefreshToken } from './auth'
 import { prisma } from './prisma'
 
 export class AdminGuardError extends Error {
@@ -18,21 +18,25 @@ export class AdminGuardError extends Error {
  * A valid token for a deleted user is treated as unauthorized.
  */
 export async function requireAdmin(req: Request): Promise<User> {
-  const userId = getUserId(req)
-  if (!userId) {
+  const sessionToken = getAdminSessionToken(req)
+  if (!sessionToken) {
     throw new AdminGuardError(401, 'Unauthorized')
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } })
-  if (!user) {
+  const session = await prisma.session.findUnique({
+    where: { sessionToken: hashRefreshToken(sessionToken) },
+    include: { user: true },
+  })
+  if (!session || session.expires <= new Date()) {
+    if (session) await prisma.session.deleteMany({ where: { id: session.id } })
     throw new AdminGuardError(401, 'Unauthorized')
   }
 
-  if (user.role !== Role.ADMIN) {
+  if (session.user.role !== Role.ADMIN) {
     throw new AdminGuardError(403, 'Forbidden')
   }
 
-  return user
+  return session.user
 }
 
 /**
@@ -47,6 +51,7 @@ export const adminGuard: RequestHandler = (req, res, next) => {
     })
     .catch((error: unknown) => {
       if (error instanceof AdminGuardError) {
+        clearAdminSessionCookie(res)
         res.status(error.statusCode).json({ error: error.message })
         return
       }

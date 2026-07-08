@@ -72,9 +72,11 @@ export default function AdminLoginPage() {
         throw new Error(data.error || "Đăng nhập thất bại")
       }
 
-      router.push("/admin")
-    } catch (err: any) {
-      setError(err.message || "Đã có lỗi xảy ra. Vui lòng thử lại.")
+      sessionStorage.setItem("admin-route-session", "active")
+      router.replace("/admin")
+      router.refresh()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra. Vui lòng thử lại.")
     } finally {
       setLoading(false)
     }

@@ -2,12 +2,15 @@ import { Prisma } from '@prisma/client'
 import type { Request, Response } from 'express'
 import {
   clearAuthCookies,
+  clearAdminSessionCookie,
   createAuthToken,
   createRefreshToken,
   getRefreshToken,
+  getAdminSessionToken,
   hashRefreshToken,
   REFRESH_TOKEN_LIFETIME_MS,
   setAuthCookie,
+  setAdminSessionCookie,
   setRefreshCookie,
 } from './auth'
 import { prisma } from './prisma'
@@ -38,6 +41,22 @@ export async function issueAuthSession(res: Response, user: SessionUser): Promis
   })
 
   setSessionCookies(res, user, refreshToken)
+}
+
+export async function issueAdminSession(res: Response, user: SessionUser): Promise<void> {
+  const sessionToken = createRefreshToken()
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      sessionToken: hashRefreshToken(sessionToken),
+      // Safety ceiling only. The frontend revokes this session immediately
+      // whenever the administrator leaves the /admin area.
+      expires: new Date(Date.now() + 30 * 60 * 1000),
+    },
+  })
+
+  setAdminSessionCookie(res, sessionToken)
 }
 
 export async function rotateAuthSession(req: Request, res: Response): Promise<boolean> {
@@ -92,6 +111,17 @@ export async function revokeRefreshSession(req: Request): Promise<void> {
   await prisma.session.deleteMany({
     where: { sessionToken: hashRefreshToken(refreshToken) },
   })
+}
+
+export async function revokeAdminSession(req: Request, res: Response): Promise<void> {
+  const sessionToken = getAdminSessionToken(req)
+  if (sessionToken) {
+    await prisma.session.deleteMany({
+      where: { sessionToken: hashRefreshToken(sessionToken) },
+    })
+  }
+
+  clearAdminSessionCookie(res)
 }
 
 export function rejectAuthSession(res: Response): void {

@@ -12,11 +12,14 @@ import {
   secretsMatch,
 } from '../../lib/auth'
 import {
+  issueAdminSession,
   issueAuthSession,
+  revokeAdminSession,
   revokeRefreshSession,
   rotateAuthSession,
 } from '../../lib/auth-session'
 import { asyncHandler } from '../../lib/async-handler'
+import { adminGuard } from '../../lib/admin-guard'
 import {
   AvatarUploadError,
   isAvatarContentType,
@@ -221,7 +224,8 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password' })
   }
 
-  await issueAuthSession(res, user)
+  await revokeAdminSession(req, res)
+  await issueAdminSession(res, user)
   res.json({
     user: {
       id: user.id,
@@ -229,6 +233,23 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
       role: user.role,
     },
   })
+}))
+
+router.get('/admin/session', adminGuard, (req, res) => {
+  const admin = res.locals.admin as { id: string; username: string; role: Role }
+  res.set('Cache-Control', 'no-store')
+  res.json({
+    user: {
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+    },
+  })
+})
+
+router.post('/admin/logout', asyncHandler(async (req, res) => {
+  await revokeAdminSession(req, res)
+  res.status(204).end()
 }))
 
 router.post('/refresh', asyncHandler(async (req, res) => {
@@ -484,7 +505,10 @@ router.delete('/me', requireCurrentUser, asyncHandler(async (_req, res) => {
 }))
 
 router.post('/logout', asyncHandler(async (req, res) => {
-  await revokeRefreshSession(req)
+  await Promise.all([
+    revokeRefreshSession(req),
+    revokeAdminSession(req, res),
+  ])
   clearAuthCookies(res)
   res.status(204).end()
 }))

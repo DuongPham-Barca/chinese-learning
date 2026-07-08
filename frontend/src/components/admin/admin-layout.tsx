@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState, type ReactNode } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import AdminIcon, { type AdminIconName } from "./admin-icons"
 import AdminAccountDropdown from "./admin-account-dropdown"
 import styles from "./admin-layout.module.css"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+const ADMIN_ROUTE_SESSION_KEY = "admin-route-session"
 
 const mainMenu: Array<[string, string, AdminIconName]> = [
   ["/admin", "Tổng quan", "grid"], ["/admin/lessons", "Bài học", "book"], ["/admin/users", "Người dùng", "users"], ["#vocabulary", "Từ vựng", "language"], ["#practice", "Câu luyện tập", "headphones"], ["#dictation", "Dictation", "mic"], ["#arrange", "Sắp xếp câu", "list"], ["/leaderboard", "Bảng xếp hạng", "chart"],
@@ -23,10 +26,101 @@ function AdminTopbar({ onMenu }: { onMenu: () => void }) {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [authorizedPath, setAuthorizedPath] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return
+
+    let active = true
+
+    if (sessionStorage.getItem(ADMIN_ROUTE_SESSION_KEY) !== "active") {
+      void fetch(`${API_BASE_URL}/auth/admin/logout`, {
+        method: "POST",
+        credentials: "include",
+        keepalive: true,
+      })
+      router.replace("/admin/login")
+      return
+    }
+
+    fetch(`${API_BASE_URL}/auth/admin/session`, {
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (!active) return
+        if (!response.ok) {
+          router.replace("/admin/login")
+          return
+        }
+        setAuthorizedPath(pathname)
+      })
+      .catch(() => {
+        if (active) router.replace("/admin/login")
+      })
+
+    return () => {
+      active = false
+    }
+  }, [pathname, router])
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return
+
+    const endAdminSession = () => {
+      sessionStorage.removeItem(ADMIN_ROUTE_SESSION_KEY)
+      void fetch(`${API_BASE_URL}/auth/admin/logout`, {
+        method: "POST",
+        credentials: "include",
+        keepalive: true,
+      })
+    }
+
+    const handleLinkClick = (event: MouseEvent) => {
+      const target = event.target as Element | null
+      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null
+      if (!anchor) return
+
+      const destination = new URL(anchor.href, window.location.href)
+      if (
+        destination.origin !== window.location.origin
+        || destination.pathname === "/admin/login"
+        || !destination.pathname.startsWith("/admin")
+      ) {
+        endAdminSession()
+      }
+    }
+
+    const handlePopState = () => {
+      if (!window.location.pathname.startsWith("/admin")) endAdminSession()
+    }
+
+    document.addEventListener("click", handleLinkClick, true)
+    window.addEventListener("popstate", handlePopState)
+    window.addEventListener("pagehide", endAdminSession)
+
+    return () => {
+      document.removeEventListener("click", handleLinkClick, true)
+      window.removeEventListener("popstate", handlePopState)
+      window.removeEventListener("pagehide", endAdminSession)
+    }
+  }, [pathname])
 
   if (pathname === "/admin/login") {
     return <>{children}</>
+  }
+
+  if (authorizedPath !== pathname) {
+    return (
+      <div
+        role="status"
+        style={{ display: "grid", minHeight: "100vh", placeItems: "center", background: "#fffdf8", color: "#475569", fontWeight: 600 }}
+      >
+        Đang kiểm tra phiên quản trị...
+      </div>
+    )
   }
 
   return <div className={styles.adminPage}><div className={styles.adminShell}><AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /><section className={styles.workspace}><AdminTopbar onMenu={() => setSidebarOpen(true)} /><div className={styles.content}>{children}</div></section></div></div>
