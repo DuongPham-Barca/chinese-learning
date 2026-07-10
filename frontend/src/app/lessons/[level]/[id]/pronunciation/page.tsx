@@ -58,7 +58,7 @@ function mockCheckPronunciation(sentence: Sentence): Promise<PronResult> {
           detectedPinyin: "-",
           score,
           status,
-          feedback: status === "correct" ? "Pronunciation is clear." : status === "needs_improvement" ? "Pay attention to tone shape." : "Listen once more and slow down.",
+          feedback: status === "correct" ? "Phát âm rõ ràng." : status === "needs_improvement" ? "Chú ý thêm đến thanh điệu." : "Nghe lại mẫu và đọc chậm hơn.",
         }
       })
       resolve({ overallScore, pronunciationAccuracy, toneAccuracy, fluency, passed: overallScore >= 70, words })
@@ -84,10 +84,10 @@ function getScoreColor(tier: ScoreTier): string {
 
 function getScoreLabel(tier: ScoreTier): string {
   switch (tier) {
-    case "excellent": return "Excellent pronunciation"
-    case "good": return "Good pronunciation"
-    case "needs_work": return "Needs refinement"
-    case "bad": return "Try again"
+    case "excellent": return "Phát âm xuất sắc"
+    case "good": return "Phát âm tốt"
+    case "needs_work": return "Cần cải thiện"
+    case "bad": return "Thử lại"
   }
 }
 
@@ -142,7 +142,7 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
         setSentences((res.data.sentences as APISentence[]).map((s) => ({ chinese: s.sentenceZh, pinyin: "", meaning: s.sentenceVi })))
       })
       .catch(() => {
-        if (active) setLoadError("Khong the tai du lieu luyen phat am.")
+        if (active) setLoadError("Không thể tải dữ liệu luyện phát âm.")
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -274,9 +274,9 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
   const renderTopBar = () => (
     <header className={styles.studyHeader}>
       <div className={styles.studyHeaderInner}>
-        <button className={styles.iconButton} type="button" onClick={() => router.push(returnHref)} aria-label="Exit"><SharedIcon name="close" size={18} /></button>
-        <div className={styles.studyHeaderTitle}><strong>Pronunciation {currentQ + 1} / {totalQ}</strong><span>{expEarned} EXP</span></div>
-        <button className={styles.iconButton} type="button" onClick={() => speak(sentence.chinese, 1)} aria-label="Play sample"><SharedIcon name="volume2" size={18} /></button>
+        <button className={styles.iconButton} type="button" onClick={() => router.push(returnHref)} aria-label="Thoát"><SharedIcon name="close" size={18} /></button>
+        <div className={styles.studyHeaderTitle}><strong>Phát âm {currentQ + 1} / {totalQ}</strong><span>{expEarned} EXP</span></div>
+        <button className={styles.iconButton} type="button" onClick={() => speak(sentence.chinese, 1)} aria-label="Nghe mẫu"><SharedIcon name="volume2" size={18} /></button>
       </div>
       <div className={styles.studyProgress} style={{ "--progress": `${progressPct}%` } as CSSProperties}><i /></div>
     </header>
@@ -284,13 +284,13 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
 
   const renderSentenceCard = () => (
     <motion.div className={styles.sentenceCard} variants={cardVariants}>
-      <div className={styles.sentenceLabel}>Sentence practice</div>
+      <div className={styles.sentenceLabel}>Câu cần luyện</div>
       <div className={styles.chineseText}>{sentence.chinese}</div>
       {sentence.pinyin && <div className={styles.pinyinText}>{sentence.pinyin}</div>}
       <div className={styles.meaningText}>{sentence.meaning}</div>
       <div className={styles.audioActions}>
-        <button className={`${styles.audioBtn} ${styles.audioBtnPrimary}`} type="button" onClick={() => speak(sentence.chinese, 1)}><SharedIcon name="volume2" size={15} />Sample</button>
-        <button className={styles.audioBtn} type="button" onClick={() => speak(sentence.chinese, 1)}><SharedIcon name="repeat" size={15} />Repeat</button>
+        <button className={`${styles.audioBtn} ${styles.audioBtnPrimary}`} type="button" onClick={() => speak(sentence.chinese, 1)}><SharedIcon name="volume2" size={15} />Nghe mẫu</button>
+        <button className={styles.audioBtn} type="button" onClick={() => speak(sentence.chinese, 1)}><SharedIcon name="repeat" size={15} />Nghe lại</button>
         <button className={styles.audioBtn} type="button" onClick={() => speak(sentence.chinese, 0.75)}><SharedIcon name="clock" size={15} />0.75x</button>
       </div>
     </motion.div>
@@ -298,19 +298,19 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
 
   const renderRecordingArea = () => {
     if (recState === "result") return null
-    if (recState === "processing") return <div className={`${styles.recordingArea} ${styles.processingArea}`}><div className={styles.spinner} /><div>Analyzing pronunciation...</div></div>
+    if (recState === "processing") return <div className={`${styles.recordingArea} ${styles.processingArea}`}><div className={styles.spinner} /><div>Đang phân tích phát âm...</div></div>
     const isRecorded = recState === "recorded"
     return (
       <motion.div className={styles.recordingArea} variants={cardVariants}>
         <div className={styles.micOuter}>
           {recState === "recording" && <div className={styles.pulseRing} />}
-          <button className={`${styles.micButton} ${recState === "recording" ? styles.micRecording : isRecorded ? styles.micRecorded : ""}`} onClick={recState === "idle" ? handleStartRecording : recState === "recording" ? handleStopRecording : undefined} disabled={isRecorded} type="button" aria-label={recState === "idle" ? "Start recording" : recState === "recording" ? "Stop recording" : "Recorded"}>
+          <button className={`${styles.micButton} ${recState === "recording" ? styles.micRecording : isRecorded ? styles.micRecorded : ""}`} onClick={recState === "idle" ? handleStartRecording : recState === "recording" ? handleStopRecording : undefined} disabled={isRecorded} type="button" aria-label={recState === "idle" ? "Bắt đầu ghi âm" : recState === "recording" ? "Dừng ghi âm" : "Đã ghi âm"}>
             <SharedIcon name={recState === "recording" ? "pause" : isRecorded ? "check" : "mic"} size={36} />
           </button>
         </div>
-        {recState === "idle" && <div className={styles.recordingStatus}>Press to record</div>}
-        {recState === "recording" && <><Waveform /><div className={styles.recordingTimer}>{String(Math.floor(recTime / 60)).padStart(2, "0")}:{String(recTime % 60).padStart(2, "0")}</div><div className={styles.recordingStatus}>Recording. Press again to stop.</div></>}
-        {isRecorded && <><div className={styles.playbackBar}><button className={styles.playbackBtn} type="button" onClick={handlePlaybackToggle}><SharedIcon name={isPlaying ? "pause" : "play"} size={17} /></button><div className={styles.playbackTimeline}><div className={styles.playbackTimelineFill} style={{ "--progress": `${playbackProgress}%` } as CSSProperties} /></div><span>00:0{Math.max(1, Math.floor(recTime / 2))}</span></div><div className={styles.actionRow}><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Record Again</button><button className={styles.primaryButton} type="button" onClick={handleCheck}>Score</button></div></>}
+        {recState === "idle" && <div className={styles.recordingStatus}>Bấm để ghi âm</div>}
+        {recState === "recording" && <><Waveform /><div className={styles.recordingTimer}>{String(Math.floor(recTime / 60)).padStart(2, "0")}:{String(recTime % 60).padStart(2, "0")}</div><div className={styles.recordingStatus}>Đang ghi âm. Bấm lần nữa để dừng.</div></>}
+        {isRecorded && <><div className={styles.playbackBar}><button className={styles.playbackBtn} type="button" onClick={handlePlaybackToggle}><SharedIcon name={isPlaying ? "pause" : "play"} size={17} /></button><div className={styles.playbackTimeline}><div className={styles.playbackTimelineFill} style={{ "--progress": `${playbackProgress}%` } as CSSProperties} /></div><span>00:0{Math.max(1, Math.floor(recTime / 2))}</span></div><div className={styles.actionRow}><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Ghi âm lại</button><button className={styles.primaryButton} type="button" onClick={handleCheck}>Chấm điểm</button></div></>}
       </motion.div>
     )
   }
@@ -318,10 +318,10 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
   const renderError = () => {
     if (!micError) return null
     const messages: Record<Exclude<MicError, null>, { title: string; desc: string; action: () => void; button: string }> = {
-      permission: { title: "Microphone permission needed", desc: "Allow microphone access in your browser to practice pronunciation.", action: handleStartRecording, button: "Allow Microphone" },
-      unsupported: { title: "Recording is not supported", desc: "Use a modern Chrome, Edge, or Safari browser for recording.", action: () => window.open("https://support.google.com/chrome", "_blank"), button: "Open Help" },
-      noaudio: { title: "No voice detected", desc: "Read louder and more clearly.", action: handleRetry, button: "Record Again" },
-      tooshort: { title: "Recording too short", desc: "Read the full sentence before stopping.", action: handleRetry, button: "Record Again" },
+      permission: { title: "Cần quyền truy cập micro", desc: "Cho phép trình duyệt dùng micro để luyện phát âm.", action: handleStartRecording, button: "Cho phép micro" },
+      unsupported: { title: "Trình duyệt chưa hỗ trợ ghi âm", desc: "Hãy dùng Chrome, Edge hoặc Safari phiên bản mới để ghi âm.", action: () => window.open("https://support.google.com/chrome", "_blank"), button: "Mở hướng dẫn" },
+      noaudio: { title: "Không phát hiện giọng nói", desc: "Hãy đọc to và rõ hơn.", action: handleRetry, button: "Ghi âm lại" },
+      tooshort: { title: "Bản ghi quá ngắn", desc: "Hãy đọc đầy đủ câu trước khi dừng.", action: handleRetry, button: "Ghi âm lại" },
     }
     const errorInfo = messages[micError]
     return <div className={styles.errorCard}><div className={styles.errorIcon}><SharedIcon name="mic" size={24} /></div><div className={styles.errorTitle}>{errorInfo.title}</div><div className={styles.errorDesc}>{errorInfo.desc}</div><div className={styles.actionRow}><button className={styles.primaryButton} type="button" onClick={errorInfo.action}>{errorInfo.button}</button></div></div>
@@ -335,16 +335,16 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
       <>
         <motion.div className={styles.resultCard} variants={cardVariants}><ScoreRing score={result.overallScore} /><div className={`${styles.scoreLabel} ${styles[`score${tier === "excellent" ? "Excellent" : tier === "good" ? "Good" : tier === "needs_work" ? "NeedsWork" : "Bad"}`]}`}>{getScoreLabel(tier)}</div></motion.div>
         <div className={styles.detailScores}>
-          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="target" size={18} /></div><div className={styles.detailLabel}>Accuracy</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.pronunciationAccuracy)) }}>{result.pronunciationAccuracy}%</div></div>
-          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="headphones" size={18} /></div><div className={styles.detailLabel}>Tone</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.toneAccuracy)) }}>{result.toneAccuracy}%</div></div>
-          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="zap" size={18} /></div><div className={styles.detailLabel}>Fluency</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.fluency)) }}>{result.fluency}%</div></div>
+          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="target" size={18} /></div><div className={styles.detailLabel}>Độ chính xác</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.pronunciationAccuracy)) }}>{result.pronunciationAccuracy}%</div></div>
+          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="headphones" size={18} /></div><div className={styles.detailLabel}>Thanh điệu</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.toneAccuracy)) }}>{result.toneAccuracy}%</div></div>
+          <div className={styles.detailCard}><div className={styles.detailIcon}><SharedIcon name="zap" size={18} /></div><div className={styles.detailLabel}>Lưu loát</div><div className={styles.detailValue} style={{ color: getScoreColor(getScoreTier(result.fluency)) }}>{result.fluency}%</div></div>
         </div>
         <div className={styles.sentenceCard}>
-          <div className={styles.sentenceLabel}>Character feedback</div>
+          <div className={styles.sentenceLabel}>Phản hồi từng chữ</div>
           <div className={styles.charFeedback}>{result.words.map((word, index) => <span key={`${word.text}-${index}`} className={`${styles.charChip} ${word.status === "correct" ? styles.charCorrect : word.status === "needs_improvement" ? styles.charNeedsWork : styles.charIncorrect}`} onClick={() => setSelectedWord(selectedWord?.text === word.text && selectedWord?.score === word.score ? null : word)}>{word.text}</span>)}</div>
-          {selectedWord && <div className={styles.charDetail}><div className={styles.charDetailWord}>{selectedWord.text}</div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Expected:</span><span>{selectedWord.expectedPinyin}</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Detected:</span><span>{selectedWord.detectedPinyin}</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Score:</span><span>{selectedWord.score}%</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Hint:</span><span>{selectedWord.feedback}</span></div><button className={styles.secondaryButton} type="button" onClick={() => setSelectedWord(null)}>Close</button></div>}
+          {selectedWord && <div className={styles.charDetail}><div className={styles.charDetailWord}>{selectedWord.text}</div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Mong đợi:</span><span>{selectedWord.expectedPinyin}</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Phát hiện:</span><span>{selectedWord.detectedPinyin}</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Điểm:</span><span>{selectedWord.score}%</span></div><div className={styles.charDetailRow}><span className={styles.charDetailLabel}>Gợi ý:</span><span>{selectedWord.feedback}</span></div><button className={styles.secondaryButton} type="button" onClick={() => setSelectedWord(null)}>Đóng</button></div>}
         </div>
-        <div className={styles.messageCard}><div className={styles.messageTitle}>{passed ? "Passed" : "Keep practicing"}</div><div className={styles.messageDesc}>{passed ? "Your pronunciation is clear enough to continue." : "Listen to the sample and record the sentence again."}</div>{passed && <div className={styles.expToast}><SharedIcon name="star" size={15} />+10 EXP</div>}<div className={styles.actionRow}>{!passed && <><button className={styles.primaryButton} type="button" onClick={() => speak(sentence.chinese, 1)}>Sample</button><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Record Again</button></>} {passed && <><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Try Again</button><button className={styles.primaryButton} type="button" onClick={handleContinue}>Continue</button></>}</div></div>
+        <div className={styles.messageCard}><div className={styles.messageTitle}>{passed ? "Đạt yêu cầu" : "Tiếp tục luyện nhé"}</div><div className={styles.messageDesc}>{passed ? "Phát âm của bạn đủ rõ để chuyển tiếp." : "Nghe mẫu và ghi âm lại câu này một lần nữa."}</div>{passed && <div className={styles.expToast}><SharedIcon name="star" size={15} />+10 EXP</div>}<div className={styles.actionRow}>{!passed && <><button className={styles.primaryButton} type="button" onClick={() => speak(sentence.chinese, 1)}>Nghe mẫu</button><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Ghi âm lại</button></>} {passed && <><button className={styles.secondaryButton} type="button" onClick={handleRetry}>Thử lại</button><button className={styles.primaryButton} type="button" onClick={handleContinue}>Tiếp tục</button></>}</div></div>
         {renderProgressDots()}
       </>
     )
@@ -354,16 +354,16 @@ export default function PronunciationPage({ params }: { params: Promise<{ level:
     const avgScore = completedResults.length > 0 ? Math.round(completedResults.reduce((sum, item) => sum + item.overallScore, 0) / completedResults.length) : 0
     return (
       <div className={styles.completionCard}>
-        <h2 className={styles.completionTitle}>Pronunciation complete</h2>
-        <div className={styles.completionStats}><div className={styles.statRow}><span className={styles.statLabel}>Sentences practiced</span><span className={styles.statValue}>{completedResults.length}</span></div><div className={styles.statRow}><span className={styles.statLabel}>Average score</span><span className={styles.statValue}>{avgScore}%</span></div><div className={styles.statRow}><span className={styles.statLabel}>Recordings</span><span className={styles.statValue}>{completedResults.length * 2}</span></div></div>
+        <h2 className={styles.completionTitle}>Hoàn thành luyện phát âm</h2>
+        <div className={styles.completionStats}><div className={styles.statRow}><span className={styles.statLabel}>Câu đã luyện</span><span className={styles.statValue}>{completedResults.length}</span></div><div className={styles.statRow}><span className={styles.statLabel}>Điểm trung bình</span><span className={styles.statValue}>{avgScore}%</span></div><div className={styles.statRow}><span className={styles.statLabel}>Số lần ghi âm</span><span className={styles.statValue}>{completedResults.length * 2}</span></div></div>
         <div className={styles.expReward}><SharedIcon name="star" size={16} />+50 EXP</div>
-        <div className={styles.actionRow}><button className={styles.primaryButton} type="button" onClick={() => router.push(`/lessons/${level}/${id}/dictation`)}>Continue</button><button className={styles.secondaryButton} type="button" onClick={() => { setPageState("practice"); setCurrentQ(0); setCompletedResults([]); setExpEarned(0); setRecState("idle"); setResult(null) }}>Practice Again</button></div>
+        <div className={styles.actionRow}><button className={styles.primaryButton} type="button" onClick={() => router.push(`/lessons/${level}/${id}/dictation`)}>Tiếp tục</button><button className={styles.secondaryButton} type="button" onClick={() => { setPageState("practice"); setCurrentQ(0); setCompletedResults([]); setExpEarned(0); setRecState("idle"); setResult(null) }}>Luyện lại</button></div>
       </div>
     )
   }
 
-  if (loading) return <LessonLayout><div className={styles.pronunciationContainer}><div className={styles.stateCard}><p>Dang tai du lieu luyen phat am...</p></div></div></LessonLayout>
-  if (loadError || sentences.length === 0) return <LessonLayout><div className={styles.pronunciationContainer}><div className={styles.stateCard}><p>{loadError || "Bai hoc chua co cau luyen tap nao."}</p><button className={styles.secondaryButton} type="button" onClick={() => router.push(returnHref)}>Back to lesson</button></div></div></LessonLayout>
+  if (loading) return <LessonLayout><div className={styles.pronunciationContainer}><div className={styles.stateCard}><p>Đang tải dữ liệu luyện phát âm...</p></div></div></LessonLayout>
+  if (loadError || sentences.length === 0) return <LessonLayout><div className={styles.pronunciationContainer}><div className={styles.stateCard}><p>{loadError || "Bài học chưa có câu luyện tập nào."}</p><button className={styles.secondaryButton} type="button" onClick={() => router.push(returnHref)}>Quay lại bài học</button></div></div></LessonLayout>
 
   return (
     <LessonLayout>

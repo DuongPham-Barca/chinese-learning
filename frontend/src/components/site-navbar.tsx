@@ -52,20 +52,20 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
 
   const defaultLinks = (
     <>
-      <a className={isActive("home")} href="#home" onClick={(e) => handleNavClick(e, "home")}>Trang chu</a>
-      <a className={isActive("roadmap")} href="#roadmap" onClick={(e) => handleNavClick(e, "roadmap")}>Giao trinh</a>
+      <a className={isActive("home")} href="#home" onClick={(e) => handleNavClick(e, "home")}>Trang chủ</a>
+      <a className={isActive("roadmap")} href="#roadmap" onClick={(e) => handleNavClick(e, "roadmap")}>Giáo trình</a>
       <a className={isActive("features")} href="#features" onClick={(e) => handleNavClick(e, "features")}>Flashcard</a>
-      <Link className={isActive("leaderboard")} href="/leaderboard">Bang xep hang</Link>
-      <Link className={isPricing ? styles.active : ""} href="/pricing">Thanh toan</Link>
+      <Link className={isActive("leaderboard")} href="/leaderboard">Bảng xếp hạng</Link>
+      <Link className={isPricing ? styles.active : ""} href="/pricing">Thanh toán</Link>
     </>
   )
 
   const lessonLinks = (
     <>
-      <Link href="/">Home</Link>
-      <Link href="/#roadmap">Courses</Link>
-      <Link className={lessonActive} href={pathname}>Current Lesson</Link>
-      <Link href="/profile">Profile</Link>
+      <Link href="/">Trang chủ</Link>
+      <Link href="/#roadmap">Giáo trình</Link>
+      <Link className={lessonActive} href={pathname}>Bài học hiện tại</Link>
+      <Link href="/profile">Hồ sơ</Link>
     </>
   )
 
@@ -74,15 +74,15 @@ export default function SiteNavbar({ active: initialActive = "home" }: { active?
       <div className={styles.navInner}>
         <Link href="/" className={styles.brand}><span>中</span><strong>ChineseDict</strong></Link>
         <div className={styles.navLinks}>{isLessonFlow ? lessonLinks : defaultLinks}</div>
-        <div className={styles.navActions}>{authUser ? <><AccountDropdown />{upgradeUser.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Dang nhap</Link><Link href="/login" className={styles.primaryButton}>Bat dau hoc <b>{">"}</b></Link></>}</div>
+        <div className={styles.navActions}>{authUser ? <><AccountDropdown />{upgradeUser.isPro ? <span className={styles.proBadge}>Pro</span> : <ProUpgradeTrigger className={styles.primaryButton} />}</> : <><Link href="/login">Đăng nhập</Link><Link href="/login" className={styles.primaryButton}>Bắt đầu học <b>{">"}</b></Link></>}</div>
         <details className={styles.mobileMenu}>
-          <summary aria-label="Mo menu"><span /><span /><span /></summary>
+          <summary aria-label="Mở menu"><span /><span /><span /></summary>
           <div>
             {isLessonFlow ? lessonLinks : defaultLinks}
             {authUser ? (
               upgradeUser.isPro ? <span className={styles.mobilePro}>ChineseDict Pro</span> : <ProUpgradeTrigger className={styles.mobileUpgrade} />
             ) : (
-              <Link href="/login">Dang nhap</Link>
+              <Link href="/login">Đăng nhập</Link>
             )}
           </div>
         </details>

@@ -27,7 +27,7 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
         if (active) setVocab(response.data.vocabulary)
       })
       .catch(() => {
-        if (active) setError("Khong the tai du lieu flashcard.")
+        if (active) setError("Không thể tải dữ liệu thẻ từ vựng.")
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -66,9 +66,9 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
 
   const returnHref = `/lessons/${level}/${id}`
 
-  if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Dang tai flashcard...</p></div></div></LessonLayout>
-  if (error || vocab.length === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{error || "Bai hoc chua co tu vung."}</p><Link className={styles.secondaryButton} href={returnHref}>Back to lesson</Link></div></div></LessonLayout>
-  if (current >= vocab.length) return <LessonLayout><div className={styles.studyWrap}><div className={styles.completionCard}><h2 className={styles.completionTitle}>Flashcard complete</h2><p>Known: {known} - Need review: {review}</p><div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Back to lesson</Link></div></div></div></LessonLayout>
+  if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải thẻ từ vựng...</p></div></div></LessonLayout>
+  if (error || vocab.length === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{error || "Bài học chưa có từ vựng."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>
+  if (current >= vocab.length) return <LessonLayout><div className={styles.studyWrap}><div className={styles.completionCard}><h2 className={styles.completionTitle}>Hoàn thành thẻ từ vựng</h2><p>Đã thuộc: {known} - Cần ôn: {review}</p><div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Quay lại bài học</Link></div></div></div></LessonLayout>
 
   const card = vocab[current]
   const progress = Math.round(((current + 1) / vocab.length) * 100)
@@ -88,27 +88,27 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
       <section className={styles.studyWrap}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
-            <Link className={styles.iconButton} href={returnHref} aria-label="Close Flashcard"><SharedIcon name="close" size={18} /></Link>
-            <div className={styles.studyHeaderTitle}><strong>Vocabulary {current + 1} / {vocab.length}</strong><span>{progress}% complete</span></div>
-            <button className={styles.iconButton} type="button" aria-label="Options"><SharedIcon name="moreHorizontal" size={18} /></button>
+            <Link className={styles.iconButton} href={returnHref} aria-label="Đóng thẻ từ vựng"><SharedIcon name="close" size={18} /></Link>
+            <div className={styles.studyHeaderTitle}><strong>Từ vựng {current + 1} / {vocab.length}</strong><span>Hoàn thành {progress}%</span></div>
+            <button className={styles.iconButton} type="button" aria-label="Tùy chọn"><SharedIcon name="moreHorizontal" size={18} /></button>
           </div>
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <motion.div key={card.id} className={`${styles.flashScene} ${flipped ? styles.flipped : ""}`} variants={cardVariants} initial="hidden" animate="visible" onClick={() => setFlipped((value) => !value)} onKeyDown={(event) => { if (event.key === "Enter") setFlipped((value) => !value) }} role="button" tabIndex={0} aria-label="Flip card">
+        <motion.div key={card.id} className={`${styles.flashScene} ${flipped ? styles.flipped : ""}`} variants={cardVariants} initial="hidden" animate="visible" onClick={() => setFlipped((value) => !value)} onKeyDown={(event) => { if (event.key === "Enter") setFlipped((value) => !value) }} role="button" tabIndex={0} aria-label="Lật thẻ">
           <div className={styles.flashCard}>
-            <div className={`${styles.cardFace} ${styles.cardFront}`}><strong>{card.hanzi}</strong><small>{card.pinyin}</small><button type="button" className={styles.audioButton} onClick={(event) => { event.stopPropagation(); speak() }} aria-label={`Play ${card.hanzi}`}><SharedIcon name="volume2" size={29} /></button></div>
-            <div className={`${styles.cardFace} ${styles.cardBack}`}><small>Vietnamese meaning</small><strong>{card.meaningVi}</strong><p>{card.hanzi} - {card.pinyin}</p><em>Tap to review the front</em></div>
+            <div className={`${styles.cardFace} ${styles.cardFront}`}><strong>{card.hanzi}</strong><small>{card.pinyin}</small><button type="button" className={styles.audioButton} onClick={(event) => { event.stopPropagation(); speak() }} aria-label={`Phát âm ${card.hanzi}`}><SharedIcon name="volume2" size={29} /></button></div>
+            <div className={`${styles.cardFace} ${styles.cardBack}`}><small>Nghĩa tiếng Việt</small><strong>{card.meaningVi}</strong><p>{card.hanzi} - {card.pinyin}</p><em>Nhấn để xem lại mặt trước</em></div>
           </div>
         </motion.div>
 
         <div className={styles.studyActions}>
-          <button type="button" className={`${styles.choiceButton} ${styles.reviewChoice}`} onClick={markReview}><SharedIcon name="rotateCcw" size={22} /><span><strong>Need Review</strong><small>Show this word more often</small></span></button>
-          <button type="button" className={`${styles.choiceButton} ${styles.knownChoice}`} onClick={markKnown}><SharedIcon name="check" size={22} /><span><strong>Known</strong><small>Move to the next word</small></span></button>
+          <button type="button" className={`${styles.choiceButton} ${styles.reviewChoice}`} onClick={markReview}><SharedIcon name="rotateCcw" size={22} /><span><strong>Cần ôn lại</strong><small>Từ này sẽ xuất hiện thường xuyên hơn</small></span></button>
+          <button type="button" className={`${styles.choiceButton} ${styles.knownChoice}`} onClick={markKnown}><SharedIcon name="check" size={22} /><span><strong>Đã thuộc</strong><small>Chuyển sang từ tiếp theo</small></span></button>
         </div>
-        <div className={styles.statStrip}><span><b>{known}</b>Known</span><span><b>{review}</b>Need Review</span><span><b>{vocab.length - current}</b>Remaining</span></div>
+        <div className={styles.statStrip}><span><b>{known}</b>Đã thuộc</span><span><b>{review}</b>Cần ôn</span><span><b>{vocab.length - current}</b>Còn lại</span></div>
       </section>
-      <aside className={styles.stickyStudyBar}><div className={styles.stickyStudyInner}><span>Accuracy {accuracy}%</span><Link className={styles.secondaryButton} href={returnHref}>Lesson Overview</Link></div></aside>
+      <aside className={styles.stickyStudyBar}><div className={styles.stickyStudyInner}><span>Độ chính xác {accuracy}%</span><Link className={styles.secondaryButton} href={returnHref}>Tổng quan bài học</Link></div></aside>
     </LessonLayout>
   )
 }
