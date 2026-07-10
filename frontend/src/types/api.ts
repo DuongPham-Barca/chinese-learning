@@ -13,6 +13,7 @@ export interface AuthUser {
   expPoints: number
   isPremium: boolean
   subscriptionUntil: string | null
+  plan: "2months" | "6months" | "12months" | null
 }
 
 export interface LeaderboardUser {

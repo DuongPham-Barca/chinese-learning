@@ -364,11 +364,15 @@ router.get('/me', asyncHandler(async (req, res) => {
       isPremium: true,
       role: true,
       subscriptionUntil: true,
+      subscriptions: { orderBy: { createdAt: 'desc' }, take: 1, select: { planId: true } },
     },
   })
 
   if (!user) return res.status(404).json({ error: 'User not found' })
-  res.json({ user })
+  const { subscriptions, ...rest } = user
+  const planMap: Record<string, string> = { TWO_MONTHS: '2months', SIX_MONTHS: '6months', TWELVE_MONTHS: '12months' }
+  const plan = subscriptions[0]?.planId ? (planMap[subscriptions[0].planId] ?? null) : null
+  res.json({ user: { ...rest, plan } })
 }))
 
 router.get('/username-availability', requireCurrentUser, asyncHandler(async (req, res) => {

@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import SiteNavbar from "@/components/site-navbar"
 import LoadingSpinner from "@/components/loading-spinner"
 import QrPaymentModal from "@/components/qr-payment-modal"
+import { useAuth } from "@/lib/auth-provider"
 import styles from "./pricing.module.css"
 
 type PlanId = "2months" | "6months" | "12months"
@@ -114,6 +115,7 @@ const itemVariants = {
 }
 
 export default function PricingPage() {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -194,10 +196,11 @@ export default function PricingPage() {
             </ul>
             <button
               type="button"
-              className={`${styles.ctaButton} ${plan.popular ? styles.ctaPrimary : ""}`}
-                onClick={() => { setSelectedPlan(plan.id); setPaymentModalOpen(true) }}
+              className={`${styles.ctaButton} ${plan.popular ? styles.ctaPrimary : ""} ${user?.plan === plan.id ? styles.ctaDisabled : ""}`}
+              disabled={user?.plan === plan.id}
+              onClick={() => { setSelectedPlan(plan.id); setPaymentModalOpen(true) }}
             >
-              {plan.buttonLabel}
+              {user?.plan === plan.id ? "Đang sử dụng" : plan.buttonLabel}
             </button>
           </motion.div>
         ))}

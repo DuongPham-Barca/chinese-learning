@@ -52,7 +52,7 @@ export async function issueAdminSession(res: Response, user: SessionUser): Promi
       sessionToken: hashRefreshToken(sessionToken),
       // Safety ceiling only. The frontend revokes this session immediately
       // whenever the administrator leaves the /admin area.
-      expires: new Date(Date.now() + 30 * 60 * 1000),
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     },
   })
 
