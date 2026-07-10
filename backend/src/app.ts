@@ -3,6 +3,7 @@ import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import { adminGuard } from './lib/admin-guard'
 import adminContentRoutes from './modules/admin/admin-content.routes'
+import adminDashboardRoutes from './modules/admin/admin-dashboard.routes'
 import adminUsersRoutes from './modules/admin/admin-users.routes'
 import authRoutes from './modules/auth/auth.routes'
 import leaderboardRoutes from './modules/leaderboard/leaderboard.routes'
@@ -28,6 +29,7 @@ app.use('/api/auth', authRoutes)
 // Defense-in-depth: every current or future /api/admin endpoint is protected centrally.
 app.use('/api/admin', adminGuard)
 app.use('/api/admin', adminContentRoutes)
+app.use('/api/admin', adminDashboardRoutes)
 app.use('/api/admin', adminUsersRoutes)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/vocabulary', vocabRoutes)

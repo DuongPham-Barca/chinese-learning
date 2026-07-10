@@ -1,26 +1,16 @@
 "use client"
 
-import { use, useCallback, useEffect, useState } from "react"
+import { use, useCallback, useEffect, useState, type CSSProperties } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
+import { cardVariants, containerVariants } from "@/app/animations"
+import LessonLayout from "@/components/lesson-layout"
+import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
 import type { Sentence } from "@/types/api"
-import styles from "../../../../courses/hsk1/lesson-1/dictation/dictation.module.css"
+import styles from "../../../lesson-flow.module.css"
 
-type IconName = "close" | "bulb" | "play" | "pause" | "repeat" | "translate" | "fire"
 type CheckStatus = "idle" | "success" | "error"
-
-function Icon({ name }: { name: IconName }) {
-  const paths: Record<IconName, React.ReactNode> = {
-    close: <path d="m6 6 12 12M18 6 6 18" />,
-    bulb: <><path d="M9 18h6M10 22h4"/><path d="M8.5 15.5A7 7 0 1 1 15.5 15.5c-.8.6-1.2 1.3-1.3 2.5h-4.4c-.1-1.2-.5-1.9-1.3-2.5Z"/></>,
-    play: <path d="m9 7 8 5-8 5V7Z" />,
-    pause: <path d="M9 7v10M15 7v10" />,
-    repeat: <><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></>,
-    translate: <><path d="M3 5h12M9 3v2M5 9c1.5 3 4 5 7 6M13 9c-1.5 3-4 5-7 6"/><path d="m14 21 4-9 4 9M15.5 18h5"/></>,
-    fire: <path d="M12 22c4 0 7-2.8 7-7.2 0-3.4-2.2-6.4-5.4-9.3.1 2.3-.8 4-2.1 4.9.2-3.4-1.5-6.1-4-8.4.1 4-2.5 6.5-2.5 10.8C5 18.2 8 22 12 22Z"/>,
-  }
-  return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
-}
 
 export default function DictationPage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
@@ -43,7 +33,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
         if (active) setSentences(response.data.sentences)
       })
       .catch(() => {
-        if (active) setLoadError("Không thể tải dữ liệu Dictation.")
+        if (active) setLoadError("Khong the tai du lieu Dictation.")
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -61,7 +51,6 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
       setPlaying(false)
       return
     }
-
     const utterance = new SpeechSynthesisUtterance(sentence.sentenceZh)
     utterance.lang = "zh-CN"
     utterance.rate = speed
@@ -115,48 +104,56 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
   useEffect(() => () => window.speechSynthesis?.cancel(), [])
 
   const returnHref = `/lessons/${level}/${id}`
+  const progress = totalItems ? ((current + (status === "success" ? 1 : 0)) / totalItems) * 100 : 0
 
-  if (loading) return <main className={styles.page}><section className={styles.practiceShell}><div style={{ padding: "2rem", textAlign: "center" }}>Đang tải Dictation...</div></section></main>
-  if (loadError || totalItems === 0) return <main className={styles.page}><section className={styles.practiceShell}><div style={{ padding: "2rem", textAlign: "center" }}><p>{loadError || "Bài học chưa có câu luyện tập."}</p><Link href={returnHref}>← Quay lại bài học</Link></div></section></main>
-  if (current >= totalItems) return <main className={styles.page}><section className={styles.practiceShell}><div style={{ minHeight: "70vh", display: "grid", placeContent: "center", textAlign: "center", gap: 16 }}><h2>Hoàn thành Dictation! 🎉</h2><p>{errors} lỗi · {accuracy}% độ chính xác</p><Link href={returnHref}>← Quay lại bài học</Link></div></section></main>
+  if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Dang tai Dictation...</p></div></div></LessonLayout>
+  if (loadError || totalItems === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{loadError || "Bai hoc chua co cau luyen tap."}</p><Link className={styles.secondaryButton} href={returnHref}>Back to lesson</Link></div></div></LessonLayout>
+  if (current >= totalItems) return <LessonLayout><div className={styles.studyWrap}><div className={styles.completionCard}><h2 className={styles.completionTitle}>Dictation complete</h2><p>{errors} mistakes - {accuracy}% accuracy</p><div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Back to lesson</Link></div></div></div></LessonLayout>
 
   return (
-    <main className={styles.page}>
-      <section className={styles.practiceShell}>
-        <header className={styles.header}>
-          <div className={styles.headerInner}><Link href={returnHref} aria-label="Đóng Dictation"><Icon name="close" /></Link><strong>Dictation {current + 1} / {totalItems}</strong><span><Icon name="fire" />{30} EXP</span></div>
-          <div className={styles.topProgress}><i style={{ width: `${((current + (status === "success" ? 1 : 0)) / totalItems) * 100}%` }} /></div>
+    <LessonLayout>
+      <section className={styles.studyWrap}>
+        <header className={styles.studyHeader}>
+          <div className={styles.studyHeaderInner}>
+            <Link className={styles.iconButton} href={returnHref} aria-label="Close Dictation"><SharedIcon name="close" size={18} /></Link>
+            <div className={styles.studyHeaderTitle}><strong>Dictation {current + 1} / {totalItems}</strong><span>{Math.round(progress)}% complete</span></div>
+            <span className={styles.iconButton}><SharedIcon name="fire" size={18} /></span>
+          </div>
+          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <div className={styles.content}>
-          <section className={styles.hintCard}><i><Icon name="bulb" /></i><div><span>GỢI Ý NGHĨA</span><h1>{sentence.sentenceVi}</h1><p>Nghe và nhập đúng câu tiếng Trung.</p></div></section>
+        <motion.div className={styles.dictationGrid} variants={containerVariants} initial="hidden" animate="visible">
+          <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}><i><SharedIcon name="sparkles" size={22} /></i><div><span>VIETNAMESE MEANING</span><h1>{sentence.sentenceVi}</h1><p>Listen and type the Chinese sentence.</p></div></motion.section>
 
-          <section className={styles.audioCard}>
+          <motion.section className={`${styles.practiceCard} ${styles.audioCard}`} variants={cardVariants}>
             <div className={`${styles.waveform} ${playing ? styles.wavePlaying : ""}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
-            <button type="button" className={styles.playButton} onClick={togglePlay} aria-label={playing ? "Tạm dừng" : "Phát câu tiếng Trung"}><Icon name={playing ? "pause" : "play"} /></button>
-            <div className={styles.timelineLabels}><span>00:0{Math.floor(time)}</span><span>00:03</span></div>
-            <div className={styles.timeline}><span style={{ width: `${(time / 3) * 100}%` }} /></div>
-            <div className={styles.speedSelector}><Icon name="repeat" />{[0.75, 1, 1.25].map((value) => <button type="button" className={speed === value ? styles.activeSpeed : ""} onClick={() => setSpeed(value)} key={value}>{value}x</button>)}</div>
-          </section>
+            <button type="button" className={styles.playButton} onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}><SharedIcon name={playing ? "pause" : "play"} size={28} /></button>
+            <div className={styles.timeRow}><span>00:0{Math.floor(time)}</span><span>00:03</span></div>
+            <div className={styles.studyProgress} style={{ "--progress": `${(time / 3) * 100}%` } as CSSProperties}><i /></div>
+            <div className={styles.speedRow}><SharedIcon name="repeat" size={14} />{[0.75, 1, 1.25].map((value) => <button type="button" className={speed === value ? styles.activeSpeed : ""} onClick={() => setSpeed(value)} key={value}>{value}x</button>)}</div>
+          </motion.section>
+        </motion.div>
 
-          <section className={`${styles.inputCard} ${status === "success" ? styles.inputSuccess : status === "error" ? styles.inputError : ""}`}>
-            <label htmlFor="hanzi-answer">NHẬP CHỮ HÁN</label>
-            <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Gõ chữ Hán tại đây..." autoFocus />
-            <p><Icon name="translate" />Nhập câu tiếng Trung bạn vừa nghe</p>
-            {status === "success" && <strong className={styles.feedbackSuccess}>Chính xác!</strong>}
-            {status === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {sentence.sentenceZh}</strong>}
-          </section>
+        <motion.section className={`${styles.practiceCard} ${styles.inputCard} ${status === "success" ? styles.inputSuccess : status === "error" ? styles.inputError : ""}`} variants={cardVariants} initial="hidden" animate="visible">
+          <label htmlFor="hanzi-answer">CHINESE INPUT</label>
+          <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Type Hanzi here..." autoFocus />
+          <p className={styles.inputHelp}><SharedIcon name="translate" size={14} />Type the Chinese sentence you heard</p>
+          {status === "success" && <strong className={styles.feedbackSuccess}>Correct.</strong>}
+          {status === "error" && <strong className={styles.feedbackError}>Correct answer: {sentence.sentenceZh}</strong>}
+        </motion.section>
 
-          <div className={styles.statusRow}>
-            <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && status === "success") ? styles.dotDone : ""} />)}</div>
-            <div><span><b>{errors}</b> lỗi</span><span><strong>{accuracy}%</strong> độ chính xác</span></div>
-          </div>
+        <div className={styles.practiceStatus}>
+          <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && status === "success") ? styles.dotDone : ""} />)}</div>
+          <div className={styles.accuracyRow}><span><b>{errors}</b> mistakes</span><span><strong>{accuracy}%</strong> accuracy</span></div>
         </div>
-
-        <aside className={styles.stickyBar}>
-          {status === "success" ? <button type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <b>→</b></button> : <button type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra <b>→</b></button>}
-        </aside>
       </section>
-    </main>
+
+      <aside className={styles.stickyStudyBar}>
+        <div className={styles.stickyStudyInner}>
+          <span>{status === "success" ? "Ready for the next sentence" : "Check your Chinese input"}</span>
+          {status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Next Question" : "Finish"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={!answer.trim()}>Check <SharedIcon name="arrowRight" size={15} /></button>}
+        </div>
+      </aside>
+    </LessonLayout>
   )
 }

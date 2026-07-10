@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { motion, type Variants } from "framer-motion"
 import { AdminButton, PageHeader, StatCard } from "@/components/admin/admin-ui"
+import { getDashboard, type DashboardData, type RevenuePoint, type WeeklyNewUser, type Activity } from "@/services/admin-dashboard.service"
 import styles from "./dashboard.module.css"
 
 const containerVariants: Variants = {
@@ -31,43 +33,77 @@ const cardVariants: Variants = {
   },
 }
 
-function RevenueChart() {
-  return <section className={styles.chartCard}><header><h2>Biểu đồ Doanh thu (30 ngày)</h2><span><i />Doanh thu</span></header><div className={styles.lineChart}><svg viewBox="0 0 620 250" preserveAspectRatio="none"><defs><linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2563eb" stopOpacity=".28"/><stop offset="1" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs><path className={styles.gridLine} d="M0 50H620M0 100H620M0 150H620M0 200H620"/><path className={styles.area} d="M0 208 62 184 124 157 186 170 248 91 310 121 372 67 434 96 496 47 558 60 620 25V235H0Z"/><path className={styles.line} d="M0 208 62 184 124 157 186 170 248 91 310 121 372 67 434 96 496 47 558 60 620 25"/><circle cx="372" cy="67" r="5" /></svg><div className={styles.tooltip}><small>24 Oct</small><strong>2.450.000đ</strong></div></div><footer><span>1 OCT</span><span>8 OCT</span><span>15 OCT</span><span>22 OCT</span><span>30 OCT</span></footer></section>
+function formatCurrency(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}Mđ`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}.000đ`
+  return `${n}đ`
 }
 
-function BarChart() {
-  const bars = [42,70,94,112,64,48,35]
-  return <section className={styles.barCard}><header><h2>Người dùng mới (Tuần)</h2></header><div className={styles.bars}>{bars.map((height,index) => <div key={index}><span className={index === 3 ? styles.activeBar : ""} style={{ height }} />{index === 3 && <b>250</b>}<small>{["T2","T3","T4","T5","T6","T7","CN"][index]}</small></div>)}</div></section>
+function RevenueChart({ data }: { data: RevenuePoint[] }) {
+  if (!data.length) return null
+  const values = data.map((d) => d.total)
+  const max = Math.max(...values, 1)
+  const points = data.map((d, i) => ({ x: (i / (data.length - 1)) * 620, y: 235 - (d.total / max) * 210 }))
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ")
+  const areaD = `${pathD} L620 235 L0 235 Z`
+  const tip = points.length >= 6 ? points[Math.floor(points.length / 2)] : points[points.length - 1]
+  const tipVal = data[Math.floor(data.length / 2)]?.total || 0
+  const tipDate = data[Math.floor(data.length / 2)]?.date?.slice(5) || ""
+
+  return <section className={styles.chartCard}><header><h2>Biểu đồ Doanh thu (30 ngày)</h2><span><i />Doanh thu</span></header><div className={styles.lineChart}><svg viewBox="0 0 620 250" preserveAspectRatio="none"><defs><linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2563eb" stopOpacity=".28"/><stop offset="1" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs><path className={styles.gridLine} d="M0 50H620M0 100H620M0 150H620M0 200H620"/><path className={styles.area} d={areaD}/><path className={styles.line} d={pathD}/><circle cx={tip.x} cy={tip.y} r="5" /></svg><div className={styles.tooltip}><small>{tipDate}</small><strong>{formatCurrency(tipVal)}</strong></div></div><footer><span>{data[0]?.date?.slice(5)?.replace("-", "/") || ""}</span><span>Giữa tháng</span><span>{data[data.length - 1]?.date?.slice(5)?.replace("-", "/") || ""}</span></footer></section>
 }
 
-function ActivityCard() {
-  const activities = [["User mới đăng ký","Lê Văn Hùng vừa gia nhập cộng đồng.","2 phút trước"],["Thanh toán thành công","Đơn hàng #CD-4920 đã được xác nhận.","15 phút trước"],["Bài học mới được đăng","Admin Minh Anh vừa xuất bản bài học HSK 4.","1 giờ trước"],["Chỉnh sửa hệ thống","Cập nhật quy tắc tính điểm Quiz hàng tuần.","3 giờ trước"]]
-  return <section className={styles.activityCard}><header><h2>Hoạt động gần đây</h2><a href="#all">Xem tất cả</a></header><div>{activities.map(([title,text,time],index) => <article key={title}><i>{index === 1 ? "✓" : index === 2 ? "▣" : "●"}</i><span><strong>{title}</strong><small>{text}</small></span><time>{time}</time></article>)}</div></section>
+function BarChart({ data }: { data: WeeklyNewUser[] }) {
+  const max = Math.max(...data.map((d) => d.count), 1)
+  return <section className={styles.barCard}><header><h2>Người dùng mới (Tuần)</h2></header><div className={styles.bars}>{data.map((d, i) => { const height = (d.count / max) * 94; const isActive = i === new Date().getDay(); return <div key={d.day}><span className={isActive ? styles.activeBar : ""} style={{ height: Math.max(height, 4) }} />{isActive && <b>{d.count}</b>}<small>{d.day}</small></div> })}</div></section>
+}
+
+function ActivityCard({ activities }: { activities: Activity[] }) {
+  return <section className={styles.activityCard}><header><h2>Hoạt động gần đây</h2></header><div>{activities.map((a, i) => <article key={i}><i>{a.type === "payment" ? "✓" : a.type === "lesson" ? "▣" : "●"}</i><span><strong>{a.title}</strong><small>{a.text}</small></span><time>{a.time}</time></article>)}</div></section>
 }
 
 function SystemHealthCard() {
-  const metrics = [["Tốc độ phản hồi",98],["Tỉ lệ chuyển đổi",42],["Lượng bài tập hoàn thành",76]] as const
-  return <section className={styles.healthCard}><h2>Sức khỏe hệ thống</h2><p>Dựa trên dữ liệu 7 ngày qua, hệ thống đang hoạt động ở mức tối ưu.</p><div>{metrics.map(([label,value]) => <article key={label}><header><span>{label}</span><b>{value}%</b></header><i><em style={{ width: `${value}%` }} /></i></article>)}</div></section>
+  const metrics = [["Tốc độ phản hồi", 98], ["Tỉ lệ chuyển đổi", 42], ["Lượng bài tập hoàn thành", 76]] as const
+  return <section className={styles.healthCard}><h2>Sức khỏe hệ thống</h2><p>Dựa trên dữ liệu 7 ngày qua, hệ thống đang hoạt động ở mức tối ưu.</p><div>{metrics.map(([label, value]) => <article key={label}><header><span>{label}</span><b>{value}%</b></header><i><em style={{ width: `${value}%` }} /></i></article>)}</div></section>
 }
 
 export default function AdminDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    getDashboard()
+      .then((res) => { if (active) setData(res.data) })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [])
+
+  if (loading) {
+    return <motion.div variants={containerVariants} initial="hidden" animate="visible"><motion.div variants={itemVariants}><PageHeader title="Tổng quan" /></motion.div></motion.div>
+  }
+
+  const stats = data?.stats
+  const formatStat = (v?: number) => v?.toLocaleString("en-US") || "0"
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <motion.div variants={itemVariants}>
         <PageHeader title="Tổng quan" subtitle={<>Xin chào Admin 👋. Chào mừng bạn trở lại bảng điều khiển.</>} actions={<><AdminButton icon="calendar" secondary>30 NGÀY QUA</AdminButton><AdminButton icon="download">XUẤT BÁO CÁO</AdminButton></>} />
       </motion.div>
       <motion.section className={styles.statsGrid} variants={containerVariants}>
-        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="users" label="Người dùng" value="12,540" meta="+8%" /></motion.div>
-        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="book" label="Bài học" value="72" meta="Hiện hành" /></motion.div>
-        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="wallet" label="Doanh thu tháng" value="12.5Md" meta="+12.4%" /></motion.div>
-        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="alert" label="Chờ duyệt" value="18" meta="Cần xử lý" tone="red" /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="users" label="Người dùng" value={formatStat(stats?.totalUsers)} meta={`${stats?.activeUsers || 0} đang hoạt động`} /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="book" label="Bài học" value={formatStat(stats?.totalLessons)} meta="Đã xuất bản" /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="wallet" label="Doanh thu tháng" value={formatCurrency(stats?.monthlyRevenue || 0)} meta={`+${stats?.newUsersThisMonth || 0} người dùng mới`} /></motion.div>
+        <motion.div variants={cardVariants} whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(37,99,235,0.12)", transition: { duration: 0.25, ease: "easeOut" } }}><StatCard icon="alert" label="Chờ duyệt" value={formatStat(stats?.pendingSubscriptions)} meta="Cần xử lý" tone="red" /></motion.div>
       </motion.section>
       <motion.section className={styles.chartsGrid} variants={containerVariants}>
-        <motion.div variants={cardVariants}><RevenueChart /></motion.div>
-        <motion.div variants={cardVariants}><BarChart /></motion.div>
+        <motion.div variants={cardVariants}><RevenueChart data={data?.revenueChart || []} /></motion.div>
+        <motion.div variants={cardVariants}><BarChart data={data?.weeklyNewUsers || []} /></motion.div>
       </motion.section>
       <motion.section className={styles.bottomGrid} variants={containerVariants}>
-        <motion.div variants={cardVariants}><ActivityCard /></motion.div>
+        <motion.div variants={cardVariants}><ActivityCard activities={data?.recentActivities || []} /></motion.div>
         <motion.div variants={cardVariants}><SystemHealthCard /></motion.div>
       </motion.section>
     </motion.div>
