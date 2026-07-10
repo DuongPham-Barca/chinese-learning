@@ -21,6 +21,15 @@ type TelegramCallbackQuery = {
   }
 }
 
+type SubscriptionResult = {
+  id: string
+  userId: string
+  planId: unknown
+  amount: number
+  transferContent: string
+  expiresAt?: Date | null
+}
+
 let handlersReady = false
 
 function escapeMarkdown(value: unknown) {
@@ -29,6 +38,13 @@ function escapeMarkdown(value: unknown) {
 
 function formatMoney(amount: number) {
   return `${amount.toLocaleString('vi-VN')}đ`
+}
+
+function formatPlan(plan: unknown) {
+  if (plan === 'SIX_MONTHS') return '6months'
+  if (plan === 'TWELVE_MONTHS') return '12months'
+  if (plan === 'TWO_MONTHS') return '2months'
+  return plan
 }
 
 function parseCallbackData(data?: string) {
@@ -46,6 +62,27 @@ async function editCallbackMessage(bot: ReturnType<typeof getBot>, query: Telegr
     message_id: query.message.message_id,
     parse_mode: 'Markdown',
   })
+}
+
+async function sendSubscriptionResultMessage(
+  bot: ReturnType<typeof getBot>,
+  chatId: number,
+  status: 'confirmed' | 'rejected',
+  subscription: SubscriptionResult,
+) {
+  const isConfirmed = status === 'confirmed'
+  const message = [
+    isConfirmed ? '✅ *Đã xác nhận nâng cấp Pro*' : '❌ *Đã từ chối yêu cầu nâng cấp Pro*',
+    '',
+    `ID: \`${escapeMarkdown(subscription.id)}\``,
+    `User ID: \`${escapeMarkdown(subscription.userId)}\``,
+    `Gói: ${escapeMarkdown(formatPlan(subscription.planId))}`,
+    `Số tiền: ${escapeMarkdown(formatMoney(subscription.amount))}`,
+    `Nội dung CK: \`${escapeMarkdown(subscription.transferContent)}\``,
+    ...(isConfirmed && subscription.expiresAt ? [`Hết hạn: ${escapeMarkdown(subscription.expiresAt.toLocaleDateString('vi-VN'))}`] : []),
+  ].join('\n')
+
+  await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' })
 }
 
 export function setupTelegramHandlers() {
@@ -70,15 +107,17 @@ export function setupTelegramHandlers() {
 
     try {
       if (parsed.action === 'subscription_confirm') {
-        await confirmSubscription(parsed.id, 'telegram_admin')
+        const subscription = await confirmSubscription(parsed.id, 'telegram_admin')
         await bot.answerCallbackQuery(query.id, { text: 'Đã xác nhận nâng cấp Pro' })
         await editCallbackMessage(bot, query, `✅ *Đã xác nhận nâng cấp Pro*\n\nID: \`${escapeMarkdown(parsed.id)}\``)
+        await sendSubscriptionResultMessage(bot, adminChatId, 'confirmed', subscription)
         return
       }
 
-      await rejectSubscription(parsed.id, 'telegram_admin')
+      const subscription = await rejectSubscription(parsed.id, 'telegram_admin')
       await bot.answerCallbackQuery(query.id, { text: 'Đã từ chối yêu cầu' })
       await editCallbackMessage(bot, query, `❌ *Đã từ chối yêu cầu nâng cấp Pro*\n\nID: \`${escapeMarkdown(parsed.id)}\``)
+      await sendSubscriptionResultMessage(bot, adminChatId, 'rejected', subscription)
     } catch (error) {
       console.error('Telegram callback handler failed:', error)
       await bot.answerCallbackQuery(query.id, { text: 'Không xử lý được yêu cầu' })
