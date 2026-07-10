@@ -22,6 +22,24 @@ type LessonSeed = {
   sentences: SentenceSeed[]
 }
 
+const levelSeeds: Array<{ id: string; type: LevelType; name: string; slug: string; description: string; order: number }> = [
+  { id: 'level_hsk1', type: LevelType.HSK1, name: 'HSK 1', slug: 'hsk-1', description: 'Tu vung va mau cau co ban HSK 1', order: 1 },
+  { id: 'level_hsk2', type: LevelType.HSK2, name: 'HSK 2', slug: 'hsk-2', description: 'Tu vung va mau cau co ban HSK 2', order: 2 },
+  { id: 'level_hsk3', type: LevelType.HSK3, name: 'HSK 3', slug: 'hsk-3', description: 'Noi dung trung cap HSK 3', order: 3 },
+  { id: 'level_hsk4', type: LevelType.HSK4, name: 'HSK 4', slug: 'hsk-4', description: 'Noi dung trung cap HSK 4', order: 4 },
+  { id: 'level_hsk5', type: LevelType.HSK5, name: 'HSK 5', slug: 'hsk-5', description: 'Noi dung nang cao HSK 5', order: 5 },
+  { id: 'level_hsk6', type: LevelType.HSK6, name: 'HSK 6', slug: 'hsk-6', description: 'Noi dung nang cao HSK 6', order: 6 },
+  { id: 'level_communication', type: LevelType.COMMUNICATION, name: 'Giao tiep', slug: 'giao-tiep', description: 'Tieng Trung giao tiep thuc te', order: 7 },
+]
+
+function levelIdFor(type: LevelType): string {
+  return levelSeeds.find((level) => level.type === type)?.id || 'level_communication'
+}
+
+function lessonSlug(order: number): string {
+  return `bai-${order}`
+}
+
 const lessons: LessonSeed[] = [
   {
     levelType: LevelType.HSK1,
@@ -377,6 +395,32 @@ async function seedAdmin() {
   console.log('  ✓ Admin: admin@example.com')
 }
 
+async function seedLevels() {
+  for (const level of levelSeeds) {
+    await prisma.level.upsert({
+      where: { slug: level.slug },
+      update: {
+        type: level.type,
+        name: level.name,
+        description: level.description,
+        order: level.order,
+        isPublished: true,
+      },
+      create: {
+        id: level.id,
+        type: level.type,
+        name: level.name,
+        slug: level.slug,
+        description: level.description,
+        order: level.order,
+        isPublished: true,
+      },
+    })
+  }
+
+  console.log('  Levels seeded')
+}
+
 async function seedLesson(data: LessonSeed) {
   const existingLesson = await prisma.lesson.findFirst({
     where: {
@@ -388,26 +432,37 @@ async function seedLesson(data: LessonSeed) {
   const lesson = existingLesson
     ? await prisma.lesson.update({
         where: { id: existingLesson.id },
-        data: { title: data.title, isFree: true },
+        data: {
+          levelId: levelIdFor(data.levelType),
+          title: data.title,
+          slug: lessonSlug(data.lessonOrder),
+          isFree: true,
+          isPublished: true,
+          expReward: 10,
+        },
       })
     : await prisma.lesson.create({
         data: {
+          levelId: levelIdFor(data.levelType),
           levelType: data.levelType,
           lessonOrder: data.lessonOrder,
           title: data.title,
+          slug: lessonSlug(data.lessonOrder),
           isFree: true,
+          isPublished: true,
+          expReward: 10,
         },
       })
 
-  for (const word of data.words) {
+  for (const [index, word] of data.words.entries()) {
     const existingWord = await prisma.vocabulary.findFirst({
       where: { lessonId: lesson.id, hanzi: word.hanzi },
     })
 
     if (existingWord) {
-      await prisma.vocabulary.update({ where: { id: existingWord.id }, data: word })
+      await prisma.vocabulary.update({ where: { id: existingWord.id }, data: { ...word, order: index + 1 } })
     } else {
-      await prisma.vocabulary.create({ data: { lessonId: lesson.id, ...word } })
+      await prisma.vocabulary.create({ data: { lessonId: lesson.id, ...word, order: index + 1 } })
     }
   }
 
@@ -432,6 +487,7 @@ async function seedLesson(data: LessonSeed) {
 async function main() {
   console.log('Seeding...')
   await seedAdmin()
+  await seedLevels()
 
   for (const lesson of lessons) {
     await seedLesson(lesson)

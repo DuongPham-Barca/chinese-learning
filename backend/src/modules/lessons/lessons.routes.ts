@@ -7,7 +7,10 @@ const router = Router()
 
 router.get('/', asyncHandler(async (req, res) => {
   const { level } = req.query
-  const where = level ? { levelType: level as any } : {}
+  const where = {
+    isPublished: true,
+    ...(level ? { levelType: level as any } : {}),
+  }
   const lessons = await prisma.lesson.findMany({
     where,
     orderBy: { lessonOrder: 'asc' },
@@ -28,9 +31,9 @@ router.get('/', asyncHandler(async (req, res) => {
 router.get('/:id', asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({
     where: { id: req.params.id },
-    include: { vocabulary: true, sentences: true },
+    include: { vocabulary: { orderBy: { order: 'asc' } }, sentences: true },
   })
-  if (!lesson) return res.status(404).json({ error: 'Lesson not found' })
+  if (!lesson || !lesson.isPublished) return res.status(404).json({ error: 'Lesson not found' })
   if (!(await canAccessLesson(req, lesson.lessonOrder))) {
     return res.status(403).json(lessonLockedResponse)
   }

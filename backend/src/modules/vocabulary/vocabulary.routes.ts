@@ -17,6 +17,7 @@ router.get('/:lessonId', asyncHandler(async (req, res) => {
 
   const vocab = await prisma.vocabulary.findMany({
     where: { lessonId: req.params.lessonId },
+    orderBy: { order: 'asc' },
   })
   res.json({ vocabulary: vocab })
 }))

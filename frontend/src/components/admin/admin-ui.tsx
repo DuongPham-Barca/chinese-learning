@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ButtonHTMLAttributes, ReactNode } from "react"
 import AdminIcon, { type AdminIconName } from "./admin-icons"
 import styles from "./admin-ui.module.css"
 
@@ -6,8 +6,8 @@ export function PageHeader({ eyebrow, title, subtitle, actions }: { eyebrow?: Re
   return <header className={styles.pageHeader}><div>{eyebrow && <div className={styles.eyebrow}>{eyebrow}</div>}<h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>{actions && <div className={styles.headerActions}>{actions}</div>}</header>
 }
 
-export function AdminButton({ children, icon, secondary = false }: { children: ReactNode; icon?: AdminIconName; secondary?: boolean }) {
-  return <button type="button" className={`${styles.adminButton} ${secondary ? styles.secondaryButton : ""}`}>{icon && <AdminIcon name={icon} />}{children}</button>
+export function AdminButton({ children, icon, secondary = false, className = "", ...props }: { children: ReactNode; icon?: AdminIconName; secondary?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button type="button" className={`${styles.adminButton} ${secondary ? styles.secondaryButton : ""} ${className}`} {...props}>{icon && <AdminIcon name={icon} />}{children}</button>
 }
 
 export function StatCard({ icon, label, value, meta, tone = "blue" }: { icon: AdminIconName; label: string; value: string; meta?: string; tone?: "blue" | "green" | "orange" | "red" }) {

@@ -60,6 +60,23 @@ model User {
   subscriptions Subscription[]
 }
 
+model Level {
+  id          String    @id @default(cuid())
+  type        LevelType? @unique
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?   @map("image_url")
+  order       Int       @default(0)
+  isPublished Boolean   @default(true) @map("is_published")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  lessons Lesson[]
+
+  @@map("levels")
+}
+
 model Subscription {
   id              String           @id @default(cuid())
   userId          String
@@ -122,26 +139,47 @@ model VerificationToken {
 
 model Lesson {
   id          String    @id @default(cuid())
+  levelId     String    @map("level_id")
   levelType   LevelType @map("level_type")
   lessonOrder Int       @map("lesson_order")
   title       String
+  slug        String
+  description String?
+  imageUrl    String?   @map("image_url")
   isFree      Boolean   @default(true) @map("is_free")
+  isPublished Boolean   @default(true) @map("is_published")
+  expReward   Int       @default(10) @map("exp_reward")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  level      Level        @relation(fields: [levelId], references: [id], onDelete: Cascade)
   vocabulary Vocabulary[]
   sentences  Sentence[]
   progress   Progress[]
+
+  @@unique([levelId, slug])
+  @@index([levelId])
 }
 
 model Vocabulary {
-  id        String  @id @default(cuid())
-  lessonId  String  @map("lesson_id")
-  hanzi     String
-  pinyin    String
-  meaningVi String  @map("meaning_vi")
-  audioUrl  String? @map("audio_url")
+  id             String   @id @default(cuid())
+  lessonId       String   @map("lesson_id")
+  hanzi          String
+  pinyin         String
+  meaningVi      String   @map("meaning_vi")
+  example        String?
+  examplePinyin  String?  @map("example_pinyin")
+  exampleMeaning String?  @map("example_meaning")
+  audioUrl       String?  @map("audio_url")
+  imageUrl       String?  @map("image_url")
+  order          Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  lesson   Lesson     @relation(fields: [lessonId], references: [id])
+  lesson   Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   progress Progress[]
+
+  @@index([lessonId])
 }
 
 model Sentence {
@@ -151,7 +189,7 @@ model Sentence {
   sentenceZh String  @map("sentence_zh")
   audioUrl   String? @map("audio_url")
 
-  lesson   Lesson     @relation(fields: [lessonId], references: [id])
+  lesson   Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   progress Progress[]
 }
 
@@ -166,8 +204,8 @@ model Progress {
   createdAt  DateTime @default(now()) @map("created_at")
 
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson   Lesson      @relation(fields: [lessonId], references: [id])
-  vocab    Vocabulary? @relation(fields: [vocabId], references: [id])
+  lesson   Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  vocab    Vocabulary? @relation(fields: [vocabId], references: [id], onDelete: SetNull)
   sentence Sentence?   @relation(fields: [sentenceId], references: [id])
 
   @@map("progress")

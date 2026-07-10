@@ -1,215 +1,89 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { AxiosError } from "axios"
 import { motion } from "framer-motion"
 import AdminIcon from "@/components/admin/admin-icons"
-import { AdminButton, AdminTable, PageHeader, Pagination, StatCard } from "@/components/admin/admin-ui"
+import { AdminButton, AdminTable, PageHeader, StatCard } from "@/components/admin/admin-ui"
+import { createUser, deleteUser, getUserById, getUsers, getUserStats, unlockUserPremium, updateUser, type AdminPlan, type AdminUser, type AdminUserPayload, type AdminUserStats } from "@/services/admin-user.service"
 import styles from "./users.module.css"
 
 type Toast = { variant: "success" | "error"; message: string } | null
+type Errors = Record<string, string>
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }
+const itemVariants = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } } }
+const plans: Array<{ id: AdminPlan; label: string; price: string; chip: string }> = [{ id: "2months", label: "2 thang", price: "49.000d", chip: "Pho bien" }, { id: "6months", label: "6 thang", price: "119.000d", chip: "Tiet kiem" }, { id: "12months", label: "12 thang", price: "189.000d", chip: "Tot nhat" }]
+const planLabels: Record<AdminPlan, string> = { "2months": "2 thang", "6months": "6 thang", "12months": "12 thang" }
+const levels = ["HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6", "COMMUNICATION"]
+const emptyUser: AdminUserPayload = { username: "", email: "", password: "", phone: "", level: "HSK1", role: "USER", isPremium: false }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } },
-}
-
-const plans = [
-  { id: "2months", months: 2, label: "2 tháng", price: "49.000đ", chip: "Phổ biến" },
-  { id: "6months", months: 6, label: "6 tháng", price: "119.000đ", chip: "Tiết kiệm 20%" },
-  { id: "12months", months: 12, label: "12 tháng", price: "189.000đ", chip: "Tiết kiệm 35%" },
-]
-
-function calcExpiry(months: number): string {
-  const d = new Date()
-  d.setMonth(d.getMonth() + months)
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
-}
-
-const initialUsers: User[] = [
-  { id:"#U-1024",name:"Nguyễn Văn An",email:"an.nguyen@email.com",initials:"NA",color:"#2563eb",level:"HSK4",exp:18540,plan:"12months",premiumUntil:"20/12/2026",unlocked:["HSK1","HSK2","HSK3","HSK4"],joined:"12/03/2024",status:"active" },
-  { id:"#U-1023",name:"Trần Thị Bình",email:"binh.tran@email.com",initials:"TB",color:"#059669",level:"HSK2",exp:9420,plan:null,premiumUntil:null,unlocked:["HSK1"],joined:"05/02/2024",status:"active" },
-  { id:"#U-1022",name:"Lê Quang Cường",email:"cuong.le@edu.vn",initials:"LC",color:"#d97706",level:"HSK5",exp:23100,plan:"6months",premiumUntil:"15/03/2027",unlocked:["HSK1","HSK2","HSK3","HSK4","HSK5"],joined:"20/01/2024",status:"active" },
-  { id:"#U-1021",name:"Phạm Mỹ Dung",email:"dung.pham@design.co",initials:"PD",color:"#dc2626",level:"HSK3",exp:7650,plan:null,premiumUntil:null,unlocked:["HSK1","HSK2"],joined:"15/12/2023",status:"inactive" },
-  { id:"#U-1020",name:"Hoàng Minh Đức",email:"duc.hoang@gmail.com",initials:"HĐ",color:"#7c3aed",level:"HSK1",exp:3200,plan:null,premiumUntil:null,unlocked:["HSK1"],joined:"08/11/2023",status:"active" },
-  { id:"#U-1019",name:"Vũ Thị Hoa",email:"hoa.vu@email.com",initials:"VH",color:"#0891b2",level:"HSK6",exp:45600,plan:"12months",premiumUntil:"10/08/2027",unlocked:["HSK1","HSK2","HSK3","HSK4","HSK5","HSK6"],joined:"02/10/2023",status:"active" },
-]
-
-type PlanValue = "2months" | "6months" | "12months"
-type PlanId = PlanValue | null
-type UserStatus = "active" | "inactive"
-
-interface User {
-  id: string
-  name: string
-  email: string
-  initials: string
-  color: string
-  level: string
-  exp: number
-  plan: PlanId
-  premiumUntil: string | null
-  unlocked: string[]
-  joined: string
-  status: UserStatus
-}
-
-const allLevels = ["HSK1","HSK2","HSK3","HSK4","HSK5","HSK6"]
-
-function FiltersCard() {
-  return <section className={styles.filters}><label><AdminIcon name="search" /><input placeholder="Tìm kiếm theo tên, email hoặc ID người dùng..." /></label><div><select defaultValue=""><option value="">Cấp độ (Level)</option><option>HSK1</option><option>HSK2</option><option>HSK3</option><option>HSK4</option><option>HSK5</option><option>HSK6</option></select><select defaultValue=""><option value="">Trạng thái</option><option>Đang hoạt động</option><option>Không hoạt động</option></select><select defaultValue=""><option value="">Loại tài khoản</option><option>Free</option><option>Premium</option></select><select defaultValue="new"><option value="new">Sắp xếp: Mới nhất</option><option>Cũ nhất</option><option>EXP cao nhất</option></select></div></section>
-}
-
-const planLabels: Record<PlanValue, string> = { "2months": "2 tháng", "6months": "6 tháng", "12months": "12 tháng" }
-
-function PlanBadge({ plan }: { plan: PlanId }) {
-  if (!plan) return <span className={styles.premiumNo}>Free</span>
-  return <span className={styles.premiumYes}>{planLabels[plan]}</span>
-}
-
-function UnlockModal({ user, onUnlock, onClose }: { user: User; onUnlock: (planMonths: number) => void; onClose: () => void }) {
-  const [selectedPlan, setSelectedPlan] = useState<number>(2)
-  const [submitting, setSubmitting] = useState(false)
-
-  function submit() {
-    setSubmitting(true)
-    setTimeout(() => {
-      setSubmitting(false)
-      onUnlock(selectedPlan)
-      onClose()
-    }, 1000)
+function apiMessage(error: unknown, fallback: string) {
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as { message?: string; error?: string } | undefined
+    return data?.message || data?.error || fallback
   }
+  return fallback
+}
+function apiErrors(error: unknown) { return error instanceof AxiosError ? ((error.response?.data as { errors?: Errors } | undefined)?.errors || null) : null }
+function formatDate(value: string | null) { return value ? new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value)) : "-" }
+function initials(user: AdminUser) { return user.username.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "U" }
+function avatarColor(id: string) { const colors = ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2"]; return colors[id.split("").reduce((s, c) => s + c.charCodeAt(0), 0) % colors.length] }
+function PlanBadge({ user }: { user: AdminUser }) { return user.isPremium ? <span className={styles.premiumYes}>{user.plan ? planLabels[user.plan] : "Premium"}</span> : <span className={styles.premiumNo}>Free</span> }
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <><button className={styles.scrim} onClick={onClose} aria-label="Dong" /><section className={styles.modal} role="dialog" aria-modal="true"><header className={styles.modalHeader}><h2>{title}</h2><button className={styles.modalClose} onClick={onClose} type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></header>{children}</section></> }
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) { return <label className={styles.field}><span>{label}</span>{children}{error && <small>{error}</small>}</label> }
 
-  const expiry = calcExpiry(selectedPlan)
-  const plan = plans.find((p) => p.months === selectedPlan)
+function UserModal({ user, saving, onClose, onSubmit }: { user: AdminUser | null; saving: boolean; onClose: () => void; onSubmit: (payload: AdminUserPayload) => Promise<Errors | null> }) {
+  const [form, setForm] = useState<AdminUserPayload>(() => user ? { username: user.username, email: user.email || "", password: "", phone: user.phone || "", level: user.level, role: user.role === "ADMIN" ? "ADMIN" : "USER", isPremium: user.isPremium, subscriptionUntil: user.subscriptionUntil } : emptyUser)
+  const [errors, setErrors] = useState<Errors>({})
+  function set<K extends keyof AdminUserPayload>(key: K, value: AdminUserPayload[K]) { setForm((f) => ({ ...f, [key]: value })); setErrors((e) => ({ ...e, [key]: "" })) }
+  async function submit() {
+    const e: Errors = {}
+    if (!form.username.trim()) e.username = "Nhap ten nguoi dung"
+    if (!user && form.password && form.password.length < 6) e.password = "Mat khau toi thieu 6 ky tu"
+    if (Object.keys(e).length) return setErrors(e)
+    const payload = { ...form }
+    if (user && !payload.password) delete payload.password
+    if (!payload.email) payload.email = null
+    if (!payload.phone) payload.phone = null
+    const result = await onSubmit(payload)
+    if (result) setErrors(result)
+  }
+  return <Modal title={user ? "Sua nguoi dung" : "Them nguoi dung"} onClose={onClose}><div className={styles.formGrid}><Field label="Ten nguoi dung" error={errors.username}><input value={form.username} onChange={(e) => set("username", e.target.value)} /></Field><Field label="Email" error={errors.email}><input value={form.email || ""} onChange={(e) => set("email", e.target.value)} /></Field><Field label={user ? "Mat khau moi" : "Mat khau"} error={errors.password}><input type="password" value={form.password || ""} onChange={(e) => set("password", e.target.value)} /></Field><Field label="So dien thoai" error={errors.phone}><input value={form.phone || ""} onChange={(e) => set("phone", e.target.value)} /></Field><Field label="Cap do" error={errors.level}><select value={form.level || "HSK1"} onChange={(e) => set("level", e.target.value)}>{levels.map((l) => <option key={l} value={l}>{l}</option>)}</select></Field><Field label="Vai tro" error={errors.role}><select value={form.role || "USER"} onChange={(e) => set("role", e.target.value as "USER" | "ADMIN")}><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></Field></div><label className={styles.checkField}><input type="checkbox" checked={Boolean(form.isPremium)} onChange={(e) => set("isPremium", e.target.checked)} /> Premium</label><div className={styles.modalActions}><button className={styles.modalCancel} onClick={onClose} disabled={saving} type="button">Huy</button><button className={styles.modalSubmit} onClick={submit} disabled={saving} type="button">{saving ? "Dang luu..." : "Luu"}</button></div></Modal>
+}
 
-  return (
-    <>
-      <button className={styles.scrim} onClick={onClose} aria-label="Đóng" />
-      <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Xác nhận mở khóa">
-        <div className={styles.modalHeader}>
-          <div>
-            <h2>Mở khóa khóa học</h2>
-            <p>Chọn gói và xác nhận mở khóa toàn bộ khóa học cho người dùng.</p>
-          </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Đóng">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        <div className={styles.modalUser}>
-          <span className={styles.modalAvatar} style={{ background: user.color }}>{user.initials}</span>
-          <div className={styles.modalUserInfo}>
-            <h3>{user.name}</h3>
-            <p>{user.email}</p>
-          </div>
-          <div className={styles.modalUserMeta}>
-            <small>ID</small>
-            <strong>{user.id}</strong>
-          </div>
-          <div className={styles.modalUserMeta}>
-            <small>Gói hiện tại</small>
-            <strong className={user.plan ? styles.premiumYes : styles.premiumNo}>{user.plan ? planLabels[user.plan] : "Free"}</strong>
-          </div>
-        </div>
-
-        <p className={styles.planLabel}>Gói đã đăng ký</p>
-        <div className={styles.planGrid}>
-          {plans.map((p) => (
-            <label
-              key={p.id}
-              className={`${styles.planCard} ${selectedPlan === p.months ? styles.planActive : ""}`}
-            >
-              <input
-                type="radio"
-                name="plan"
-                checked={selectedPlan === p.months}
-                onChange={() => setSelectedPlan(p.months)}
-              />
-              <span className={styles.planName}>{p.label}</span>
-              <span className={styles.planPrice}>{p.price}</span>
-              <span className={styles.planChip}>{p.chip}</span>
-            </label>
-          ))}
-        </div>
-
-        <div className={styles.expiryPreview}>
-          <span>Ngày hết hạn</span>
-          <strong>{expiry}</strong>
-        </div>
-
-        <div style={{ margin: "0 0 20px", padding: "14px 16px", borderRadius: 12, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
-          <p style={{ margin: 0, color: "#92400E", fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
-            Xác nhận mở khóa toàn bộ khóa học cho <strong>{user.name}</strong> với gói <strong>{plan?.label}</strong>?
-          </p>
-          <p style={{ margin: "6px 0 0", color: "#A16207", fontSize: 12, lineHeight: 1.4 }}>
-            Tài khoản sẽ hết hạn vào <strong>{expiry}</strong>.
-          </p>
-        </div>
-
-        <div className={styles.modalActions}>
-          <button className={styles.modalCancel} onClick={onClose}>Hủy</button>
-          <button className={styles.modalSubmit} disabled={submitting} onClick={submit}>
-            {submitting ? (
-              <><span className={styles.modalSpinner} /> Đang xử lý...</>
-            ) : (
-              <><AdminIcon name="check" /> Xác nhận mở khóa</>
-            )}
-          </button>
-        </div>
-      </div>
-    </>
-  )
+function UnlockModal({ user, saving, onClose, onUnlock }: { user: AdminUser; saving: boolean; onClose: () => void; onUnlock: (plan: AdminPlan) => void }) {
+  const [plan, setPlan] = useState<AdminPlan>("2months")
+  return <Modal title="Mo khoa premium" onClose={onClose}><div className={styles.modalUser}><span className={styles.modalAvatar} style={{ background: avatarColor(user.id) }}>{initials(user)}</span><div className={styles.modalUserInfo}><h3>{user.username}</h3><p>{user.email || "Chua co email"}</p></div><div className={styles.modalUserMeta}><small>Hien tai</small><strong>{user.isPremium ? "Premium" : "Free"}</strong></div></div><div className={styles.planGrid}>{plans.map((p) => <label key={p.id} className={`${styles.planCard} ${plan === p.id ? styles.planActive : ""}`}><input type="radio" checked={plan === p.id} onChange={() => setPlan(p.id)} /><span className={styles.planName}>{p.label}</span><span className={styles.planPrice}>{p.price}</span><span className={styles.planChip}>{p.chip}</span></label>)}</div><div className={styles.modalActions}><button className={styles.modalCancel} disabled={saving} onClick={onClose} type="button">Huy</button><button className={styles.modalSubmit} disabled={saving} onClick={() => onUnlock(plan)} type="button">{saving ? "Dang xu ly..." : "Xac nhan"}</button></div></Modal>
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(initialUsers)
-  const [unlockTarget, setUnlockTarget] = useState<User | null>(null)
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [stats, setStats] = useState<AdminUserStats | null>(null)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [search, setSearch] = useState("")
+  const [level, setLevel] = useState("")
+  const [status, setStatus] = useState("")
+  const [account, setAccount] = useState("")
+  const [sort, setSort] = useState("new")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [toast, setToast] = useState<Toast>(null)
-
-  function handleUnlocked(target: User, planMonths: number) {
-    const planId = (plans.find((p) => p.months === planMonths)?.id || "2months") as PlanValue
-    setUsers((prev) => prev.map((u) => u.id === target.id ? { ...u, plan: planId, premiumUntil: calcExpiry(planMonths), unlocked: [...allLevels] } : u))
-    showToast("success", `Đã mở khóa gói ${planLabels[planId]} cho ${target.name}, hết hạn ${calcExpiry(planMonths)}`)
-  }
-
-  function showToast(variant: "success" | "error", message: string) {
-    setToast({ variant, message })
-    setTimeout(() => setToast(null), 3500)
-  }
-
-  return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <motion.div variants={itemVariants}>
-        <PageHeader eyebrow={<span>Dashboard › <b>Người dùng</b></span>} title="Người dùng" actions={<AdminButton icon="plus">Thêm người dùng</AdminButton>} />
-      </motion.div>
-      <motion.section className={styles.statsGrid} variants={containerVariants}>
-        <motion.div variants={itemVariants}><StatCard icon="users" label="TỔNG NGƯỜI DÙNG" value="12,540" meta="+8.2%" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard icon="check" label="ĐANG HOẠT ĐỘNG" value="8,320" meta="66.3%" tone="green" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard icon="wallet" label="PREMIUM" value="1,847" meta="14.7%" tone="orange" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard icon="clock" label="MỚI TRONG THÁNG" value="423" meta="+12%" tone="blue" /></motion.div>
-      </motion.section>
-      <motion.div variants={itemVariants}><FiltersCard /></motion.div>
-      <motion.div variants={itemVariants}>
-        <section className={styles.tableCard}><AdminTable><thead><tr><th>ID</th><th>Người dùng</th><th>EXP</th><th>Gói</th><th>Hết hạn</th><th>Trạng thái</th><th>Actions</th></tr></thead><tbody>{users.map((user) => <tr key={user.id}><td><b>{user.id}</b></td><td><div className={styles.userInfo}><span className={styles.avatar} style={{ background: user.color }}>{user.initials}</span><span><strong className={styles.userName}>{user.name}</strong><small className={styles.userEmail}>{user.email}</small></span></div></td><td><span className={styles.expText}>{user.exp.toLocaleString("en-US")}</span></td><td><PlanBadge plan={user.plan} /></td><td><span className={styles.joinDate}>{user.premiumUntil || "—"}</span></td><td><span className={styles.statusCol}><i className={`${styles.statusDot} ${user.status === "active" ? styles.statusActive : styles.statusInactive}`} />{user.status === "active" ? "Hoạt động" : "Không hoạt động"}</span></td><td><div className={styles.actions}><button type="button" className={styles.unlockBtn} onClick={() => setUnlockTarget(user)} aria-label="Mở khóa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button><button type="button" aria-label="Xem"><AdminIcon name="eye" /></button><button type="button" aria-label="Sửa"><AdminIcon name="edit" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Đang xem 1 đến 6 trong số 12,540 người dùng</span><Pagination /></footer></section>
-      </motion.div>
-
-      {unlockTarget && <UnlockModal user={unlockTarget} onUnlock={(m) => handleUnlocked(unlockTarget, m)} onClose={() => setUnlockTarget(null)} />}
-
-      {toast && (
-        <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}>
-          {toast.variant === "success" ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6"/></svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>
-          )}
-          {toast.message}
-        </div>
-      )}
-    </motion.div>
-  )
+  const [saving, setSaving] = useState(false)
+  const [formTarget, setFormTarget] = useState<AdminUser | "create" | null>(null)
+  const [unlockTarget, setUnlockTarget] = useState<AdminUser | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
+  const [detail, setDetail] = useState<AdminUser | null>(null)
+  const premiumRate = useMemo(() => stats?.total ? `${Math.round((stats.premium / stats.total) * 100)}%` : "0%", [stats])
+  const activeRate = useMemo(() => stats?.total ? `${Math.round((stats.active / stats.total) * 100)}%` : "0%", [stats])
+  const loadStats = useCallback(async () => setStats((await getUserStats()).data), [])
+  const loadUsers = useCallback(async () => { setLoading(true); setError(""); try { const r = await getUsers({ page, limit: 10, search, level, status, account, sort }); setUsers(r.data); setTotal(r.pagination.total); setTotalPages(Math.max(1, r.pagination.totalPages)) } catch (e) { setError(apiMessage(e, "Khong the tai danh sach nguoi dung")) } finally { setLoading(false) } }, [account, level, page, search, sort, status])
+  useEffect(() => { let active = true; queueMicrotask(() => { if (active) loadStats().catch((e) => setToast({ variant: "error", message: apiMessage(e, "Khong the tai thong ke") })) }); return () => { active = false } }, [loadStats])
+  useEffect(() => { let active = true; queueMicrotask(() => { if (active) void loadUsers() }); return () => { active = false } }, [loadUsers])
+  async function saveUser(payload: AdminUserPayload) { setSaving(true); try { if (formTarget && formTarget !== "create") await updateUser(formTarget.id, payload); else await createUser(payload); setFormTarget(null); setToast({ variant: "success", message: "Da luu nguoi dung" }); await Promise.all([loadUsers(), loadStats()]); return null } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the luu nguoi dung") }); return apiErrors(e) } finally { setSaving(false) } }
+  async function unlock(planId: AdminPlan) { if (!unlockTarget) return; setSaving(true); try { await unlockUserPremium(unlockTarget.id, { planId }); setUnlockTarget(null); setToast({ variant: "success", message: `Da mo khoa ${planLabels[planId]}` }); await Promise.all([loadUsers(), loadStats()]) } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the mo khoa premium") }) } finally { setSaving(false) } }
+  async function confirmDelete() { if (!deleteTarget) return; setSaving(true); try { await deleteUser(deleteTarget.id); setDeleteTarget(null); setToast({ variant: "success", message: "Da xoa nguoi dung" }); await Promise.all([loadUsers(), loadStats()]) } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the xoa nguoi dung") }) } finally { setSaving(false) } }
+  async function openDetail(id: string) { try { setDetail((await getUserById(id)).data) } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the tai chi tiet") }) } }
+  return <motion.div variants={containerVariants} initial="hidden" animate="visible"><motion.div variants={itemVariants}><PageHeader eyebrow={<span>Dashboard / <b>Nguoi dung</b></span>} title="Nguoi dung" actions={<AdminButton icon="plus" onClick={() => setFormTarget("create")}>Them nguoi dung</AdminButton>} /></motion.div><motion.section className={styles.statsGrid} variants={containerVariants}><motion.div variants={itemVariants}><StatCard icon="users" label="TONG NGUOI DUNG" value={(stats?.total || 0).toLocaleString("en-US")} /></motion.div><motion.div variants={itemVariants}><StatCard icon="check" label="DANG HOAT DONG" value={(stats?.active || 0).toLocaleString("en-US")} meta={activeRate} tone="green" /></motion.div><motion.div variants={itemVariants}><StatCard icon="wallet" label="PREMIUM" value={(stats?.premium || 0).toLocaleString("en-US")} meta={premiumRate} tone="orange" /></motion.div><motion.div variants={itemVariants}><StatCard icon="clock" label="MOI TRONG THANG" value={(stats?.newThisMonth || 0).toLocaleString("en-US")} /></motion.div></motion.section><motion.div variants={itemVariants}><section className={styles.filters}><label><AdminIcon name="search" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="Tim kiem theo ten, email hoac ID..." /></label><div><select value={level} onChange={(e) => { setLevel(e.target.value); setPage(1) }}><option value="">Cap do</option>{levels.map((l) => <option key={l} value={l}>{l}</option>)}</select><select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}><option value="">Trang thai</option><option value="active">Dang hoat dong</option><option value="inactive">Khong hoat dong</option></select><select value={account} onChange={(e) => { setAccount(e.target.value); setPage(1) }}><option value="">Tai khoan</option><option value="free">Free</option><option value="premium">Premium</option></select><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="new">Moi nhat</option><option value="old">Cu nhat</option><option value="exp">EXP cao nhat</option></select><button type="button" onClick={() => void loadUsers()}>Tai lai</button></div></section></motion.div><motion.div variants={itemVariants}><section className={styles.tableCard}>{loading && <div className={styles.skeletonList}><span /><span /><span /></div>}{!loading && error && <div className={styles.stateBox}>{error}<button type="button" onClick={() => void loadUsers()}>Tai lai</button></div>}{!loading && !error && !users.length && <div className={styles.stateBox}>Khong co nguoi dung.</div>}{!loading && !error && users.length > 0 && <><AdminTable><thead><tr><th>ID</th><th>Nguoi dung</th><th>Cap do</th><th>EXP</th><th>Goi</th><th>Het han</th><th>Trang thai</th><th>Actions</th></tr></thead><tbody>{users.map((u) => <tr key={u.id}><td><b>{u.id.slice(0, 8)}</b></td><td><div className={styles.userInfo}><span className={styles.avatar} style={{ background: avatarColor(u.id) }}>{initials(u)}</span><span><strong className={styles.userName}>{u.username}</strong><small className={styles.userEmail}>{u.email || "Chua co email"}</small></span></div></td><td><span className={styles.levelBadge}>{u.level}</span></td><td><span className={styles.expText}>{u.expPoints.toLocaleString("en-US")}</span></td><td><PlanBadge user={u} /></td><td><span className={styles.joinDate}>{formatDate(u.subscriptionUntil)}</span></td><td><span className={styles.statusCol}><i className={`${styles.statusDot} ${u.status === "active" ? styles.statusActive : styles.statusInactive}`} />{u.status === "active" ? "Dang hoat dong" : "Khong hoat dong"}</span></td><td><div className={styles.actions}><button className={styles.unlockBtn} type="button" onClick={() => setUnlockTarget(u)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button><button type="button" onClick={() => void openDetail(u.id)}><AdminIcon name="eye" /></button><button type="button" onClick={() => setFormTarget(u)}><AdminIcon name="edit" /></button><button type="button" onClick={() => setDeleteTarget(u)}><AdminIcon name="alert" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Dang xem {users.length ? (page - 1) * 10 + 1 : 0} den {(page - 1) * 10 + users.length} trong so {total} nguoi dung</span><div className={styles.pagination}><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} type="button">‹</button><strong>{page}/{totalPages}</strong><button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} type="button">›</button></div></footer></>}</section></motion.div>{formTarget && <UserModal user={formTarget === "create" ? null : formTarget} saving={saving} onClose={() => setFormTarget(null)} onSubmit={saveUser} />}{unlockTarget && <UnlockModal user={unlockTarget} saving={saving} onClose={() => setUnlockTarget(null)} onUnlock={(p) => void unlock(p)} />}{detail && <Modal title="Chi tiet nguoi dung" onClose={() => setDetail(null)}><div className={styles.detailGrid}><div><span>ID</span><strong>{detail.id}</strong></div><div><span>Ten</span><strong>{detail.username}</strong></div><div><span>Email</span><strong>{detail.email || "-"}</strong></div><div><span>Cap do</span><strong>{detail.level}</strong></div><div><span>EXP</span><strong>{detail.expPoints.toLocaleString("en-US")}</strong></div><div><span>Premium den</span><strong>{formatDate(detail.subscriptionUntil)}</strong></div><div><span>Tien do</span><strong>{detail.progressCount}</strong></div><div><span>Session</span><strong>{detail.activeSessionCount}</strong></div><div><span>Ngay tao</span><strong>{formatDate(detail.createdAt)}</strong></div></div><h3 className={styles.sectionTitle}>Tien do gan day</h3>{!detail.recentProgress?.length ? <div className={styles.stateBox}>Chua co tien do hoc tap.</div> : <div className={styles.progressList}>{detail.recentProgress.map((p) => <article key={p.id}><strong>{p.lesson.title}</strong><span>{p.lesson.levelType} / Bai {p.lesson.lessonOrder} / +{p.expGained} EXP</span></article>)}</div>}</Modal>}{deleteTarget && <Modal title="Xoa nguoi dung" onClose={() => setDeleteTarget(null)}><div className={styles.stateBox}>Ban co chac muon xoa nguoi dung &quot;{deleteTarget.username}&quot;? Hanh dong nay khong the hoan tac.</div><div className={styles.modalActions}><button className={styles.modalCancel} disabled={saving} onClick={() => setDeleteTarget(null)} type="button">Huy</button><button className={styles.dangerButton} disabled={saving} onClick={() => void confirmDelete()} type="button">{saving ? "Dang xoa..." : "Xoa"}</button></div></Modal>}{toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}</motion.div>
 }

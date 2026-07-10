@@ -1,68 +1,166 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { AxiosError } from "axios"
 import { motion } from "framer-motion"
 import AdminIcon from "@/components/admin/admin-icons"
-import { AdminButton, AdminTable, PageHeader, Pagination } from "@/components/admin/admin-ui"
+import { AdminButton, AdminTable, PageHeader } from "@/components/admin/admin-ui"
+import { getLevels, type AdminLevel } from "@/services/admin-level.service"
+import { createLesson, deleteLesson, getLessonById, getLessons, toggleLessonStatus, updateLesson, type AdminLesson, type AdminLessonDetail, type LessonPayload } from "@/services/admin-lesson.service"
+import { createVocabulary, deleteVocabulary, type VocabularyPayload } from "@/services/admin-vocabulary.service"
 import styles from "./lessons.module.css"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }
+const itemVariants = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } } }
+type Toast = { variant: "success" | "error"; message: string } | null
+type Errors = Record<string, string>
+
+const emptyLesson: LessonPayload = { levelId: "", title: "", slug: "", description: "", imageUrl: "", order: 1, isFree: false, isPublished: false, expReward: 10 }
+const emptyVocab: VocabularyPayload = { chinese: "", pinyin: "", vietnamese: "", example: "", examplePinyin: "", exampleMeaning: "", audioUrl: "", imageUrl: "", order: 1 }
+
+function apiMessage(error: unknown, fallback: string) {
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as { message?: string; error?: string } | undefined
+    return data?.message || data?.error || fallback
+  }
+  return fallback
+}
+function apiErrors(error: unknown) {
+  return error instanceof AxiosError ? ((error.response?.data as { errors?: Errors } | undefined)?.errors || null) : null
+}
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value))
+}
+function slugify(value: string) {
+  return value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } },
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return <><button className={styles.scrim} onClick={onClose} aria-label="Dong" /><section className={styles.modal} role="dialog" aria-modal="true"><header className={styles.modalHeader}><h2>{title}</h2><button className={styles.modalClose} onClick={onClose} type="button">x</button></header>{children}</section></>
+}
+function Field({ label, error, children, wide = false }: { label: string; error?: string; children: React.ReactNode; wide?: boolean }) {
+  return <label className={`${styles.field} ${wide ? styles.wideField : ""}`}><span>{label}</span>{children}{error && <small>{error}</small>}</label>
 }
 
-type Lesson = typeof lessons[number]
-type LevelTab = "all" | "HSK1" | "HSK2" | "HSK3" | "HSK4" | "HSK5" | "HSK6"
-
-const levelTabs: LevelTab[] = ["all", "HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6"]
-
-const lessons: Array<{ id:string; level:string; order:string; title:string; subtitle:string; vocab:number; sentences:number; free:boolean; date:string; featured?:boolean; draft?:boolean }> = [
-  { id:"#L101",level:"HSK1",order:"01",title:"Chào hỏi cơ bản",subtitle:"Basic Greetings & Introductions",vocab:12,sentences:8,free:true,date:"24/05/2024" },
-  { id:"#L102",level:"HSK1",order:"02",title:"Bạn tên là gì?",subtitle:"Asking for names and nationality",vocab:15,sentences:10,free:true,date:"22/05/2024" },
-  { id:"#L103",level:"HSK1",order:"03",title:"Số đếm và tuổi tác",subtitle:"Numbers, ages & basic counting",vocab:18,sentences:12,free:true,date:"20/05/2024" },
-  { id:"#L201",level:"HSK2",order:"01",title:"Lịch trình hằng ngày",subtitle:"Daily schedules & routines",vocab:20,sentences:10,free:true,date:"28/05/2024" },
-  { id:"#L202",level:"HSK2",order:"02",title:"Thời tiết và mùa",subtitle:"Weather & seasons vocabulary",vocab:16,sentences:8,free:true,date:"26/05/2024" },
-  { id:"#L203",level:"HSK2",order:"03",title:"Hỏi đường",subtitle:"Asking for directions",vocab:14,sentences:12,free:true,date:"25/05/2024" },
-  { id:"#L210",level:"HSK2",order:"05",title:"Ăn tối ở đâu?",subtitle:"Ordering food at a restaurant",vocab:20,sentences:12,free:true,date:"15/05/2024" },
-  { id:"#L301",level:"HSK3",order:"01",title:"Kỳ nghỉ cuối tuần",subtitle:"Weekend plans & activities",vocab:24,sentences:14,free:false,date:"30/05/2024" },
-  { id:"#L302",level:"HSK3",order:"02",title:"Sức khỏe và thể thao",subtitle:"Health, fitness & sports",vocab:26,sentences:15,free:false,date:"29/05/2024" },
-  { id:"#L305",level:"HSK3",order:"14",title:"Kế hoạch cuối tuần",subtitle:"Weekend plans & leisure activities",vocab:28,sentences:15,free:false,date:"18/05/2024",featured:true },
-  { id:"#L401",level:"HSK4",order:"01",title:"Môi trường làm việc",subtitle:"Workplace environment & communication",vocab:32,sentences:18,free:false,date:"01/06/2024" },
-  { id:"#L402",level:"HSK4",order:"--",title:"Thị trường lao động",subtitle:"Discussing job markets & economy",vocab:42,sentences:0,free:false,date:"10/05/2024",draft:true },
-  { id:"#L501",level:"HSK5",order:"01",title:"Kinh tế và xã hội",subtitle:"Economics & social issues",vocab:38,sentences:20,free:false,date:"05/06/2024" },
-  { id:"#L601",level:"HSK6",order:"01",title:"Văn học đương đại",subtitle:"Contemporary Chinese literature",vocab:45,sentences:22,free:false,date:"10/06/2024" },
-]
-
-function LevelTabs({ active, onChange }: { active: LevelTab; onChange: (tab: LevelTab) => void }) {
-  return <div className={styles.tabs}>{levelTabs.map((tab) => <button key={tab} type="button" className={`${styles.tab} ${active === tab ? styles.activeTab : ""}`} onClick={() => onChange(tab)}>{tab === "all" ? "Tất cả" : tab}</button>)}</div>
+function LessonModal({ levels, lesson, defaultLevelId, saving, onClose, onSubmit }: { levels: AdminLevel[]; lesson: AdminLesson | null; defaultLevelId: string; saving: boolean; onClose: () => void; onSubmit: (payload: LessonPayload) => Promise<Errors | null> }) {
+  const [form, setForm] = useState<LessonPayload>(() => lesson ? { levelId: lesson.levelId, title: lesson.title, slug: lesson.slug, description: lesson.description || "", imageUrl: lesson.imageUrl || "", order: lesson.order, isFree: lesson.isFree, isPublished: lesson.isPublished, expReward: lesson.expReward } : { ...emptyLesson, levelId: defaultLevelId })
+  const [errors, setErrors] = useState<Errors>({})
+  function set<K extends keyof LessonPayload>(key: K, value: LessonPayload[K]) { setForm((f) => ({ ...f, [key]: value })); setErrors((e) => ({ ...e, [key]: "" })) }
+  async function submit() {
+    const e: Errors = {}
+    if (!form.levelId) e.levelId = "Chon cap do"
+    if (!form.title.trim()) e.title = "Nhap ten bai hoc"
+    if (form.order < 0) e.order = "Thu tu khong duoc am"
+    if (form.expReward < 0) e.expReward = "EXP khong duoc am"
+    if (Object.keys(e).length) return setErrors(e)
+    const result = await onSubmit({ ...form, slug: form.slug?.trim() || slugify(form.title) })
+    if (result) setErrors(result)
+  }
+  return <Modal title={lesson ? "Sua bai hoc" : "Them bai hoc"} onClose={onClose}><div className={styles.formGrid}>
+    <Field label="Cap do" error={errors.levelId}><select value={form.levelId} onChange={(e) => set("levelId", e.target.value)}><option value="">Chon cap do</option>{levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></Field>
+    <Field label="Ten bai hoc" error={errors.title}><input value={form.title} onChange={(e) => set("title", e.target.value)} /></Field>
+    <Field label="Slug" error={errors.slug}><input value={form.slug || ""} placeholder="Tu sinh neu bo trong" onChange={(e) => set("slug", e.target.value)} /></Field>
+    <Field label="Hinh anh" error={errors.imageUrl}><input value={form.imageUrl || ""} onChange={(e) => set("imageUrl", e.target.value)} /></Field>
+    <Field label="Thu tu" error={errors.order}><input type="number" min={0} value={form.order} onChange={(e) => set("order", Number(e.target.value))} /></Field>
+    <Field label="EXP" error={errors.expReward}><input type="number" min={0} value={form.expReward} onChange={(e) => set("expReward", Number(e.target.value))} /></Field>
+    <Field label="Mo ta" error={errors.description} wide><textarea value={form.description || ""} onChange={(e) => set("description", e.target.value)} /></Field>
+    <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(e) => set("isFree", e.target.checked)} /> Mien phi</label>
+    <label className={styles.checkField}><input type="checkbox" checked={form.isPublished} onChange={(e) => set("isPublished", e.target.checked)} /> Xuat ban</label>
+  </div><div className={styles.modalActions}><button className={styles.secondaryAction} onClick={onClose} disabled={saving} type="button">Huy</button><button className={styles.primaryAction} onClick={submit} disabled={saving} type="button">{saving ? "Dang luu..." : "Luu"}</button></div></Modal>
 }
 
-function FiltersCard() {
-  return <section className={styles.filters}><label><AdminIcon name="search" /><input placeholder="Tìm kiếm theo tiêu đề bài học hoặc nội dung..." /></label><div><select defaultValue=""><option value="">Trạng thái</option><option>Published</option><option>Draft</option></select><select defaultValue=""><option value="">Free/Pro</option><option>Free</option><option>Pro</option></select><select defaultValue="new"><option value="new">Sắp xếp: Mới nhất</option><option>Cũ nhất</option></select></div></section>
+function VocabModal({ saving, onClose, onSubmit }: { saving: boolean; onClose: () => void; onSubmit: (payload: VocabularyPayload) => Promise<Errors | null> }) {
+  const [form, setForm] = useState<VocabularyPayload>(emptyVocab)
+  const [errors, setErrors] = useState<Errors>({})
+  function set<K extends keyof VocabularyPayload>(key: K, value: VocabularyPayload[K]) { setForm((f) => ({ ...f, [key]: value })); setErrors((e) => ({ ...e, [key]: "" })) }
+  async function submit() {
+    const e: Errors = {}
+    if (!form.chinese.trim()) e.chinese = "Nhap tieng Trung"
+    if (!form.pinyin.trim()) e.pinyin = "Nhap pinyin"
+    if (!form.vietnamese.trim()) e.vietnamese = "Nhap nghia"
+    if (Object.keys(e).length) return setErrors(e)
+    const result = await onSubmit(form)
+    if (result) setErrors(result)
+  }
+  return <Modal title="Them tu vung" onClose={onClose}><div className={styles.formGrid}>
+    <Field label="Tieng Trung" error={errors.chinese}><input value={form.chinese} onChange={(e) => set("chinese", e.target.value)} /></Field>
+    <Field label="Pinyin" error={errors.pinyin}><input value={form.pinyin} onChange={(e) => set("pinyin", e.target.value)} /></Field>
+    <Field label="Tieng Viet" error={errors.vietnamese}><input value={form.vietnamese} onChange={(e) => set("vietnamese", e.target.value)} /></Field>
+    <Field label="Thu tu" error={errors.order}><input type="number" min={0} value={form.order} onChange={(e) => set("order", Number(e.target.value))} /></Field>
+    <Field label="Vi du" wide><textarea value={form.example || ""} onChange={(e) => set("example", e.target.value)} /></Field>
+  </div><div className={styles.modalActions}><button className={styles.secondaryAction} onClick={onClose} disabled={saving} type="button">Huy</button><button className={styles.primaryAction} onClick={submit} disabled={saving} type="button">{saving ? "Dang luu..." : "Luu"}</button></div></Modal>
 }
 
 export default function AdminLessonsPage() {
-  const [activeLevel, setActiveLevel] = useState<LevelTab>("all")
+  const [levels, setLevels] = useState<AdminLevel[]>([])
+  const [lessons, setLessons] = useState<AdminLesson[]>([])
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [search, setSearch] = useState("")
+  const [levelId, setLevelId] = useState("")
+  const [status, setStatus] = useState("")
+  const [access, setAccess] = useState("")
+  const [sort, setSort] = useState("order")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [toast, setToast] = useState<Toast>(null)
+  const [lessonModal, setLessonModal] = useState<AdminLesson | "create" | null>(null)
+  const [detail, setDetail] = useState<AdminLessonDetail | null>(null)
+  const [vocabOpen, setVocabOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AdminLesson | null>(null)
+  const [saving, setSaving] = useState(false)
+  const defaultLevelId = useMemo(() => levelId || levels[0]?.id || "", [levelId, levels])
 
-  const filtered = activeLevel === "all" ? lessons : lessons.filter((l) => l.level === activeLevel)
+  const loadLevels = useCallback(async () => { setLevels((await getLevels({ limit: 100, sort: "order" })).data) }, [])
+  const loadLessons = useCallback(async () => {
+    setLoading(true); setError("")
+    try {
+      const response = await getLessons({ page, limit: 10, search, levelId, status, access, sort })
+      setLessons(response.data); setTotal(response.pagination.total); setTotalPages(Math.max(1, response.pagination.totalPages))
+    } catch (e) { setError(apiMessage(e, "Khong the tai danh sach bai hoc")) } finally { setLoading(false) }
+  }, [access, levelId, page, search, sort, status])
 
-  return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <motion.div variants={itemVariants}>
-        <PageHeader eyebrow={<span>Dashboard › <b>Bài học</b></span>} title="Bài học" actions={<AdminButton icon="plus">Thêm bài học</AdminButton>} />
-      </motion.div>
-      <motion.div variants={itemVariants}>
-        <section className={styles.tabCard}><LevelTabs active={activeLevel} onChange={setActiveLevel} /></section>
-      </motion.div>
-      <motion.div variants={itemVariants}><FiltersCard /></motion.div>
-      <motion.div variants={itemVariants}>
-        <section className={styles.tableCard}><AdminTable><thead><tr><th>ID</th><th>Cấp độ</th><th>Thứ tự</th><th>Tiêu đề bài học</th><th>Nội dung</th><th>Free</th><th>Cập nhật</th><th>Actions</th></tr></thead><tbody>{filtered.map((lesson) => <tr key={lesson.id}><td><b>{lesson.id}</b></td><td><span className={styles.levelBadge}>{lesson.level}</span></td><td>{lesson.order}</td><td><div className={styles.lessonTitle}><strong>{lesson.title}</strong>{lesson.featured && <i>★</i>}{lesson.draft && <em>DRAFT</em>}<small>{lesson.subtitle}</small></div></td><td><span className={styles.contentCounts}>☆ {lesson.vocab}　☵ {lesson.sentences}</span></td><td>{lesson.free ? <span className={styles.freeYes}>✓ Yes</span> : <span className={styles.freeNo}>⊗ No</span>}</td><td>{lesson.date}</td><td><div className={styles.actions}><button type="button" aria-label="Xem"><AdminIcon name="eye" /></button><button type="button" aria-label="Sửa"><AdminIcon name="edit" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Đang xem 1 đến {filtered.length} trong số {lessons.length} bài học</span><Pagination /></footer></section>
-      </motion.div>
-    </motion.div>
-  )
+  useEffect(() => { let active = true; queueMicrotask(() => { if (active) loadLevels().catch((e) => setToast({ variant: "error", message: apiMessage(e, "Khong the tai cap do") })) }); return () => { active = false } }, [loadLevels])
+  useEffect(() => { let active = true; queueMicrotask(() => { if (active) void loadLessons() }); return () => { active = false } }, [loadLessons])
+
+  async function saveLesson(payload: LessonPayload) {
+    setSaving(true)
+    try {
+      if (lessonModal && lessonModal !== "create") await updateLesson(lessonModal.id, payload)
+      else await createLesson(payload)
+      setLessonModal(null); setToast({ variant: "success", message: "Da luu bai hoc" }); await loadLessons(); return null
+    } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the luu bai hoc") }); return apiErrors(e) } finally { setSaving(false) }
+  }
+  async function openDetail(id: string) {
+    try { setDetail((await getLessonById(id)).data) } catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the tai chi tiet") }) }
+  }
+  async function saveVocab(payload: VocabularyPayload) {
+    if (!detail) return null
+    setSaving(true)
+    try { await createVocabulary(detail.id, payload); setVocabOpen(false); await openDetail(detail.id); await loadLessons(); setToast({ variant: "success", message: "Da them tu vung" }); return null }
+    catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the luu tu vung") }); return apiErrors(e) } finally { setSaving(false) }
+  }
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setSaving(true)
+    try { await deleteLesson(deleteTarget.id); setDeleteTarget(null); await loadLessons(); setToast({ variant: "success", message: "Da xoa bai hoc" }) }
+    catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the xoa bai hoc") }) } finally { setSaving(false) }
+  }
+  async function switchStatus(lesson: AdminLesson) {
+    try { await toggleLessonStatus(lesson.id, { isPublished: !lesson.isPublished }); await loadLessons(); setToast({ variant: "success", message: "Da cap nhat trang thai" }) }
+    catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the cap nhat trang thai") }) }
+  }
+
+  return <motion.div variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div variants={itemVariants}><PageHeader eyebrow={<span>Dashboard / <b>Bai hoc</b></span>} title="Bai hoc" actions={<AdminButton icon="plus" onClick={() => setLessonModal("create")}>Them bai hoc</AdminButton>} /></motion.div>
+    <motion.div variants={itemVariants}><section className={styles.tabCard}><div className={styles.tabs}><button type="button" className={`${styles.tab} ${!levelId ? styles.activeTab : ""}`} onClick={() => { setLevelId(""); setPage(1) }}>Tat ca</button>{levels.map((l) => <button key={l.id} type="button" className={`${styles.tab} ${levelId === l.id ? styles.activeTab : ""}`} onClick={() => { setLevelId(l.id); setPage(1) }}>{l.name}</button>)}</div></section></motion.div>
+    <motion.div variants={itemVariants}><section className={styles.filters}><label><AdminIcon name="search" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="Tim kiem theo ten bai hoc..." /></label><div><select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}><option value="">Trang thai</option><option value="published">Published</option><option value="unpublished">Draft</option></select><select value={access} onChange={(e) => { setAccess(e.target.value); setPage(1) }}><option value="">Free/Pro</option><option value="free">Free</option><option value="paid">Pro</option></select><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="order">Thu tu</option><option value="createdAt">Moi nhat</option><option value="title">Ten A-Z</option></select><button type="button" onClick={() => void loadLessons()}>Tai lai</button></div></section></motion.div>
+    <motion.div variants={itemVariants}><section className={styles.tableCard}>{loading && <div className={styles.skeletonList}><span /><span /><span /></div>}{!loading && error && <div className={styles.stateBox}>{error}<button type="button" onClick={() => void loadLessons()}>Tai lai</button></div>}{!loading && !error && !lessons.length && <div className={styles.stateBox}>Chua co bai hoc.</div>}{!loading && !error && lessons.length > 0 && <><AdminTable><thead><tr><th>ID</th><th>Cap do</th><th>Thu tu</th><th>Tieu de</th><th>Noi dung</th><th>Free</th><th>Xuat ban</th><th>Cap nhat</th><th>Actions</th></tr></thead><tbody>{lessons.map((lesson) => <tr key={lesson.id}><td><b>{lesson.id.slice(0, 8)}</b></td><td><span className={styles.levelBadge}>{lesson.level.name}</span></td><td>{lesson.order}</td><td><div className={styles.lessonTitle}><strong>{lesson.title}</strong>{!lesson.isPublished && <em>DRAFT</em>}<small>{lesson.description || lesson.slug}</small></div></td><td><span className={styles.contentCounts}>{lesson.vocabularyCount} tu / {lesson.sentenceCount} cau</span></td><td>{lesson.isFree ? <span className={styles.freeYes}>Free</span> : <span className={styles.freeNo}>Pro</span>}</td><td><button className={lesson.isPublished ? styles.statusOn : styles.statusOff} onClick={() => void switchStatus(lesson)} type="button">{lesson.isPublished ? "Published" : "Draft"}</button></td><td>{formatDate(lesson.updatedAt)}</td><td><div className={styles.actions}><button type="button" onClick={() => void openDetail(lesson.id)}><AdminIcon name="eye" /></button><button type="button" onClick={() => setLessonModal(lesson)}><AdminIcon name="edit" /></button><button type="button" onClick={() => setDeleteTarget(lesson)}><AdminIcon name="alert" /></button></div></td></tr>)}</tbody></AdminTable><footer><span>Dang xem {lessons.length ? (page - 1) * 10 + 1 : 0} den {(page - 1) * 10 + lessons.length} trong so {total} bai hoc</span><div className={styles.pagination}><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} type="button">‹</button><strong>{page}/{totalPages}</strong><button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} type="button">›</button></div></footer></>}</section></motion.div>
+    {lessonModal && <LessonModal levels={levels} lesson={lessonModal === "create" ? null : lessonModal} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setLessonModal(null)} onSubmit={saveLesson} />}
+    {detail && <Modal title="Chi tiet bai hoc" onClose={() => setDetail(null)}><div className={styles.detailGrid}><div><span>Ten bai</span><strong>{detail.title}</strong></div><div><span>Cap do</span><strong>{detail.level.name}</strong></div><div><span>EXP</span><strong>{detail.expReward}</strong></div><div className={styles.detailWide}><span>Mo ta</span><p>{detail.description || "Chua co mo ta"}</p></div></div><div className={styles.detailToolbar}><button className={styles.primaryAction} type="button" onClick={() => setVocabOpen(true)}>Them tu vung</button></div>{!detail.vocabulary.length ? <div className={styles.stateBox}>Chua co tu vung.</div> : <AdminTable className={styles.vocabTable}><thead><tr><th>Thu tu</th><th>Tu</th><th>Nghia</th><th>Actions</th></tr></thead><tbody>{detail.vocabulary.map((v) => <tr key={v.id}><td>{v.order}</td><td><strong>{v.chinese}</strong><small>{v.pinyin}</small></td><td>{v.vietnamese}</td><td><div className={styles.actions}><button type="button" onClick={async () => { await deleteVocabulary(v.id); await openDetail(detail.id); await loadLessons() }}><AdminIcon name="alert" /></button></div></td></tr>)}</tbody></AdminTable>}</Modal>}
+    {vocabOpen && <VocabModal saving={saving} onClose={() => setVocabOpen(false)} onSubmit={saveVocab} />}
+    {deleteTarget && <Modal title="Xoa bai hoc" onClose={() => setDeleteTarget(null)}><div className={styles.confirmBody}>Ban co chac muon xoa &quot;{deleteTarget.title}&quot;? Toan bo tu vung thuoc bai hoc co the bi xoa theo.</div><div className={styles.modalActions}><button className={styles.secondaryAction} disabled={saving} onClick={() => setDeleteTarget(null)} type="button">Huy</button><button className={styles.dangerAction} disabled={saving} onClick={() => void confirmDelete()} type="button">{saving ? "Dang xoa..." : "Xoa"}</button></div></Modal>}
+    {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}
+  </motion.div>
 }
