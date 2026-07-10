@@ -82,14 +82,6 @@ function LearningModuleCard({ type, lesson, level, lessonOrder }: { type: "flash
   )
 }
 
-function StickyContinueBar() {
-  return (
-    <aside className={styles.stickyBar}>
-      <div className={styles.stickyInner}><div><span>Trạng thái hiện tại</span><strong>Chưa bắt đầu</strong></div><Link href="/courses/hsk1/lesson-1/dictation">Bắt đầu luyện tập <b>→</b></Link></div>
-    </aside>
-  )
-}
-
 export default function LessonOverviewPage() {
   const [lesson, setLesson] = useState<LessonDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,7 +110,6 @@ export default function LessonOverviewPage() {
           <LearningModuleCard type="dictation" lesson={lesson} level="hsk1" lessonOrder={1} />
         </section>
       </div>
-      <StickyContinueBar />
     </main>
   )
 }

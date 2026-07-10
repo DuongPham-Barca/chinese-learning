@@ -108,7 +108,6 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
         </div>
         <div className={styles.statStrip}><span><b>{known}</b>Đã thuộc</span><span><b>{review}</b>Cần ôn</span><span><b>{vocab.length - current}</b>Còn lại</span></div>
       </section>
-      <aside className={styles.stickyStudyBar}><div className={styles.stickyStudyInner}><span>Độ chính xác {accuracy}%</span><Link className={styles.secondaryButton} href={returnHref}>Tổng quan bài học</Link></div></aside>
     </LessonLayout>
   )
 }

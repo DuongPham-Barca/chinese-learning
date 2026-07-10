@@ -3,7 +3,7 @@
 import { use, useEffect, useState, type CSSProperties } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
 import { cardVariants, containerVariants, fadeInVariants, itemVariants, sectionViewport } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon, { type SharedIconName } from "@/components/shared-icon"
@@ -56,27 +56,7 @@ function LessonProgressCard() {
   )
 }
 
-function ComingSoonModal({ title, onClose }: { title: string; onClose: () => void }) {
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [onClose])
-
-  return (
-    <motion.div className={styles.modalOverlay} onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.div className={styles.modal} onClick={(e) => e.stopPropagation()} initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.96 }}>
-        <div className={styles.modalArt}><SharedIcon name="wand" size={38} /></div>
-        <h2>Sắp ra mắt</h2>
-        <p><strong>{title}</strong> đang được hoàn thiện cho luồng học này. Bạn có thể bắt đầu với các phần đã mở trước.</p>
-        <button className={styles.primaryButton} type="button" onClick={onClose}>Đã hiểu</button>
-      </motion.div>
-    </motion.div>
-  )
-}
-
 function LearningModuleCard({ type, lesson, level }: { type: string; lesson: LessonDetail; level: string }) {
-  const [showModal, setShowModal] = useState(false)
   const status = MODULE_STATUS[type] ?? "coming_soon"
   const isComingSoon = status === "coming_soon"
   const labels: Record<string, { title: string; description: string; duration: string; checklist: string[] }> = {
@@ -100,13 +80,12 @@ function LearningModuleCard({ type, lesson, level }: { type: string; lesson: Les
       <ul className={styles.checklist}>{item.checklist.map((check) => <li key={check}><SharedIcon name="check" size={14} />{check}</li>)}</ul>
       <footer className={styles.moduleFooter}>
         <span className={styles.duration}><SharedIcon name="clock" size={14} />{item.duration}</span>
-        {isComingSoon ? <span className={styles.disabledAction}>Xem trước</span> : <Link className={styles.moduleAction} href={`/lessons/${level}/${lesson.id}/${type}`}>Bắt đầu</Link>}
+        {isComingSoon ? <span className={styles.disabledAction}>Sắp ra mắt</span> : <Link className={styles.moduleAction} href={`/lessons/${level}/${lesson.id}/${type}`}>Bắt đầu</Link>}
       </footer>
-      <AnimatePresence>{showModal && <ComingSoonModal title={item.title} onClose={() => setShowModal(false)} />}</AnimatePresence>
     </>
   )
 
-  return isComingSoon ? <motion.article className={`${styles.moduleCard} ${styles.moduleCardComing}`} variants={cardVariants} onClick={() => setShowModal(true)}>{body}</motion.article> : <motion.article className={styles.moduleCard} variants={cardVariants}>{body}</motion.article>
+  return <motion.article className={styles.moduleCard} variants={cardVariants}>{body}</motion.article>
 }
 
 export default function LessonDetailPage({ params }: { params: Promise<{ level: string; id: string }> }) {
@@ -155,7 +134,6 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
           <LearningModuleCard type="quiz" lesson={lesson} level={level} />
         </motion.section>
       </div>
-      <aside className={styles.bottomBar}><div className={styles.bottomInner}><div><span>Trạng thái bài học</span><strong>Chưa bắt đầu</strong></div><Link className={styles.primaryButton} href={`/lessons/${level}/${id}/flashcard`}>Bắt đầu học <SharedIcon name="arrowRight" size={15} /></Link></div></aside>
     </LessonLayout>
   )
 }
