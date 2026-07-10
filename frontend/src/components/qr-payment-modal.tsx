@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
+import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 import styles from "./qr-payment-modal.module.css"
 
 type PlanInfo = {
@@ -26,11 +28,14 @@ const bankInfo = {
 }
 
 export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalProps) {
+  const { user } = useAuth()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const transferContent = plan ? "[email - gói]" : ""
+  const transferContent = plan && user
+    ? `[${user.email || user.username} - ${plan.id}]`
+    : ""
 
   const copyToClipboard = useCallback(async (text: string, field: string) => {
     try {
@@ -43,11 +48,18 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
   }, [])
 
   const handleConfirm = useCallback(async () => {
+    if (!plan) return
     setSubmitting(true)
-    await new Promise((r) => setTimeout(r, 600))
-    setSubmitting(false)
-    setSubmitted(true)
-  }, [])
+    try {
+      await api.post("/subscriptions", { planId: plan.id, transferContent })
+      setSubmitted(true)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } }
+      alert(error.response?.data?.error || "Có lỗi xảy ra")
+    } finally {
+      setSubmitting(false)
+    }
+  }, [plan, transferContent])
 
   const handleClose = useCallback(() => {
     setSubmitted(false)

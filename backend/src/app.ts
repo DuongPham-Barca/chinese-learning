@@ -2,6 +2,8 @@ import cors from 'cors'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import { adminGuard } from './lib/admin-guard'
+import { setupTelegramHandlers } from './lib/telegram-handler'
+import './lib/telegram-bot'
 import adminContentRoutes from './modules/admin/admin-content.routes'
 import adminDashboardRoutes from './modules/admin/admin-dashboard.routes'
 import adminUsersRoutes from './modules/admin/admin-users.routes'
@@ -10,6 +12,7 @@ import leaderboardRoutes from './modules/leaderboard/leaderboard.routes'
 import lessonRoutes from './modules/lessons/lessons.routes'
 import progressRoutes from './modules/progress/progress.routes'
 import sentenceRoutes from './modules/sentences/sentences.routes'
+import subscriptionRoutes from './modules/subscriptions/subscription.routes'
 import vocabRoutes from './modules/vocabulary/vocabulary.routes'
 
 export const app = express()
@@ -26,6 +29,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api', subscriptionRoutes)
 // Defense-in-depth: every current or future /api/admin endpoint is protected centrally.
 app.use('/api/admin', adminGuard)
 app.use('/api/admin', adminContentRoutes)
@@ -43,3 +47,5 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
 }
 
 app.use(errorHandler)
+
+setupTelegramHandlers()

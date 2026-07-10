@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto'
-import type { Request, Response } from 'express'
+import type { Request, RequestHandler, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import { prisma } from './prisma'
 
 const AUTH_COOKIE = 'auth_token'
 const REFRESH_COOKIE = 'refresh_token'
@@ -10,6 +11,21 @@ export const REFRESH_TOKEN_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000
 export interface AuthTokenPayload {
   userId: string
   email: string | null
+}
+
+export type RequestUser = {
+  id: string
+  email: string | null
+  username: string
+  role: string
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: RequestUser
+    }
+  }
 }
 
 export function getJwtSecret(): string {
@@ -58,6 +74,29 @@ export function getUserId(req: Request): string | null {
   } catch {
     return null
   }
+}
+
+export const requireUser: RequestHandler = (req, res, next) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  void prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, username: true, role: true },
+  })
+    .then((user) => {
+      if (!user) {
+        res.status(401).json({ error: 'Unauthorized' })
+        return
+      }
+
+      req.user = user
+      next()
+    })
+    .catch(next)
 }
 
 function cookieSecurityAttributes(): string {

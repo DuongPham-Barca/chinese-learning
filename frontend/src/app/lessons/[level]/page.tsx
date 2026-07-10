@@ -89,7 +89,7 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
             return (
               <motion.div key={lesson.id} variants={cardVariants}>
                 {lesson.isLocked
-                  ? <article className={`${styles.lessonCard} ${styles.lessonCardLocked}`} aria-disabled="true">{cardContent}</article>
+                  ? <article className={`${styles.lessonCard} ${styles.lessonCardLocked}`}>{cardContent}</article>
                   : <Link className={styles.lessonCard} href={`/lessons/${level}/${lesson.id}`}>{cardContent}</Link>}
               </motion.div>
             )
