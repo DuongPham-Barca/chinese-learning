@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import SiteNavbar from "@/components/site-navbar"
+import { useAuth } from "@/lib/auth-provider"
 import {
   containerVariants,
   sectionVariants,
@@ -87,6 +88,7 @@ function Brand() {
 
 export default function HomePage() {
   const prefersReducedMotion = useReducedMotion()
+  const { user } = useAuth()
 
   return (
     <main className={styles.page}>
@@ -103,7 +105,11 @@ export default function HomePage() {
           <motion.span variants={heroItemVariants} className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</motion.span>
           <motion.h1 variants={heroItemVariants}>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</motion.h1>
           <motion.p variants={heroItemVariants}>Hệ thống học tiếng Trung hiện đại với Flashcard, Dictation, luyện phát âm và giáo trình HSK đầy đủ.</motion.p>
-          <motion.div variants={heroItemVariants} className={styles.heroButtons}><Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link><a href="#roadmap" className={styles.secondaryButton}>Khám phá giáo trình</a></motion.div>
+          <motion.div variants={heroItemVariants} className={styles.heroButtons}>{user ? (
+  <button onClick={() => document.getElementById("roadmap")?.scrollIntoView({ behavior: "smooth" })} className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></button>
+) : (
+  <Link href="/login" className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></Link>
+)}<button onClick={() => document.getElementById("roadmap")?.scrollIntoView({ behavior: "smooth" })} className={styles.secondaryButton}>Khám phá giáo trình</button></motion.div>
           <motion.div variants={heroItemVariants} className={styles.bullets}>
             {["Hơn 10,000 học viên", "Luyện Dictation mỗi ngày", "Flashcard thông minh", "Theo dõi tiến độ học tập"].map((item) => <span key={item}><i><Icon name="check" /></i>{item}</span>)}
           </motion.div>
