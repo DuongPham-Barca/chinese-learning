@@ -62,9 +62,9 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
 
       {!loading && !error && lessons.length > 0 && (
         <motion.section className={styles.lessonGrid} variants={containerVariants} initial="hidden" animate="visible">
-          {lessons.map((lesson) => (
-            <motion.div key={lesson.id} variants={cardVariants}>
-              <Link className={styles.lessonCard} href={`/lessons/${level}/${lesson.id}`}>
+          {lessons.map((lesson) => {
+            const cardContent = (
+              <>
                 <div className={styles.cardTop}>
                   <span className={styles.lessonNumber}>{lesson.lessonOrder}</span>
                   <span className={styles.badgeRow}>
@@ -79,11 +79,21 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
                 </div>
                 <footer>
                   <span className={styles.statusBadge}>{lesson.isLocked ? "Cần Pro" : "Chưa bắt đầu"}</span>
-                  <span className={styles.startButton}>Bắt đầu học <SharedIcon name="arrowRight" size={14} /></span>
+                  {lesson.isLocked
+                    ? <button className={`${styles.startButton} ${styles.lockedStartButton}`} type="button" disabled>Đã khóa <SharedIcon name="lock" size={14} /></button>
+                    : <span className={styles.startButton}>Bắt đầu học <SharedIcon name="arrowRight" size={14} /></span>}
                 </footer>
-              </Link>
-            </motion.div>
-          ))}
+              </>
+            )
+
+            return (
+              <motion.div key={lesson.id} variants={cardVariants}>
+                {lesson.isLocked
+                  ? <article className={`${styles.lessonCard} ${styles.lessonCardLocked}`} aria-disabled="true">{cardContent}</article>
+                  : <Link className={styles.lessonCard} href={`/lessons/${level}/${lesson.id}`}>{cardContent}</Link>}
+              </motion.div>
+            )
+          })}
         </motion.section>
       )}
     </LessonLayout>
