@@ -22,8 +22,7 @@ VALUES
   ('level_hsk3', 'HSK3', 'HSK 3', 'hsk-3', 'Noi dung trung cap HSK 3', 3, true),
   ('level_hsk4', 'HSK4', 'HSK 4', 'hsk-4', 'Noi dung trung cap HSK 4', 4, true),
   ('level_hsk5', 'HSK5', 'HSK 5', 'hsk-5', 'Noi dung nang cao HSK 5', 5, true),
-  ('level_hsk6', 'HSK6', 'HSK 6', 'hsk-6', 'Noi dung nang cao HSK 6', 6, true),
-  ('level_communication', 'COMMUNICATION', 'Giao tiep', 'giao-tiep', 'Tieng Trung giao tiep thuc te', 7, true)
+  ('level_hsk6', 'HSK6', 'HSK 6', 'hsk-6', 'Noi dung nang cao HSK 6', 6, true)
 ON CONFLICT ("slug") DO NOTHING;
 
 ALTER TABLE "Lesson" ADD COLUMN "level_id" TEXT;
@@ -44,7 +43,6 @@ SET
     WHEN 'HSK4' THEN 'level_hsk4'
     WHEN 'HSK5' THEN 'level_hsk5'
     WHEN 'HSK6' THEN 'level_hsk6'
-    WHEN 'COMMUNICATION' THEN 'level_communication'
   END,
   "slug" = 'bai-' || "lesson_order";
 

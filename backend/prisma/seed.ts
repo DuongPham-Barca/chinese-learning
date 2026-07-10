@@ -29,11 +29,10 @@ const levelSeeds: Array<{ id: string; type: LevelType; name: string; slug: strin
   { id: 'level_hsk4', type: LevelType.HSK4, name: 'HSK 4', slug: 'hsk-4', description: 'Noi dung trung cap HSK 4', order: 4 },
   { id: 'level_hsk5', type: LevelType.HSK5, name: 'HSK 5', slug: 'hsk-5', description: 'Noi dung nang cao HSK 5', order: 5 },
   { id: 'level_hsk6', type: LevelType.HSK6, name: 'HSK 6', slug: 'hsk-6', description: 'Noi dung nang cao HSK 6', order: 6 },
-  { id: 'level_communication', type: LevelType.COMMUNICATION, name: 'Giao tiep', slug: 'giao-tiep', description: 'Tieng Trung giao tiep thuc te', order: 7 },
 ]
 
 function levelIdFor(type: LevelType): string {
-  return levelSeeds.find((level) => level.type === type)?.id || 'level_communication'
+  return levelSeeds.find((level) => level.type === type)?.id || 'level_hsk6'
 }
 
 function lessonSlug(order: number): string {

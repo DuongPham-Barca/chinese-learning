@@ -15,7 +15,6 @@ enum LevelType {
   HSK4
   HSK5
   HSK6
-  COMMUNICATION
 }
 
 enum Role {

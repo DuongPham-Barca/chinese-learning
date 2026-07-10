@@ -31,7 +31,7 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
       <Link href="/" className="text-sm text-gray-500 hover:underline mb-4 block">
         ← Trang chủ
       </Link>
-      <h1 className="text-2xl font-bold mb-6">{level.toUpperCase().replace("COMMUNICATION", "GIAO TIẾP")}</h1>
+      <h1 className="text-2xl font-bold mb-6">{level.toUpperCase()}</h1>
       {loading && <p>Đang tải danh sách bài học...</p>}
       {error && <p className="text-red-600">{error}</p>}
       {!loading && !error && lessons.length === 0 && <p>Cấp độ này chưa có bài học.</p>}

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "LevelType" AS ENUM ('HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'COMMUNICATION');
+CREATE TYPE "LevelType" AS ENUM ('HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6');
 
 -- CreateTable
 CREATE TABLE "Lesson" (

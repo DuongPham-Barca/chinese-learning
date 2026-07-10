@@ -76,7 +76,7 @@ function blankToNull(value?: string | null) {
 function inferLevelType(name: string, slug: string): LevelType | null {
   const source = `${name} ${slug}`.toLowerCase()
   for (const type of levelTypes) {
-    const normalized = type === 'COMMUNICATION' ? 'giao' : type.toLowerCase().replace('hsk', 'hsk-')
+    const normalized = type.toLowerCase().replace('hsk', 'hsk-')
     if (source.includes(type.toLowerCase()) || source.includes(normalized)) return type
   }
   return null
@@ -203,7 +203,7 @@ router.post('/lessons', asyncHandler(async (req, res) => {
   if (!level) return error(res, 404, 'Khong tim thay cap do')
   const slug = slugify(parsed.data.slug || parsed.data.title)
   try {
-    const lesson = await prisma.lesson.create({ data: { levelId: level.id, levelType: level.type || LevelType.COMMUNICATION, title: parsed.data.title, slug, description: blankToNull(parsed.data.description), imageUrl: parsed.data.imageUrl ?? null, lessonOrder: parsed.data.order, isFree: parsed.data.isFree, isPublished: parsed.data.isPublished, expReward: parsed.data.expReward }, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
+    const lesson = await prisma.lesson.create({ data: { levelId: level.id, levelType: level.type || LevelType.HSK6, title: parsed.data.title, slug, description: blankToNull(parsed.data.description), imageUrl: parsed.data.imageUrl ?? null, lessonOrder: parsed.data.order, isFree: parsed.data.isFree, isPublished: parsed.data.isPublished, expReward: parsed.data.expReward }, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
     return success(res, lessonOut(lesson), 'Tao bai hoc thanh cong', 201)
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug bai hoc da ton tai trong cap do nay', { slug: 'Slug da ton tai' })
@@ -219,7 +219,7 @@ router.put('/lessons/:id', asyncHandler(async (req, res) => {
     const level = await prisma.level.findUnique({ where: { id: parsed.data.levelId } })
     if (!level) return error(res, 404, 'Khong tim thay cap do')
     data.levelId = level.id
-    data.levelType = level.type || LevelType.COMMUNICATION
+    data.levelType = level.type || LevelType.HSK6
   }
   if (parsed.data.title !== undefined) data.title = parsed.data.title
   if (parsed.data.slug !== undefined) data.slug = slugify(parsed.data.slug)

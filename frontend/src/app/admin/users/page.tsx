@@ -14,7 +14,7 @@ const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, trans
 const itemVariants = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] as const } } }
 const plans: Array<{ id: AdminPlan; label: string; price: string; chip: string }> = [{ id: "2months", label: "2 thang", price: "49.000d", chip: "Pho bien" }, { id: "6months", label: "6 thang", price: "119.000d", chip: "Tiet kiem" }, { id: "12months", label: "12 thang", price: "189.000d", chip: "Tot nhat" }]
 const planLabels: Record<AdminPlan, string> = { "2months": "2 thang", "6months": "6 thang", "12months": "12 thang" }
-const levels = ["HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6", "COMMUNICATION"]
+const levels = ["HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6"]
 const emptyUser: AdminUserPayload = { username: "", email: "", password: "", phone: "", level: "HSK1", role: "USER", isPremium: false }
 
 function apiMessage(error: unknown, fallback: string) {

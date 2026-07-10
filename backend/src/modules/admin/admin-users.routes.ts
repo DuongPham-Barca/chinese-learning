@@ -7,7 +7,7 @@ import { prisma } from '../../lib/prisma'
 
 const router = Router()
 
-const levelSchema = z.enum(['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'COMMUNICATION'])
+const levelSchema = z.enum(['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'])
 const roleSchema = z.enum(['USER', 'ADMIN'])
 const planSchema = z.enum(['2months', '6months', '12months'])
 const userSchema = z.object({
