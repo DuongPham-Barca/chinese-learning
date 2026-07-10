@@ -1,5 +1,5 @@
-import HSKLevelPage from "../hsk-level-page"
+import { redirect } from "next/navigation"
 
 export default function HSK2Page() {
-  return <HSKLevelPage level="hsk2" />
+  redirect("/lessons/hsk2")
 }

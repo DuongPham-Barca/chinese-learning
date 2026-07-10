@@ -43,6 +43,9 @@ export interface Vocabulary {
   hanzi: string
   pinyin: string
   meaningVi: string
+  example?: string | null
+  examplePinyin?: string | null
+  exampleMeaning?: string | null
   audioUrl: string | null
 }
 

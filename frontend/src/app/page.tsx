@@ -191,7 +191,7 @@ export default function HomePage() {
               <div className={styles.levelTop}><strong>{level}</strong><span>{[1,2,3,4,5].map((dot) => <i className={dot <= dots ? styles.dotActive : ""} key={dot} />)}</span></div>
               <small>{lessons}</small><small>{words}</small>
               <p>{description}</p>
-              <Link href={level.startsWith("HSK") ? `/courses/${level.toLowerCase()}` : "/login"}>Bắt đầu học →</Link>
+              <Link href={level.startsWith("HSK") ? `/lessons/${level.toLowerCase()}` : "/login"}>Bắt đầu học →</Link>
             </motion.article>
           ))}
         </motion.div>
