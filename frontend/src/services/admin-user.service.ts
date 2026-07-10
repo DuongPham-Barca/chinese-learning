@@ -1,6 +1,17 @@
 import api from "@/lib/api"
 import type { AdminItemResponse, AdminListResponse } from "./admin-level.service"
 
+export interface AdminSession {
+  id: string
+  username: string
+  role: string
+}
+
+export async function getAdminSession() {
+  const response = await api.get<{ user: AdminSession }>("/auth/admin/session")
+  return response.data
+}
+
 export type AdminPlan = "2months" | "6months" | "12months"
 export type AdminUserStatus = "active" | "inactive"
 
