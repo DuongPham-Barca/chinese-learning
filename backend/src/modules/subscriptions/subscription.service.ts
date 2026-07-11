@@ -1,4 +1,5 @@
 import { SubStatus, SubscriptionPlan } from '@prisma/client'
+import { sendEmail } from '../../lib/mail'
 import { prisma } from '../../lib/prisma'
 
 export type SubscriptionPlanId = '2months' | '6months' | '12months'
@@ -60,7 +61,12 @@ export async function createSubscription(userId: string, planId: SubscriptionPla
 }
 
 export async function confirmSubscription(id: string, confirmedBy: string) {
-  const sub = await prisma.subscription.findUnique({ where: { id } })
+  const sub = await prisma.subscription.findUnique({
+    where: { id },
+    include: {
+      user: { select: { username: true, email: true } },
+    },
+  })
   if (!sub) throw new Error('Subscription not found')
   if (sub.status !== SubStatus.PENDING) throw new Error('Subscription is not pending')
 
@@ -68,7 +74,7 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
   const startedAt = new Date()
   const expiresAt = addMonths(startedAt, plan.months)
 
-  return prisma.$transaction(async (tx) => {
+  const confirmed = await prisma.$transaction(async (tx) => {
     const confirmed = await tx.subscription.update({
       where: { id },
       data: {
@@ -87,14 +93,32 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
 
     return confirmed
   })
+
+  try {
+    if (!sub.user.email) throw new Error('User email is not configured')
+    await sendEmail(sub.user.email, 'Xác nhận kích hoạt Pro',
+      `<p>Chào ${sub.user.username},</p>
+   <p>Yêu cầu nâng cấp Pro của bạn đã được <strong>xác nhận</strong>.</p>
+   <p>Thời hạn: ${expiresAt.toLocaleDateString('vi-VN')}</p>
+   <p>Cảm ơn bạn đã đồng hành cùng ChineseDict!</p>`)
+  } catch (error) {
+    console.error('Failed to send subscription confirmation email:', error)
+  }
+
+  return confirmed
 }
 
 export async function rejectSubscription(id: string, confirmedBy: string) {
-  const sub = await prisma.subscription.findUnique({ where: { id } })
+  const sub = await prisma.subscription.findUnique({
+    where: { id },
+    include: {
+      user: { select: { username: true, email: true } },
+    },
+  })
   if (!sub) throw new Error('Subscription not found')
   if (sub.status !== SubStatus.PENDING) throw new Error('Subscription is not pending')
 
-  return prisma.subscription.update({
+  const rejected = await prisma.subscription.update({
     where: { id },
     data: {
       status: SubStatus.REJECTED,
@@ -102,4 +126,16 @@ export async function rejectSubscription(id: string, confirmedBy: string) {
       confirmedBy,
     },
   })
+
+  try {
+    if (!sub.user.email) throw new Error('User email is not configured')
+    await sendEmail(sub.user.email, 'Yêu cầu nâng cấp Pro bị từ chối',
+      `<p>Chào ${sub.user.username},</p>
+   <p>Yêu cầu nâng cấp Pro của bạn đã bị <strong>từ chối</strong>.</p>
+   <p>Vui lòng kiểm tra lại thông tin chuyển khoản hoặc liên hệ admin để được hỗ trợ.</p>`)
+  } catch (error) {
+    console.error('Failed to send subscription rejection email:', error)
+  }
+
+  return rejected
 }

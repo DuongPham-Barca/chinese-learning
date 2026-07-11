@@ -35,6 +35,9 @@ importers:
       node-telegram-bot-api:
         specifier: ^1.1.2
         version: 1.1.2
+      nodemailer:
+        specifier: ^9.0.3
+        version: 9.0.3
       nodemon:
         specifier: ^3.1.14
         version: 3.1.14
@@ -66,6 +69,9 @@ importers:
       '@types/node-telegram-bot-api':
         specifier: ^0.64.15
         version: 0.64.15
+      '@types/nodemailer':
+        specifier: ^8.0.1
+        version: 8.0.1
       prisma:
         specifier: ^6.6.0
         version: 6.19.3(typescript@5.9.3)
@@ -404,6 +410,9 @@ packages:
 
   '@types/node@22.20.0':
     resolution: {integrity: sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g==}
+
+  '@types/nodemailer@8.0.1':
+    resolution: {integrity: sha512-PxpaInm8V1JQDd4j0ds5HfvWQk8JupS1C0Picb96QJsrrRDjBH+DlK7L4ZdNSqNULhiZRQHc40nLVShaGxXAMw==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -860,6 +869,10 @@ packages:
   node-telegram-bot-api@1.1.2:
     resolution: {integrity: sha512-PtLczp0WZCQz7LHsObl1WIyfMSTco58cfYXITqB4Fbeuybd/A/sM729h892fbcjz+szJ9lpu+/pfewUs9NObrg==}
     engines: {node: '>=18'}
+
+  nodemailer@9.0.3:
+    resolution: {integrity: sha512-n+YP+NKwR5zRWa60k3GiQ6Q3B4KXCoAw40dAKeCtYn020iNN74aWK2liXIC3ZEATeGql7we3tE3t8QwhY0eskw==}
+    engines: {node: '>=6.0.0'}
 
   nodemon@3.1.14:
     resolution: {integrity: sha512-jakjZi93UtB3jHMWsXL68FXSAosbLfY0In5gtKq3niLSkrWznrVBzXFNOEMJUfc9+Ke7SHWoAZsiMkNP3vq6Jw==}
@@ -1461,6 +1474,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/nodemailer@8.0.1':
+    dependencies:
+      '@types/node': 22.20.0
+
   '@types/qs@6.15.1': {}
 
   '@types/range-parser@1.2.7': {}
@@ -1960,6 +1977,8 @@ snapshots:
   node-fetch-native@1.6.7: {}
 
   node-telegram-bot-api@1.1.2: {}
+
+  nodemailer@9.0.3: {}
 
   nodemon@3.1.14:
     dependencies:
