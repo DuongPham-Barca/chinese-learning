@@ -7,7 +7,7 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
-import type { Sentence } from "@/types/api"
+import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
 type CheckStatus = "idle" | "success" | "error"
@@ -30,12 +30,12 @@ function tokenizeSentence(sentenceZh: string): Token[] {
   }))
 }
 
-function buildQuestions(sentences: Sentence[]): SentenceQuestion[] {
-  return sentences.map((sentence) => {
-    const answer = tokenizeSentence(sentence.sentenceZh)
+function buildQuestions(items: Vocabulary[]): SentenceQuestion[] {
+  return items.filter((v) => v.example).map((item) => {
+    const answer = tokenizeSentence(item.example!)
     return {
-      id: sentence.id,
-      meaning: sentence.sentenceVi,
+      id: item.id,
+      meaning: item.exampleMeaning || item.meaningVi,
       answer,
       tokens: shuffleArray(answer),
       answerText: answer.map((token) => token.text).join(""),
@@ -46,7 +46,7 @@ function buildQuestions(sentences: Sentence[]): SentenceQuestion[] {
 export default function SentenceSortingPage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
   const returnHref = `/lessons/${level}/${id}`
-  const [sentences, setSentences] = useState<Sentence[]>([])
+  const [items, setItems] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
   const [current, setCurrent] = useState(0)
@@ -58,9 +58,9 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
 
   useEffect(() => {
     let active = true
-    api.get<{ sentences: Sentence[] }>(`/sentences/${id}`)
+    api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${id}`)
       .then((response) => {
-        if (active) setSentences(response.data.sentences)
+        if (active) setItems(response.data.vocabulary)
       })
       .catch(() => {
         if (active) setLoadError("Không thể tải dữ liệu sắp xếp câu.")
@@ -71,7 +71,7 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
     return () => { active = false }
   }, [id])
 
-  const questions = useMemo(() => buildQuestions(sentences), [sentences])
+  const questions = useMemo(() => buildQuestions(items), [items])
   const question = questions[current]
   const totalItems = questions.length
   const progress = totalItems ? Math.round(((current + (status === "success" ? 1 : 0)) / totalItems) * 100) : 0
