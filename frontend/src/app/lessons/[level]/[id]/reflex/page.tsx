@@ -8,6 +8,7 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
@@ -40,7 +41,7 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
   const [items, setItems] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(() => readLessonProgress(id).reflex?.completed ?? 0)
   const [answer, setAnswer] = useState("")
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>("idle")
   const [correct, setCorrect] = useState(0)
@@ -72,11 +73,13 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
     setTranslationStatus(status)
     setAttempts((value) => value + 1)
     if (status === "correct") setCorrect((value) => value + 1)
-  }, [answer, item])
+    if (status === "correct" || status === "near") updateLessonModuleProgress(id, "reflex", current + 1, totalItems)
+  }, [answer, current, id, item, totalItems])
 
   const revealAnswer = useCallback(() => {
     setTranslationStatus("revealed")
-  }, [])
+    updateLessonModuleProgress(id, "reflex", current + 1, totalItems)
+  }, [current, id, totalItems])
 
   const nextSentence = useCallback(() => {
     setAnswer("")
@@ -129,7 +132,7 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
             <div>
               <span>DỊCH SANG TIẾNG TRUNG</span>
               <h1>{item.exampleMeaning || item.meaningVi}</h1>
-              <p>Nhập câu tiếng Trung tương ứng. Bấm "Xem đáp án" nếu cần.</p>
+              <p>Nhập câu tiếng Trung tương ứng. Bấm Xem đáp án nếu cần.</p>
             </div>
           </motion.section>
 

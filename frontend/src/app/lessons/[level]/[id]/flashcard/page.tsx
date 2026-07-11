@@ -7,6 +7,7 @@ import { cardVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
@@ -15,8 +16,8 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
   const [vocab, setVocab] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [current, setCurrent] = useState(0)
-  const [learned, setLearned] = useState(0)
+  const [current, setCurrent] = useState(() => readLessonProgress(id).flashcard?.completed ?? 0)
+  const [learned, setLearned] = useState(() => readLessonProgress(id).flashcard?.completed ?? 0)
   const [flipped, setFlipped] = useState(false)
 
   useEffect(() => {
@@ -37,10 +38,12 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
   useEffect(() => () => window.speechSynthesis?.cancel(), [])
 
   const moveNext = useCallback(() => {
-    setLearned((value) => Math.max(value, Math.min(current + 1, vocab.length)))
+    const completed = Math.min(current + 1, vocab.length)
+    updateLessonModuleProgress(id, "flashcard", completed, vocab.length)
+    setLearned((value) => Math.max(value, completed))
     setCurrent((value) => value + 1)
     setFlipped(false)
-  }, [current, vocab.length])
+  }, [current, id, vocab.length])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

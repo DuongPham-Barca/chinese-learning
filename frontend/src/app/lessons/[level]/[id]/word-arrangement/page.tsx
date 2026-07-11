@@ -7,6 +7,7 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
@@ -49,7 +50,7 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
   const [items, setItems] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(() => readLessonProgress(id)["word-arrangement"]?.completed ?? 0)
   const [selected, setSelected] = useState<Token[]>([])
   const [status, setStatus] = useState<CheckStatus>("idle")
   const [correct, setCorrect] = useState(0)
@@ -95,8 +96,11 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
     const isCorrect = selected.map((token) => token.text).join("") === question.answerText
     setStatus(isCorrect ? "success" : "error")
     setAttempts((value) => value + 1)
-    if (isCorrect) setCorrect((value) => value + 1)
-  }, [question, selected, status])
+    if (isCorrect) {
+      setCorrect((value) => value + 1)
+      updateLessonModuleProgress(id, "word-arrangement", current + 1, totalItems)
+    }
+  }, [current, id, question, selected, status, totalItems])
 
   const nextSentence = useCallback(() => {
     setSelected([])

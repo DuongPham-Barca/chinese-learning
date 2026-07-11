@@ -7,6 +7,7 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
@@ -27,7 +28,7 @@ function compareCharacters(answer: string, expected: string) {
 export default function DictationPage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
   const [items, setItems] = useState<Vocabulary[]>([])
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(() => readLessonProgress(id).dictation?.completed ?? 0)
   const [answer, setAnswer] = useState("")
   const [status, setStatus] = useState<CheckStatus>("idle")
   const [playing, setPlaying] = useState(false)
@@ -80,12 +81,13 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
     const expected = item.example!.replace(/[\s.，。！？、；：""''（）《》]/g, "")
     if (normalized === expected) {
       setStatus("success")
+      updateLessonModuleProgress(id, "dictation", current + 1, totalItems)
     } else {
       setStatus("error")
       setErrors((value) => value + 1)
       setAccuracy((value) => Math.max(value - 5, 0))
     }
-  }, [answer, item])
+  }, [answer, current, id, item, totalItems])
 
   const nextExercise = useCallback(() => {
     setCurrent((value) => value + 1)

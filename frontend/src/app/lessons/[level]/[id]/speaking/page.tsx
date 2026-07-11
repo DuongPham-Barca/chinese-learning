@@ -7,11 +7,46 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SpeechRecognitionAPI: any = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : undefined
+type SpeechRecognitionResultEvent = {
+  results: {
+    length: number
+    [index: number]: {
+      [index: number]: { transcript: string }
+    }
+  }
+}
+
+type SpeechRecognitionErrorEvent = {
+  error: string
+}
+
+type SpeechRecognitionInstance = {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  maxAlternatives: number
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onend: (() => void) | null
+  start: () => void
+  stop: () => void
+  abort: () => void
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance
+
+type WindowWithSpeechRecognition = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
+}
+
+const SpeechRecognitionAPI: SpeechRecognitionConstructor | undefined = typeof window !== "undefined"
+  ? (window as WindowWithSpeechRecognition).SpeechRecognition || (window as WindowWithSpeechRecognition).webkitSpeechRecognition
+  : undefined
 
 type RecordState = "idle" | "listening" | "processing" | "done"
 type MicError = "unsupported" | "no-speech" | "permission" | null
@@ -50,13 +85,13 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
   const [items, setItems] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(() => readLessonProgress(id).speaking?.completed ?? 0)
   const [recordState, setRecordState] = useState<RecordState>("idle")
   const [micError, setMicError] = useState<MicError>(null)
   const [transcript, setTranscript] = useState("")
   const [comparison, setComparison] = useState<CharResult[]>([])
   const [accuracy, setAccuracy] = useState(0)
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const manualStopRef = useRef(false)
   const transcriptRef = useRef("")
 
@@ -128,13 +163,13 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
     recognition.interimResults = true
     recognition.maxAlternatives = 1
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       const currentText = event.results[event.results.length - 1][0].transcript
       transcriptRef.current = currentText
       setTranscript(currentText)
     }
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event) => {
       if (manualStopRef.current) return
       if (event.error === "not-allowed") {
         setMicError("permission")
@@ -161,13 +196,14 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
       setComparison(result)
       setAccuracy(score)
       setRecordState("done")
+      updateLessonModuleProgress(id, "speaking", current + 1, totalItems)
       recognitionRef.current = null
     }
 
     recognition.start()
     recognitionRef.current = recognition
     setRecordState("listening")
-  }, [item])
+  }, [current, id, item, totalItems])
 
   const nextSentence = useCallback(() => {
     setTranscript("")
@@ -241,7 +277,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
               <>
                 <div className={`${styles.waveform} ${styles.wavePlaying}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
                 <div className={styles.recordingStatus}>Đang nghe... Bấm lần nữa để dừng</div>
-                {transcript && <p className={styles.transcriptText}>"{transcript}"</p>}
+                {transcript && <p className={styles.transcriptText}>{transcript}</p>}
               </>
             )}
             {recordState === "processing" && <div className={styles.processingArea}><div className={styles.spinner} /><div>Đang nhận diện giọng nói...</div></div>}

@@ -2,11 +2,12 @@
 
 import { use, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { cardVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
+import { completeLessonModule, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
@@ -15,81 +16,62 @@ type QuizQuestion = {
   support: string
   answer: string
   choices: string[]
-  type: "word-nghia" | "nghia-word" | "word-pinyin" | "example-dich" | "dich-example"
+  type: "word-meaning" | "meaning-word" | "example-zh" | "example-meaning"
 }
 
-function stageProgressKey(lessonId: string) {
-  return `lesson-stage-progress:${lessonId}`
-}
-
-function saveQuizComplete(lessonId: string) {
-  if (typeof window === "undefined") return
-  const current = JSON.parse(window.localStorage.getItem(stageProgressKey(lessonId)) || "{}")
-  window.localStorage.setItem(stageProgressKey(lessonId), JSON.stringify({ ...current, quiz: true }))
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
+function shuffleArray<T>(items: T[]): T[] {
+  const output = [...items]
+  for (let i = output.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+    ;[output[i], output[j]] = [output[j], output[i]]
   }
-  return a
+  return output
 }
 
 function buildQuestions(items: Vocabulary[]): QuizQuestion[] {
-  const withExample = items.filter((v) => v.example && v.exampleMeaning)
-  if (withExample.length < 2) return []
+  const usable = items.filter((item) => item.example && item.exampleMeaning)
+  if (usable.length < 2) return []
 
-  const questions: QuizQuestion[] = []
-
-  for (const item of withExample) {
-    const others = withExample.filter((v) => v.id !== item.id)
-
-    const pickDistractors = (getValue: (v: Vocabulary) => string, count = 3) => {
-      return shuffleArray(others).slice(0, count).map(getValue)
+  const questions = usable.flatMap((item) => {
+    const others = usable.filter((candidate) => candidate.id !== item.id)
+    const choices = (correct: string, getValue: (item: Vocabulary) => string) => {
+      const distractors = shuffleArray(others).map(getValue)
+      return shuffleArray([correct, ...distractors]).slice(0, Math.min(4, distractors.length + 1))
     }
 
-    const makeChoices = (correct: string, distractors: string[]) => {
-      return shuffleArray([correct, ...distractors]).slice(0, 4)
-    }
-
-    if (others.length >= 3) {
-      questions.push({
-        type: "word-nghia",
+    return [
+      {
+        type: "word-meaning" as const,
         prompt: `Từ "${item.hanzi}" có nghĩa là gì?`,
         support: item.pinyin,
         answer: item.meaningVi,
-        choices: makeChoices(item.meaningVi, pickDistractors((v) => v.meaningVi)),
-      })
-
-      questions.push({
-        type: "nghia-word",
+        choices: choices(item.meaningVi, (candidate) => candidate.meaningVi),
+      },
+      {
+        type: "meaning-word" as const,
         prompt: `Nghĩa "${item.meaningVi}" là chữ Hán nào?`,
         support: "",
         answer: item.hanzi,
-        choices: makeChoices(item.hanzi, pickDistractors((v) => v.hanzi)),
-      })
-
-      questions.push({
-        type: "dich-example",
+        choices: choices(item.hanzi, (candidate) => candidate.hanzi),
+      },
+      {
+        type: "example-zh" as const,
         prompt: `Dịch "${item.exampleMeaning}" sang tiếng Trung?`,
         support: "",
         answer: item.example!,
-        choices: makeChoices(item.example!, pickDistractors((v) => v.example!)),
-      })
-
-      questions.push({
-        type: "example-dich",
+        choices: choices(item.example!, (candidate) => candidate.example!),
+      },
+      {
+        type: "example-meaning" as const,
         prompt: `Câu "${item.example}" có nghĩa là gì?`,
         support: "",
         answer: item.exampleMeaning!,
-        choices: makeChoices(item.exampleMeaning!, pickDistractors((v) => v.exampleMeaning!)),
-      })
-    }
-  }
+        choices: choices(item.exampleMeaning!, (candidate) => candidate.exampleMeaning!),
+      },
+    ]
+  })
 
-  return shuffleArray(questions).slice(0, Math.min(questions.length, 20))
+  return shuffleArray(questions).filter((question) => question.choices.length >= 2)
 }
 
 export default function QuizStagePage({ params }: { params: Promise<{ level: string; id: string }> }) {
@@ -138,8 +120,9 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
     const nextAnswers = [...answers, selected]
     setAnswers(nextAnswers)
     setSelected("")
+    updateLessonModuleProgress(id, "quiz", current + 1, questions.length)
     if (current + 1 >= questions.length) {
-      saveQuizComplete(id)
+      completeLessonModule(id, "quiz", questions.length)
       setComplete(true)
       return
     }
@@ -163,11 +146,11 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
       <div className={styles.studyWrap}>
         <div className={styles.completionCard}>
           <div className={styles.completionMark}><SharedIcon name={percent >= 70 ? "check" : "rotateCcw"} size={34} /></div>
-          <h2 className={styles.completionTitle}>Hoàn thành Kiểm tra</h2>
+          <h2 className={styles.completionTitle}>Hoàn thành Trắc nghiệm</h2>
           <div className={styles.quizScore}><strong>{percent}%</strong><span>{score}/{questions.length} câu đúng</span></div>
           <p>{percent >= 70 ? "Bạn đã nắm được phần lớn nội dung bài học." : "Hãy luyện lại một vòng để củng cố từ vựng và câu."}</p>
           <div className={styles.actionRow}>
-            <button className={styles.secondaryButton} type="button" onClick={retry}>Retry</button>
+            <button className={styles.secondaryButton} type="button" onClick={retry}>Làm lại</button>
             <Link className={styles.primaryButton} href={returnHref}>Về tổng quan</Link>
           </div>
         </div>
@@ -181,7 +164,7 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng kiểm tra"><SharedIcon name="close" size={18} /></Link>
-            <div className={styles.studyHeaderTitle}><strong>Kiểm tra {current + 1} / {questions.length}</strong><span>Từ vựng & Câu ví dụ</span></div>
+            <div className={styles.studyHeaderTitle}><strong>Trắc nghiệm {current + 1} / {questions.length}</strong><span>Từ vựng & Câu ví dụ</span></div>
             <span className={styles.iconButton}><SharedIcon name="target" size={18} /></span>
           </div>
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
@@ -189,9 +172,12 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
 
         <AnimatePresence mode="wait">
           <motion.section key={current} className={styles.quizCard} variants={cardVariants} initial="hidden" animate="visible" exit={{ opacity: 0, y: -18 }}>
-            <span className={styles.wordEyebrow}>{question.type === "word-nghia" ? "Chữ Hán → Nghĩa" : question.type === "nghia-word" ? "Nghĩa → Chữ Hán" : question.type === "example-dich" ? "Câu ví dụ → Dịch" : "Dịch → Câu ví dụ"}</span>
+            <span className={styles.wordEyebrow}>Trắc nghiệm</span>
             <h1>{question.prompt}</h1>
-            {question.support && <div className={styles.quizSupport}><strong>{question.support}</strong></div>}
+            <div className={styles.quizSupport}>
+              <strong>{question.support || "选择"}</strong>
+              {question.type === "word-meaning" && <button className={styles.audioButton} type="button" onClick={() => speak(question.answer)} aria-label="Nghe câu hỏi"><SharedIcon name="volume2" size={24} /></button>}
+            </div>
             <div className={styles.choiceGrid}>
               {question.choices.map((choice) => <button type="button" className={`${styles.quizChoice} ${selected === choice ? styles.quizChoiceSelected : ""}`} key={choice} onClick={() => setSelected(choice)}>{choice}</button>)}
             </div>

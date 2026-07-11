@@ -1,11 +1,11 @@
 import type { SharedIconName } from "@/components/shared-icon"
+import type { LessonModuleId } from "@/services/lesson-progress.service"
 import type { LessonDetail } from "@/types/api"
 
-export type LearningModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "speaking" | "quiz"
 export type LearningModuleStatus = "active" | "coming_soon"
 
 export type LearningModule = {
-  id: LearningModuleId
+  id: LessonModuleId
   title: string
   description: string
   checklist: string[]
@@ -14,6 +14,7 @@ export type LearningModule = {
   icon: SharedIconName
   image: string
   status: LearningModuleStatus
+  totalItems: number
 }
 
 function minutes(value: number) {
@@ -23,7 +24,8 @@ function minutes(value: number) {
 export function getLearningModules(lesson: LessonDetail, level: string): LearningModule[] {
   const wordCount = lesson.vocabulary.length
   const sentenceCount = lesson.sentences.length
-  const reflexCount = lesson.sentences.length
+  const reflexCount = lesson.vocabulary.filter((item) => item.example).length
+  const quizCount = reflexCount >= 2 ? reflexCount * 4 : 0
   const baseHref = `/lessons/${level}/${lesson.id}`
 
   return [
@@ -41,6 +43,7 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
       icon: "layers",
       image: "/lesson-flashcard.png",
       status: "active",
+      totalItems: wordCount,
     },
     {
       id: "dictation",
@@ -51,11 +54,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Nhập chữ Hán",
         "So sánh và sửa lỗi",
       ],
-      duration: minutes(Math.ceil(sentenceCount * 1.5)),
+      duration: minutes(Math.ceil(reflexCount * 1.5)),
       href: `${baseHref}/dictation`,
       icon: "headphones",
       image: "/lesson-dictation.png",
       status: "active",
+      totalItems: reflexCount,
     },
     {
       id: "word-arrangement",
@@ -66,11 +70,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Kiểm tra trật tự câu",
         "Hiển thị đáp án và giải thích",
       ],
-      duration: minutes(sentenceCount),
+      duration: minutes(reflexCount),
       href: `${baseHref}/word-arrangement`,
       icon: "keyboard",
       image: "/lesson-flashcard.png",
       status: "active",
+      totalItems: reflexCount,
     },
     {
       id: "reflex",
@@ -86,6 +91,7 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
       icon: "translate",
       image: "/lesson-dictation.png",
       status: "active",
+      totalItems: reflexCount,
     },
     {
       id: "speaking",
@@ -101,6 +107,7 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
       icon: "mic",
       image: "/lesson-dictation.png",
       status: "active",
+      totalItems: reflexCount,
     },
     {
       id: "quiz",
@@ -116,6 +123,7 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
       icon: "target",
       image: "/lesson-flashcard.png",
       status: "active",
+      totalItems: quizCount,
     },
   ]
 }
