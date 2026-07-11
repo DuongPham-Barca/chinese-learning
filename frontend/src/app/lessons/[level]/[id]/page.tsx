@@ -1,38 +1,29 @@
 "use client"
 
 import { use, useEffect, useState, type CSSProperties } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { cardVariants, containerVariants, fadeInVariants, itemVariants, sectionViewport } from "@/app/animations"
+import { containerVariants, itemVariants, sectionViewport } from "@/app/animations"
+import LearningModuleCard from "@/components/learning-module-card"
 import LessonLayout from "@/components/lesson-layout"
-import SharedIcon, { type SharedIconName } from "@/components/shared-icon"
+import LessonProgress from "@/components/lesson-progress"
+import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
 import type { LessonDetail } from "@/types/api"
 import styles from "../../lesson-flow.module.css"
-
-const MODULE_STATUS: Record<string, "active" | "coming_soon"> = {
-  flashcard: "active",
-  pronunciation: "active",
-  dictation: "active",
-  "word-arrangement": "coming_soon",
-  quiz: "coming_soon",
-}
-
-const MODULE_ICONS: Record<string, SharedIconName> = {
-  flashcard: "layers",
-  pronunciation: "mic",
-  dictation: "headphones",
-  "word-arrangement": "keyboard",
-  quiz: "target",
-}
+import { getLearningModules, lessonProgressSteps } from "./learning-modules"
 
 function LessonHeader({ lesson, level }: { lesson: LessonDetail; level: string }) {
   return (
     <header className={styles.detailHeader}>
       <div className={styles.detailHeaderInner}>
-        <Link href={`/lessons/${level}`} className={styles.backButton} aria-label={`Quay lại ${level.toUpperCase()}`}><SharedIcon name="arrowLeft" size={19} /></Link>
-        <div className={styles.detailTitle}><strong>{lesson.title}</strong><span>{level.toUpperCase()} - {lesson.vocabulary.length} từ vựng - {lesson.sentences.length} câu luyện tập</span></div>
+        <Link href={`/lessons/${level}`} className={styles.backButton} aria-label={`Quay lại ${level.toUpperCase()}`}>
+          <SharedIcon name="arrowLeft" size={19} />
+        </Link>
+        <div className={styles.detailTitle}>
+          <strong>{lesson.title}</strong>
+          <span>{level.toUpperCase()} - {lesson.vocabulary.length} từ vựng - {lesson.sentences.length} câu luyện tập</span>
+        </div>
         <div className={styles.headerProgress}>
           <span className={styles.miniTrack} style={{ "--progress": "0%" } as CSSProperties}><i /></span>
           <b>0%</b>
@@ -42,52 +33,6 @@ function LessonHeader({ lesson, level }: { lesson: LessonDetail; level: string }
   )
 }
 
-function LessonProgressCard() {
-  const steps = ["Thẻ từ vựng", "Phát âm", "Nghe chép", "Sắp xếp từ", "Trắc nghiệm"]
-  return (
-    <motion.section className={styles.progressCard} variants={fadeInVariants} initial="hidden" whileInView="visible" viewport={sectionViewport}>
-      <div className={styles.progressHead}>
-        <div><h1>Tiến độ bài học</h1><p>Hoàn thành từng phần để biến từ mới thành phản xạ chủ động.</p></div>
-        <div className={styles.percentPill} style={{ "--progress": "0%" } as CSSProperties}><span>0%</span></div>
-      </div>
-      <div className={styles.largeTrack} style={{ "--progress": "0%" } as CSSProperties}><i /></div>
-      <div className={styles.timeline}>{steps.map((label) => <div className={styles.timelineStep} key={label}><i><SharedIcon name="circle" size={13} /></i>{label}</div>)}</div>
-    </motion.section>
-  )
-}
-
-function LearningModuleCard({ type, lesson, level }: { type: string; lesson: LessonDetail; level: string }) {
-  const status = MODULE_STATUS[type] ?? "coming_soon"
-  const isComingSoon = status === "coming_soon"
-  const labels: Record<string, { title: string; description: string; duration: string; checklist: string[] }> = {
-    flashcard: { title: "Thẻ từ vựng", description: `Học ${lesson.vocabulary.length} từ vựng trọng tâm bằng ghi nhớ trực quan.`, duration: `${Math.max(5, lesson.vocabulary.length)} phút`, checklist: ["Chữ Hán, pinyin và nghĩa", "Có phát âm mẫu", "Phân loại đã thuộc và cần ôn"] },
-    pronunciation: { title: "Phát âm", description: "Đọc câu tiếng Trung và nhận phản hồi phát âm.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút`, checklist: ["Luyện nói theo câu", "Vòng điểm phát âm", "Gợi ý theo từng chữ"] },
-    dictation: { title: "Nghe chép", description: "Nghe và nhập lại các câu tiếng Trung trong bài.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút`, checklist: ["Gợi ý nghĩa tiếng Việt", "Điều chỉnh tốc độ nghe", "Hiển thị đáp án đúng"] },
-    "word-arrangement": { title: "Sắp xếp từ", description: "Sắp xếp từ thành câu tiếng Trung hoàn chỉnh.", duration: `${Math.max(5, lesson.sentences.length)} phút`, checklist: ["Kéo thả thứ tự", "Luyện cấu trúc câu", "Sửa lỗi tức thì"] },
-    quiz: { title: "Trắc nghiệm", description: "Ôn lại từ vựng và khả năng hiểu câu.", duration: "10 phút", checklist: ["Câu hỏi tổng hợp", "Điểm cuối bài", "Tóm tắt thông minh"] },
-  }
-  const item = labels[type] ?? { title: type, description: "", duration: "5 phút", checklist: [] }
-  const imgSrc = type === "dictation" || type === "pronunciation" ? "/lesson-dictation.png" : "/lesson-flashcard.png"
-
-  const body = (
-    <>
-      <div className={styles.moduleArt}><Image src={imgSrc} width={180} height={118} alt="" /><span className={styles.moduleIcon}><SharedIcon name={MODULE_ICONS[type] ?? "bookOpen"} size={28} /></span></div>
-      <div className={styles.moduleHeading}>
-        <h2>{item.title}</h2>
-        <span className={isComingSoon ? styles.soonBadge : styles.newBadge}>{isComingSoon ? "Sắp ra mắt" : "Mới"}</span>
-      </div>
-      <p>{item.description}</p>
-      <ul className={styles.checklist}>{item.checklist.map((check) => <li key={check}><SharedIcon name="check" size={14} />{check}</li>)}</ul>
-      <footer className={styles.moduleFooter}>
-        <span className={styles.duration}><SharedIcon name="clock" size={14} />{item.duration}</span>
-        {isComingSoon ? <span className={styles.disabledAction}>Sắp ra mắt</span> : <Link className={styles.moduleAction} href={`/lessons/${level}/${lesson.id}/${type}`}>Bắt đầu</Link>}
-      </footer>
-    </>
-  )
-
-  return <motion.article className={styles.moduleCard} variants={cardVariants}>{body}</motion.article>
-}
-
 export default function LessonDetailPage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
   const requestKey = `${level}:${id}`
@@ -95,6 +40,7 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
 
   useEffect(() => {
     let active = true
+
     api.get<{ lesson: LessonDetail }>(`/lessons/${id}`)
       .then((response) => {
         if (!active) return
@@ -107,6 +53,7 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
       .catch(() => {
         if (active) setLoadState({ key: requestKey, lesson: null, error: "Không tìm thấy bài học hoặc máy chủ đang tạm gián đoạn." })
       })
+
     return () => { active = false }
   }, [id, level, requestKey])
 
@@ -115,23 +62,33 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
   const error = loading ? "" : loadState.error
 
   if (loading) return <LessonLayout><div className={styles.stateCard}><p>Đang tải bài học...</p></div></LessonLayout>
-  if (error || !lesson) return <LessonLayout><div className={styles.stateCard}><p>{error || "Không tìm thấy bài học."}</p><Link className={styles.secondaryButton} href={`/lessons/${level}`}>Quay lại danh sách bài học</Link></div></LessonLayout>
+  if (error || !lesson) {
+    return (
+      <LessonLayout>
+        <div className={styles.stateCard}>
+          <p>{error || "Không tìm thấy bài học."}</p>
+          <Link className={styles.secondaryButton} href={`/lessons/${level}`}>Quay lại danh sách bài học</Link>
+        </div>
+      </LessonLayout>
+    )
+  }
+
+  const modules = getLearningModules(lesson, level)
 
   return (
     <LessonLayout>
       <LessonHeader lesson={lesson} level={level} />
       <div className={styles.detailStack}>
-        <LessonProgressCard />
+        <LessonProgress steps={lessonProgressSteps} />
         <motion.section className={styles.infoCard} variants={itemVariants} initial="hidden" whileInView="visible" viewport={sectionViewport}>
           <div className={styles.infoIllustration}><SharedIcon name="bookOpen" size={32} /></div>
-          <div><h2>Bạn sẽ học gì</h2><p>Bạn sẽ học <strong>{lesson.vocabulary.length} từ vựng</strong> và <strong>{lesson.sentences.length} câu luyện tập</strong>.</p></div>
+          <div>
+            <h2>Bạn sẽ học gì</h2>
+            <p>Bài học gồm <strong>{lesson.vocabulary.length} từ vựng</strong> và <strong>{lesson.sentences.length} câu luyện tập</strong>, được tổ chức theo 5 chế độ học độc lập.</p>
+          </div>
         </motion.section>
         <motion.section className={styles.moduleGrid} variants={containerVariants} initial="hidden" animate="visible">
-          <LearningModuleCard type="flashcard" lesson={lesson} level={level} />
-          <LearningModuleCard type="pronunciation" lesson={lesson} level={level} />
-          <LearningModuleCard type="dictation" lesson={lesson} level={level} />
-          <LearningModuleCard type="word-arrangement" lesson={lesson} level={level} />
-          <LearningModuleCard type="quiz" lesson={lesson} level={level} />
+          {modules.map((module) => <LearningModuleCard key={module.id} module={module} />)}
         </motion.section>
       </div>
     </LessonLayout>

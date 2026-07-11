@@ -7,14 +7,26 @@ import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
-import type { Sentence } from "@/types/api"
+import type { Vocabulary } from "@/types/api"
 import styles from "../../../lesson-flow.module.css"
 
 type CheckStatus = "idle" | "success" | "error"
 
+function compareCharacters(answer: string, expected: string) {
+  const inputChars = Array.from(answer.trim().replace(/[\s.，。！？、；：""''（）《》]/g, ""))
+  const expectedChars = Array.from(expected.replace(/[\s.，。！？、；：""''（）《》]/g, ""))
+  const maxLength = Math.max(inputChars.length, expectedChars.length)
+
+  return Array.from({ length: maxLength }, (_, index) => ({
+    actual: inputChars[index] ?? "",
+    expected: expectedChars[index] ?? "",
+    correct: inputChars[index] === expectedChars[index],
+  }))
+}
+
 export default function DictationPage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
-  const [sentences, setSentences] = useState<Sentence[]>([])
+  const [items, setItems] = useState<Vocabulary[]>([])
   const [current, setCurrent] = useState(0)
   const [answer, setAnswer] = useState("")
   const [status, setStatus] = useState<CheckStatus>("idle")
@@ -28,9 +40,9 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
 
   useEffect(() => {
     let active = true
-    api.get<{ sentences: Sentence[] }>(`/sentences/${id}`)
+    api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${id}`)
       .then((response) => {
-        if (active) setSentences(response.data.sentences)
+        if (active) setItems(response.data.vocabulary.filter((v) => v.example))
       })
       .catch(() => {
         if (active) setLoadError("Không thể tải dữ liệu nghe chép.")
@@ -41,17 +53,17 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
     return () => { active = false }
   }, [id])
 
-  const sentence = sentences[current]
-  const totalItems = sentences.length
+  const item = items[current]
+  const totalItems = items.length
 
   const togglePlay = useCallback(() => {
-    if (!sentence || !("speechSynthesis" in window)) return
+    if (!item || !("speechSynthesis" in window)) return
     if (playing) {
       window.speechSynthesis.cancel()
       setPlaying(false)
       return
     }
-    const utterance = new SpeechSynthesisUtterance(sentence.sentenceZh)
+    const utterance = new SpeechSynthesisUtterance(item.example!)
     utterance.lang = "zh-CN"
     utterance.rate = speed
     utterance.onend = () => setPlaying(false)
@@ -60,12 +72,12 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
     window.speechSynthesis.speak(utterance)
     setTime(0)
     setPlaying(true)
-  }, [playing, sentence, speed])
+  }, [playing, item, speed])
 
   const checkAnswer = useCallback(() => {
-    if (!sentence || !answer.trim()) return
-    const normalized = answer.trim().replace(/\s/g, "")
-    const expected = sentence.sentenceZh.replace(/\s/g, "")
+    if (!item || !answer.trim()) return
+    const normalized = answer.trim().replace(/[\s.，。！？、；：""''（）《》]/g, "")
+    const expected = item.example!.replace(/[\s.，。！？、；：""''（）《》]/g, "")
     if (normalized === expected) {
       setStatus("success")
     } else {
@@ -73,7 +85,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
       setErrors((value) => value + 1)
       setAccuracy((value) => Math.max(value - 5, 0))
     }
-  }, [answer, sentence])
+  }, [answer, item])
 
   const nextExercise = useCallback(() => {
     setCurrent((value) => value + 1)
@@ -105,6 +117,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
 
   const returnHref = `/lessons/${level}/${id}`
   const progress = totalItems ? ((current + (status === "success" ? 1 : 0)) / totalItems) * 100 : 0
+  const comparison = item && status !== "idle" ? compareCharacters(answer, item.example!) : []
 
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải bài nghe chép...</p></div></div></LessonLayout>
   if (loadError || totalItems === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{loadError || "Bài học chưa có câu luyện tập."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>
@@ -123,7 +136,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
         </header>
 
         <motion.div className={styles.dictationGrid} variants={containerVariants} initial="hidden" animate="visible">
-          <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}><i><SharedIcon name="sparkles" size={22} /></i><div><span>NGHĨA TIẾNG VIỆT</span><h1>{sentence.sentenceVi}</h1><p>Nghe và nhập lại câu tiếng Trung.</p></div></motion.section>
+            <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}><i><SharedIcon name="sparkles" size={22} /></i><div><span>NGHĨA TIẾNG VIỆT</span><h1>{item.exampleMeaning || item.meaningVi}</h1><p>Nghe và nhập lại câu tiếng Trung.</p></div></motion.section>
 
           <motion.section className={`${styles.practiceCard} ${styles.audioCard}`} variants={cardVariants}>
             <div className={`${styles.waveform} ${playing ? styles.wavePlaying : ""}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
@@ -139,7 +152,21 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
           <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Gõ chữ Hán tại đây..." autoFocus />
           <p className={styles.inputHelp}><SharedIcon name="translate" size={14} />Nhập câu tiếng Trung bạn vừa nghe</p>
           {status === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
-          {status === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {sentence.sentenceZh}</strong>}
+          {status === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {item.example}</strong>}
+          {status !== "idle" && (
+            <div className={styles.answerReview}>
+              <div className={styles.sentenceLabel}>So sánh ký tự</div>
+              <div className={styles.charFeedback}>
+                {comparison.map((item, index) => (
+                  <span className={`${styles.charChip} ${item.correct ? styles.charCorrect : styles.charIncorrect}`} key={`${item.expected}-${index}`}>
+                    {item.actual || "∅"}
+                  </span>
+                ))}
+              </div>
+                  <p>Đáp án chuẩn: <strong>{item.example}</strong></p>
+              <button className={styles.audioBtn} type="button" onClick={togglePlay}><SharedIcon name="volume2" size={15} />Nghe lại audio</button>
+            </div>
+          )}
         </motion.section>
 
         <div className={styles.practiceStatus}>

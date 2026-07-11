@@ -22,16 +22,6 @@ function stageProgressKey(lessonId: string) {
   return `lesson-stage-progress:${lessonId}`
 }
 
-function hasQuizAccess(lessonId: string) {
-  if (typeof window === "undefined") return false
-  try {
-    const progress = JSON.parse(window.localStorage.getItem(stageProgressKey(lessonId)) || "{}")
-    return Boolean(progress.practice)
-  } catch {
-    return false
-  }
-}
-
 function saveQuizComplete(lessonId: string) {
   if (typeof window === "undefined") return
   const current = JSON.parse(window.localStorage.getItem(stageProgressKey(lessonId)) || "{}")
@@ -87,7 +77,6 @@ function buildQuestions(lesson: LessonDetail): QuizQuestion[] {
 export default function QuizStagePage({ params }: { params: Promise<{ level: string; id: string }> }) {
   const { level, id } = use(params)
   const returnHref = `/lessons/${level}/${id}`
-  const [allowed, setAllowed] = useState(false)
   const [lesson, setLesson] = useState<LessonDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -95,11 +84,6 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
   const [selected, setSelected] = useState("")
   const [answers, setAnswers] = useState<string[]>([])
   const [complete, setComplete] = useState(false)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setAllowed(hasQuizAccess(id)), 0)
-    return () => window.clearTimeout(timer)
-  }, [id])
 
   useEffect(() => {
     let active = true
@@ -152,17 +136,6 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
   }, [])
 
   useEffect(() => () => window.speechSynthesis?.cancel(), [])
-
-  if (!allowed) return (
-    <LessonLayout>
-      <div className={styles.studyWrap}>
-        <div className={styles.stateCard}>
-          <p>Hãy hoàn thành phần Luyện tập trước khi vào Kiểm tra.</p>
-          <Link className={styles.primaryButton} href={`/lessons/${level}/${id}/practice`}>Luyện tập</Link>
-        </div>
-      </div>
-    </LessonLayout>
-  )
 
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải kiểm tra...</p></div></div></LessonLayout>
   if (error || !lesson || questions.length === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{error || "Bài học chưa đủ dữ liệu kiểm tra."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>

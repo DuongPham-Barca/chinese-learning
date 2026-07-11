@@ -1,0 +1,114 @@
+import type { SharedIconName } from "@/components/shared-icon"
+import type { LessonDetail } from "@/types/api"
+
+export type LearningModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "quiz"
+export type LearningModuleStatus = "active" | "coming_soon"
+
+export type LearningModule = {
+  id: LearningModuleId
+  title: string
+  description: string
+  checklist: string[]
+  duration: string
+  href: string
+  icon: SharedIconName
+  image: string
+  status: LearningModuleStatus
+}
+
+function minutes(value: number) {
+  return `${Math.max(3, value)} phút`
+}
+
+export function getLearningModules(lesson: LessonDetail, level: string): LearningModule[] {
+  const wordCount = lesson.vocabulary.length
+  const sentenceCount = lesson.sentences.length
+  const reflexCount = lesson.sentences.length
+  const baseHref = `/lessons/${level}/${lesson.id}`
+
+  return [
+    {
+      id: "flashcard",
+      title: "Thẻ từ vựng & Phát âm",
+      description: "Học từ mới và nghe phát âm mẫu từng từ.",
+      checklist: [
+        "Chữ Hán, pinyin và nghĩa tiếng Việt",
+        "Nghe audio phát âm mẫu",
+        "Câu ví dụ và ngữ cảnh sử dụng",
+      ],
+      duration: minutes(wordCount),
+      href: `${baseHref}/flashcard`,
+      icon: "layers",
+      image: "/lesson-flashcard.png",
+      status: "active",
+    },
+    {
+      id: "dictation",
+      title: "Nghe chép",
+      description: "Nghe từ hoặc câu tiếng Trung và nhập lại bằng chữ Hán.",
+      checklist: [
+        "Nghe audio tiếng Trung",
+        "Nhập chữ Hán",
+        "So sánh và sửa lỗi",
+      ],
+      duration: minutes(Math.ceil(sentenceCount * 1.5)),
+      href: `${baseHref}/dictation`,
+      icon: "headphones",
+      image: "/lesson-dictation.png",
+      status: "active",
+    },
+    {
+      id: "word-arrangement",
+      title: "Sắp xếp câu",
+      description: "Sắp xếp các từ thành câu tiếng Trung hoàn chỉnh.",
+      checklist: [
+        "Kéo thả hoặc bấm chọn từ",
+        "Kiểm tra trật tự câu",
+        "Hiển thị đáp án và giải thích",
+      ],
+      duration: minutes(sentenceCount),
+      href: `${baseHref}/word-arrangement`,
+      icon: "keyboard",
+      image: "/lesson-flashcard.png",
+      status: "active",
+    },
+    {
+      id: "reflex",
+      title: "Phản xạ & Luyện nói",
+      description: "Dịch câu tiếng Việt sang tiếng Trung, sau đó đọc lại và nhận điểm phát âm.",
+      checklist: [
+        "Dịch Việt sang Trung",
+        "Nghe câu tiếng Trung mẫu",
+        "Ghi âm và chấm phát âm câu",
+      ],
+      duration: minutes(reflexCount * 2),
+      href: `${baseHref}/reflex`,
+      icon: "mic",
+      image: "/lesson-dictation.png",
+      status: "active",
+    },
+    {
+      id: "quiz",
+      title: "Trắc nghiệm",
+      description: "Ôn tập tổng hợp từ vựng, nghĩa và cấu trúc câu.",
+      checklist: [
+        "Chọn nghĩa đúng",
+        "Chọn câu đúng",
+        "Xem kết quả cuối bài",
+      ],
+      duration: minutes(Math.ceil((wordCount + sentenceCount) * 0.8)),
+      href: `${baseHref}/quiz`,
+      icon: "target",
+      image: "/lesson-flashcard.png",
+      status: "active",
+    },
+  ]
+}
+
+export const lessonProgressSteps = [
+  "Thẻ từ vựng & Phát âm",
+  "Nghe chép",
+  "Sắp xếp câu",
+  "Phản xạ & Luyện nói",
+  "Trắc nghiệm",
+]
