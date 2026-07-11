@@ -84,10 +84,14 @@ function normalizeSheet(data: string[][]): VocabRow[] {
   return rows
 }
 
+function normalizeTopicTitle(topic: string): string {
+  return topic.trim().toLowerCase() === "khác" ? "Từ vựng tổng hợp" : topic
+}
+
 function groupIntoLessons(rows: VocabRow[], wordsPerLesson = 25): { title: string; words: VocabRow[] }[] {
   const byTopic = new Map<string, VocabRow[]>()
   for (const row of rows) {
-    const key = row.topic || "__untopiced__"
+    const key = row.topic ? normalizeTopicTitle(row.topic) : "__untopiced__"
     if (!byTopic.has(key)) byTopic.set(key, [])
     byTopic.get(key)!.push(row)
   }
