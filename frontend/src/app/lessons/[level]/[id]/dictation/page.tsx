@@ -136,8 +136,6 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
         </header>
 
         <motion.div className={styles.dictationGrid} variants={containerVariants} initial="hidden" animate="visible">
-            <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}><i><SharedIcon name="sparkles" size={22} /></i><div><span>NGHĨA TIẾNG VIỆT</span><h1>{item.exampleMeaning || item.meaningVi}</h1><p>Nghe và nhập lại câu tiếng Trung.</p></div></motion.section>
-
           <motion.section className={`${styles.practiceCard} ${styles.audioCard}`} variants={cardVariants}>
             <div className={`${styles.waveform} ${playing ? styles.wavePlaying : ""}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
             <button type="button" className={styles.playButton} onClick={togglePlay} aria-label={playing ? "Tạm dừng" : "Phát"}><SharedIcon name={playing ? "pause" : "play"} size={28} /></button>
@@ -145,9 +143,8 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
             <div className={styles.studyProgress} style={{ "--progress": `${(time / 3) * 100}%` } as CSSProperties}><i /></div>
             <div className={styles.speedRow}><SharedIcon name="repeat" size={14} />{[0.75, 1, 1.25].map((value) => <button type="button" className={speed === value ? styles.activeSpeed : ""} onClick={() => setSpeed(value)} key={value}>{value}x</button>)}</div>
           </motion.section>
-        </motion.div>
 
-        <motion.section className={`${styles.practiceCard} ${styles.inputCard} ${status === "success" ? styles.inputSuccess : status === "error" ? styles.inputError : ""}`} variants={cardVariants} initial="hidden" animate="visible">
+          <motion.section className={`${styles.practiceCard} ${styles.inputCard} ${status === "success" ? styles.inputSuccess : status === "error" ? styles.inputError : ""}`} variants={cardVariants}>
           <label htmlFor="hanzi-answer">NHẬP CHỮ HÁN</label>
           <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Gõ chữ Hán tại đây..." autoFocus />
           <p className={styles.inputHelp}><SharedIcon name="translate" size={14} />Nhập câu tiếng Trung bạn vừa nghe</p>
@@ -168,6 +165,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
             </div>
           )}
         </motion.section>
+        </motion.div>
 
         <div className={styles.practiceStatus}>
           <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && status === "success") ? styles.dotDone : ""} />)}</div>

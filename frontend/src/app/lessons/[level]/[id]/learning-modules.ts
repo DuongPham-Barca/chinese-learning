@@ -1,7 +1,7 @@
 import type { SharedIconName } from "@/components/shared-icon"
 import type { LessonDetail } from "@/types/api"
 
-export type LearningModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "quiz"
+export type LearningModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "speaking" | "quiz"
 export type LearningModuleStatus = "active" | "coming_soon"
 
 export type LearningModule = {
@@ -74,15 +74,30 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
     },
     {
       id: "reflex",
-      title: "Phản xạ & Luyện nói",
-      description: "Dịch câu tiếng Việt sang tiếng Trung, sau đó đọc lại và nhận điểm phát âm.",
+      title: "Phản xạ",
+      description: "Dịch câu tiếng Việt sang tiếng Trung để rèn phản xạ.",
       checklist: [
         "Dịch Việt sang Trung",
-        "Nghe câu tiếng Trung mẫu",
-        "Ghi âm và chấm phát âm câu",
+        "Kiểm tra đáp án",
+        "Xem giải thích",
       ],
-      duration: minutes(reflexCount * 2),
+      duration: minutes(reflexCount),
       href: `${baseHref}/reflex`,
+      icon: "translate",
+      image: "/lesson-dictation.png",
+      status: "active",
+    },
+    {
+      id: "speaking",
+      title: "Luyện nói",
+      description: "Đọc câu tiếng Trung và nhận điểm phát âm.",
+      checklist: [
+        "Nghe câu tiếng Trung mẫu",
+        "Ghi âm và chấm phát âm",
+        "Nhận phản hồi từng chữ",
+      ],
+      duration: minutes(reflexCount * 1.5),
+      href: `${baseHref}/speaking`,
       icon: "mic",
       image: "/lesson-dictation.png",
       status: "active",
@@ -109,6 +124,7 @@ export const lessonProgressSteps = [
   "Thẻ từ vựng & Phát âm",
   "Nghe chép",
   "Sắp xếp câu",
-  "Phản xạ & Luyện nói",
+  "Phản xạ",
+  "Luyện nói",
   "Trắc nghiệm",
 ]
