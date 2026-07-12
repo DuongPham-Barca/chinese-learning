@@ -12,7 +12,6 @@ import styles from "../lessons.module.css"
 export function LessonCard({
   lesson,
   level,
-  topicTitle,
   onView,
   onEdit,
   onDuplicate,
@@ -20,7 +19,6 @@ export function LessonCard({
 }: {
   lesson: AdminLesson
   level: AdminLevel
-  topicTitle: string
   onView: () => void
   onEdit: () => void
   onDuplicate: () => void
@@ -37,7 +35,7 @@ export function LessonCard({
           <h4>{lesson.title}</h4>
           <button type="button" className={styles.mobileMenu} title="Actions" aria-label="Actions"><AdminIcon name="menu" /></button>
         </div>
-        <div className={styles.badgeRow}><HskBadge level={level} />{topicTitle && <span className={styles.topicBadge}>{topicTitle}</span>}<StatusBadge published={lesson.isPublished} /></div>
+        <div className={styles.badgeRow}><HskBadge level={level} /><StatusBadge published={lesson.isPublished} /></div>
         <p>{lesson.description || lesson.slug || "Chưa có mô tả ngắn cho bài học."}</p>
         <div className={styles.lessonMetrics}>
           <span><AdminIcon name="language" />{lesson.vocabularyCount} từ</span>

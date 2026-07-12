@@ -1,6 +1,6 @@
 import api from "@/lib/api"
 import type { AdminItemResponse } from "./admin-level.service"
-import type { AdminVocabulary } from "./admin-lesson.service"
+import type { AdminSentence, AdminVocabulary } from "./admin-lesson.service"
 
 export type VocabularyPayload = {
   chinese: string
@@ -40,6 +40,21 @@ export async function deleteVocabulary(id: string) {
   const response = await api.delete<AdminItemResponse<{ id: string }>>(`/admin/vocabularies/${id}`)
   return response.data
 }
+export type ImportAllResult = {
+  imported: AdminVocabulary[]
+  sentences: AdminSentence[]
+  totalRows: number
+  added: number
+  skipped: Array<{ row: number; issue: string }>
+}
+
+export async function importAll(lessonId: string, file: File) {
+  const formData = new FormData()
+  formData.append("file", file)
+  const response = await api.post<AdminItemResponse<ImportAllResult>>(`/admin/lessons/${lessonId}/import`, formData)
+  return response.data
+}
+
 export async function reorderVocabularies(payload: { lessonId: string; items: Array<{ id: string; order: number }> }) {
   const response = await api.patch<AdminItemResponse<{ count: number }>>("/admin/vocabularies/reorder", payload)
   return response.data

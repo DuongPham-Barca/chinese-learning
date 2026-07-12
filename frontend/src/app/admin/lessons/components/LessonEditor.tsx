@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import AdminIcon from "@/components/admin/admin-icons"
 import { AdminButton } from "@/components/admin/admin-ui"
 import type { AdminLesson, AdminLessonDetail } from "@/services/admin-lesson.service"
@@ -13,7 +13,7 @@ import { SentenceManager } from "./SentenceManager"
 import { VocabularyManager } from "./VocabularyManager"
 import { Field, HskBadge, LessonModal, StatusBadge, UploadDropzone } from "./LessonShared"
 import { getHskMeta, slugify } from "./lesson-model"
-import type { EditorTab, LessonTopic } from "./types"
+import type { EditorTab } from "./types"
 import styles from "../lessons.module.css"
 
 const tabs: Array<{ id: EditorTab; label: string; icon: "book" | "language" | "quiz" | "settings" | "eye" }> = [
@@ -26,32 +26,26 @@ const tabs: Array<{ id: EditorTab; label: string; icon: "book" | "language" | "q
 
 export function LessonEditor({
   levels,
-  topics,
   lesson,
   detail,
   defaultLevelId,
-  defaultTopicId,
   saving,
   onClose,
   onSaveLesson,
   onAddVocabulary,
   onDeleteVocabulary,
   onImport,
-  onCreateTopic,
 }: {
   levels: AdminLevel[]
-  topics: LessonTopic[]
   lesson: AdminLesson | null
   detail: AdminLessonDetail | null
   defaultLevelId: string
-  defaultTopicId: string
   saving: boolean
   onClose: () => void
   onSaveLesson: (payload: LessonPayload) => Promise<Record<string, string> | null>
   onAddVocabulary: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
   onDeleteVocabulary: (id: string) => void
   onImport: () => void
-  onCreateTopic: () => void
 }) {
   const [activeTab, setActiveTab] = useState<EditorTab>("basic")
   const [form, setForm] = useState<LessonPayload>(() => lesson ? {
@@ -65,10 +59,8 @@ export function LessonEditor({
     isPublished: lesson.isPublished,
     expReward: lesson.expReward,
   } : { levelId: defaultLevelId, title: "", slug: "", description: "", imageUrl: "", order: 1, isFree: false, isPublished: false, expReward: 10 })
-  const [topicId, setTopicId] = useState(defaultTopicId)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const selectedLevel = levels.find((level) => level.id === form.levelId) || levels[0]
-  const filteredTopics = useMemo(() => topics.filter((topic) => topic.levelId === form.levelId), [form.levelId, topics])
 
   function set<K extends keyof LessonPayload>(key: K, value: LessonPayload[K]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -94,19 +86,12 @@ export function LessonEditor({
             <div className={styles.editorSection}>
               <div className={styles.formGrid}>
                 <Field label="Tên bài học" error={errors.title}><input value={form.title} onChange={(event) => set("title", event.target.value)} placeholder="VD: Giới thiệu gia đình" /></Field>
-                <Field label="HSK level" error={errors.levelId}><select value={form.levelId} onChange={(event) => { set("levelId", event.target.value); setTopicId("") }}>{levels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></Field>
-                <Field label="Chủ đề" helper={!filteredTopics.length ? "Chưa có chủ đề phù hợp cho HSK đã chọn." : undefined}>
-                  <select value={topicId} onChange={(event) => setTopicId(event.target.value)}>
-                    <option value="">Chọn chủ đề</option>
-                    {filteredTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.title}</option>)}
-                  </select>
-                </Field>
+                <Field label="HSK level" error={errors.levelId}><select value={form.levelId} onChange={(event) => { set("levelId", event.target.value) }}>{levels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></Field>
                 <Field label="Lesson Order" error={errors.order}><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
                 <Field label="Mô tả" wide><textarea value={form.description || ""} onChange={(event) => set("description", event.target.value)} /></Field>
                 <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
                 <Field label="EXP Reward"><input type="number" min={0} value={form.expReward} onChange={(event) => set("expReward", Number(event.target.value))} /></Field>
                 <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Bài học miễn phí</label>
-                {!filteredTopics.length && <div className={styles.wideField}><AdminButton secondary icon="plus" onClick={onCreateTopic}>Tạo chủ đề mới</AdminButton></div>}
                 <div className={styles.wideField}><UploadDropzone title="Thumbnail bài học" helper="Kéo thả hoặc click để chọn ảnh. UI kiểm tra định dạng PNG/JPG/WEBP và dung lượng trước khi gửi." previewUrl={form.imageUrl || undefined} /></div>
               </div>
             </div>

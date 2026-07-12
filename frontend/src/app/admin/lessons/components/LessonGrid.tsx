@@ -11,7 +11,6 @@ import styles from "../lessons.module.css"
 export function LessonGrid({
   lessons,
   level,
-  topicTitle,
   onView,
   onEdit,
   onDuplicate,
@@ -19,7 +18,6 @@ export function LessonGrid({
 }: {
   lessons: AdminLesson[]
   level: AdminLevel
-  topicTitle: string
   onView: (lesson: AdminLesson) => void
   onEdit: (lesson: AdminLesson) => void
   onDuplicate: (lesson: AdminLesson) => void
@@ -32,7 +30,6 @@ export function LessonGrid({
           key={lesson.id}
           lesson={lesson}
           level={level}
-          topicTitle={topicTitle}
           onView={() => onView(lesson)}
           onEdit={() => onEdit(lesson)}
           onDuplicate={() => onDuplicate(lesson)}
@@ -46,7 +43,6 @@ export function LessonGrid({
 export function LessonTable({
   lessons,
   level,
-  topicTitle,
   onView,
   onEdit,
   onDuplicate,
@@ -54,7 +50,6 @@ export function LessonTable({
 }: {
   lessons: AdminLesson[]
   level: AdminLevel
-  topicTitle: string
   onView: (lesson: AdminLesson) => void
   onEdit: (lesson: AdminLesson) => void
   onDuplicate: (lesson: AdminLesson) => void
@@ -63,7 +58,7 @@ export function LessonTable({
   return (
     <AdminTable className={styles.lessonTable}>
       <thead>
-        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Topic</th><th>Nội dung</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
+        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Nội dung</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {lessons.map((lesson) => (
@@ -71,7 +66,6 @@ export function LessonTable({
             <td><span className={styles.dragHandle}>::</span> Bai {String(lesson.order).padStart(2, "0")}</td>
             <td><strong>{lesson.title}</strong><small>{lesson.description || lesson.slug}</small></td>
             <td><HskBadge level={level} /></td>
-            <td>{topicTitle ? <span className={styles.topicBadge}>{topicTitle}</span> : null}</td>
             <td>{lesson.vocabularyCount} từ / {lesson.sentenceCount} câu</td>
             <td><StatusBadge published={lesson.isPublished} /></td>
             <td>{formatDate(lesson.updatedAt)}</td>
@@ -86,7 +80,7 @@ export function LessonTable({
 export function NoLessons({ onCreate, onImport }: { onCreate: () => void; onImport: () => void }) {
   return (
     <div className={styles.emptyState}>
-      <h3>Chủ đề này chưa có bài học</h3>
+      <h3>Chưa có bài học</h3>
       <p>Tạo bài học đầu tiên hoặc import nhiều bài học bằng Excel.</p>
       <div>
         <AdminButton icon="plus" onClick={onCreate}>Tạo bài học</AdminButton>

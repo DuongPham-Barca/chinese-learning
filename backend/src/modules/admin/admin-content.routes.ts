@@ -398,4 +398,105 @@ router.post('/lessons/:lessonId/vocabularies/import-examples', importUpload.sing
   return success(res, { imported: imported.map(vocabOut), totalRows: candidates.length, added: imported.length, skipped }, 'Import câu luyện tập vào example thành công', 201)
 }))
 
+router.post('/lessons/:lessonId/import', importUpload.single('file'), asyncHandler(async (req, res) => {
+  const lesson = await prisma.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true } })
+  if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
+  if (!req.file) return error(res, 400, 'Chọn file Excel hoặc CSV để import', { file: 'File is required' })
+
+  const rows = readSheetRows(req.file.buffer)
+  const skipped: Array<{ row: number; issue: string }> = []
+  const importedVocabs: any[] = []
+  const importedSentences: any[] = []
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    const rowNum = i + 2
+
+    const chinese = cell(row, ['chinese', 'hanzi', 'Chinese', 'Hanzi'])
+    const pinyin = cell(row, ['pinyin', 'Pinyin'])
+    const vietnamese = cell(row, ['vietnamese', 'meaningVi', 'meaning_vi', 'Vietnamese'])
+    const sentenceVi = cell(row, ['sentenceVi', 'sentence_vi', 'SentenceVi'])
+    const sentenceZh = cell(row, ['sentenceZh', 'sentence_zh', 'SentenceZh'])
+    const hasVocab = !!(chinese && pinyin && vietnamese)
+
+    if (!hasVocab && !sentenceVi && !sentenceZh) {
+      skipped.push({ row: rowNum, issue: 'Dòng không có dữ liệu từ vựng hoặc câu' })
+      continue
+    }
+
+    if (hasVocab) {
+      const example = cell(row, ['example', 'exampleZh', 'sentenceZh', 'Example'])
+      const examplePinyin = cell(row, ['example_pinyin', 'examplePinyin', 'sentencePinyin', 'ExamplePinyin'])
+      const exampleMeaning = cell(row, ['example_meaning', 'exampleMeaning', 'exampleVi', 'sentenceVi', 'ExampleMeaning'])
+      const audioUrl = cell(row, ['audioUrl', 'audio', 'Audio']) || null
+      const imageUrl = cell(row, ['imageUrl', 'image', 'Image']) || null
+      const order = Number(cell(row, ['order', 'Order'])) || i + 1
+
+      try {
+        const existing = await prisma.vocabulary.findFirst({
+          where: { lessonId: lesson.id, hanzi: chinese },
+        })
+        if (existing) {
+          const updated = await prisma.vocabulary.update({
+            where: { id: existing.id },
+            data: {
+              pinyin,
+              meaningVi: vietnamese,
+              ...(example ? { example: blankToNull(example) } : {}),
+              ...(examplePinyin ? { examplePinyin: blankToNull(examplePinyin) } : {}),
+              ...(exampleMeaning ? { exampleMeaning: blankToNull(exampleMeaning) } : {}),
+              ...(audioUrl ? { audioUrl } : {}),
+              ...(imageUrl ? { imageUrl } : {}),
+              order,
+            },
+          })
+          importedVocabs.push(updated)
+        } else {
+          const created = await prisma.vocabulary.create({
+            data: {
+              lessonId: lesson.id,
+              hanzi: chinese,
+              pinyin,
+              meaningVi: vietnamese,
+              example: blankToNull(example),
+              examplePinyin: blankToNull(examplePinyin),
+              exampleMeaning: blankToNull(exampleMeaning),
+              audioUrl,
+              imageUrl,
+              order,
+            },
+          })
+          importedVocabs.push(created)
+        }
+      } catch {
+        skipped.push({ row: rowNum, issue: `Lỗi từ vựng: ${chinese}` })
+      }
+    }
+
+    if (sentenceVi && sentenceZh) {
+      try {
+        const created = await prisma.sentence.create({
+          data: {
+            lessonId: lesson.id,
+            sentenceVi,
+            sentenceZh,
+            audioUrl: cell(row, ['audioUrl', 'audio', 'Audio']) || null,
+          },
+        })
+        importedSentences.push(created)
+      } catch {
+        skipped.push({ row: rowNum, issue: `Lỗi câu: ${sentenceZh}` })
+      }
+    }
+  }
+
+  return success(res, {
+    imported: importedVocabs.map(vocabOut),
+    sentences: importedSentences,
+    totalRows: rows.length,
+    added: importedVocabs.length + importedSentences.length,
+    skipped,
+  }, 'Import thành công', 201)
+}))
+
 export default router

@@ -5,46 +5,19 @@ export type HskLevelKey = "hsk1" | "hsk2" | "hsk3" | "hsk4" | "hsk5" | "hsk6" | 
 export type PublishStatus = "published" | "draft"
 export type ViewMode = "grid" | "table"
 export type EditorTab = "basic" | "vocabulary" | "sentences" | "settings" | "preview"
-export type ImportDataType = "lessons" | "vocabulary" | "sentences"
-export type ImportStep = 1 | 2 | 3 | 4 | 5 | 6 | 7
-
-export type LessonTopic = {
-  id: string
-  levelId: string
-  title: string
-  description: string
-  coverUrl?: string
-  icon: string
-  order: number
-  status: PublishStatus
-  color: string
-  lessons: AdminLesson[]
-}
+export type ImportStep = 1 | 2 | 3 | 4 | 5 | 6
 
 export type LevelSummary = {
   level: AdminLevel
   key: HskLevelKey
   description: string
-  topics: number
   lessons: number
   vocabulary: number
-}
-
-export type TopicDraft = {
-  title: string
-  levelId: string
-  description: string
-  coverUrl: string
-  icon: string
-  order: number
-  status: PublishStatus
-  color: string
 }
 
 export type LessonEditorTarget = {
   lesson: AdminLesson | null
   detail: AdminLessonDetail | null
-  topicId: string
 }
 
 export type PracticeMode = "speaking" | "dictation" | "arrange" | "reaction"

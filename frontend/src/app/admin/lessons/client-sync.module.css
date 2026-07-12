@@ -2,8 +2,6 @@
 .clientAlignedPage:before{position:absolute;z-index:-1;inset:-32px -28px auto;height:360px;content:"";background:radial-gradient(circle at 8% 0,rgba(37,99,235,.12),transparent 310px),radial-gradient(circle at 92% 8%,rgba(96,165,250,.1),transparent 360px),linear-gradient(180deg,var(--client-cream),rgba(255,253,248,0))}
 .clientPanel{border-color:#bfdbfe!important;border-radius:24px!important;background:linear-gradient(135deg,#fff 0%,#f8fbff 58%,#eef6ff 100%)!important;box-shadow:0 22px 55px rgba(37,99,235,.1)!important}
 .clientCard{border-color:var(--client-border)!important;border-radius:18px!important;background:#fff!important;box-shadow:0 14px 34px rgba(51,65,85,.06)!important}
-.clientTopic{position:relative;border-left-width:0!important;border-radius:18px!important}
-.clientTopic:before{position:absolute;top:0;right:0;left:0;height:4px;content:"";background:linear-gradient(90deg,var(--accent,#2563eb),#60a5fa)}
 .clientLesson{position:relative;min-height:236px;overflow:hidden;border-radius:18px!important;transition:transform .2s,box-shadow .2s,border-color .2s}
 .clientLesson:before{position:absolute;top:0;right:0;left:0;height:4px;content:"";background:linear-gradient(90deg,var(--client-blue),#60a5fa)}
 .clientLesson:hover{transform:translateY(-2px);border-color:#bfdbfe!important;box-shadow:0 18px 42px rgba(37,99,235,.13)!important}

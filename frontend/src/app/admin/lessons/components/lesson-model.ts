@@ -1,6 +1,6 @@
 import type { AdminLesson } from "@/services/admin-lesson.service"
 import type { AdminLevel } from "@/services/admin-level.service"
-import type { HskLevelKey, LessonTopic, LevelSummary, PracticeSentence, TopicDraft } from "./types"
+import type { HskLevelKey, LevelSummary, PracticeSentence } from "./types"
 
 export const HSK_ORDER: HskLevelKey[] = ["hsk1", "hsk2", "hsk3", "hsk4", "hsk5", "hsk6", "communication"]
 
@@ -12,17 +12,6 @@ export const HSK_META: Record<HskLevelKey, { label: string; description: string;
   hsk5: { label: "HSK5", description: "Đọc hiểu dài, thành ngữ và biểu đạt trừu tượng.", accent: "#dc2626", soft: "#fef2f2" },
   hsk6: { label: "HSK6", description: "Ngôn ngữ học thuật, tin tức và văn phòng nâng cao.", accent: "#9333ea", soft: "#faf5ff" },
   communication: { label: "Giao tiep", description: "Tình huống nghe nói thực tế ngoài khung HSK.", accent: "#0f766e", soft: "#f0fdfa" },
-}
-
-export const DEFAULT_TOPIC_DRAFT: TopicDraft = {
-  title: "",
-  levelId: "",
-  description: "",
-  coverUrl: "",
-  icon: "book",
-  order: 1,
-  status: "draft",
-  color: "#2563eb",
 }
 
 export const SAMPLE_SENTENCES: PracticeSentence[] = [
@@ -50,52 +39,16 @@ export function getHskMeta(level: AdminLevel | { name: string; slug?: string; or
   return HSK_META[levelKey(level)]
 }
 
-export function makeTopicId() {
-  return `topic-${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-export function buildTopics(levels: AdminLevel[], lessons: AdminLesson[], localTopics: LessonTopic[]) {
-  const topicsByLevel = new Map<string, LessonTopic[]>()
-  for (const level of levels) topicsByLevel.set(level.id, [])
-  for (const topic of localTopics) {
-    const list = topicsByLevel.get(topic.levelId) || []
-    list.push({ ...topic, lessons: [] })
-    topicsByLevel.set(topic.levelId, list)
-  }
-
-  for (const level of levels) {
-    const current = topicsByLevel.get(level.id) || []
-    const unassignedLessons = lessons.filter((lesson) => lesson.levelId === level.id)
-    if (unassignedLessons.length) {
-      current.unshift({
-        id: `unassigned-${level.id}`,
-        levelId: level.id,
-        title: "",
-        description: "",
-        icon: "list",
-        order: 0,
-        status: "draft",
-        color: getHskMeta(level).accent,
-        lessons: unassignedLessons.sort((a, b) => a.order - b.order),
-      })
-    }
-    topicsByLevel.set(level.id, current.sort((a, b) => a.order - b.order))
-  }
-  return topicsByLevel
-}
-
-export function buildLevelSummaries(levels: AdminLevel[], lessons: AdminLesson[], topicsByLevel: Map<string, LessonTopic[]>): LevelSummary[] {
+export function buildLevelSummaries(levels: AdminLevel[], lessons: AdminLesson[]): LevelSummary[] {
   return levels
     .slice()
     .sort((a, b) => a.order - b.order)
     .map((level) => {
       const levelLessons = lessons.filter((lesson) => lesson.levelId === level.id)
-      const topicCount = (topicsByLevel.get(level.id) || []).length
       return {
         level,
         key: levelKey(level),
         description: level.description || getHskMeta(level).description,
-        topics: topicCount,
         lessons: levelLessons.length || level.lessonCount || 0,
         vocabulary: levelLessons.reduce((sum, lesson) => sum + lesson.vocabularyCount, 0),
       }

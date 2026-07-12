@@ -2,33 +2,27 @@
 
 import AdminIcon from "@/components/admin/admin-icons"
 import { AdminButton } from "@/components/admin/admin-ui"
-import type { LessonTopic, ViewMode } from "./types"
+import type { ViewMode } from "./types"
 import syncStyles from "../client-sync.module.css"
 import styles from "../lessons.module.css"
 
 export function LessonFilters({
   search,
   status,
-  topicId,
   sort,
   view,
-  topics,
   onSearch,
   onStatus,
-  onTopic,
   onSort,
   onView,
   onRefresh,
 }: {
   search: string
   status: string
-  topicId: string
   sort: string
   view: ViewMode
-  topics: LessonTopic[]
   onSearch: (value: string) => void
   onStatus: (value: string) => void
-  onTopic: (value: string) => void
   onSort: (value: string) => void
   onView: (value: ViewMode) => void
   onRefresh: () => void
@@ -37,13 +31,9 @@ export function LessonFilters({
     <section className={`${styles.filters} ${syncStyles.clientCard}`}>
       <label className={styles.searchBox}>
         <AdminIcon name="search" />
-        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Tìm chủ đề hoặc bài học..." />
+        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Tìm bài học..." />
       </label>
       <div className={styles.filterControls}>
-        <select value={topicId} onChange={(event) => onTopic(event.target.value)}>
-          <option value="">Tất cả chủ đề</option>
-          {topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.title}</option>)}
-        </select>
         <select value={status} onChange={(event) => onStatus(event.target.value)}>
           <option value="">Tất cả trạng thái</option>
           <option value="published">Published</option>
