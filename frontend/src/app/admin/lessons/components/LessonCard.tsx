@@ -42,7 +42,6 @@ export function LessonCard({
         <div className={styles.lessonMetrics}>
           <span><AdminIcon name="language" />{lesson.vocabularyCount} từ</span>
           <span><AdminIcon name="quiz" />{lesson.sentenceCount} câu</span>
-          <span><AdminIcon name="clock" />15 phút</span>
         </div>
         <footer>
           <span>Cập nhật {formatDate(lesson.updatedAt)}</span>

@@ -18,10 +18,21 @@ router.get('/', asyncHandler(async (req, res) => {
       _count: { select: { vocabulary: true, sentences: true } },
     },
   })
+  const lessonIds = lessons.map(l => l.id)
+  const vocabExamples = lessonIds.length ? await prisma.vocabulary.groupBy({
+    by: ['lessonId'],
+    where: { lessonId: { in: lessonIds }, example: { not: null } },
+    _count: true,
+  }) : []
+  const exampleCountMap = new Map(vocabExamples.map(v => [v.lessonId, v._count]))
   const hasPremium = await hasActivePremium(req)
   res.json({
     lessons: lessons.map((lesson) => ({
       ...lesson,
+      _count: {
+        ...lesson._count,
+        sentences: lesson._count.sentences + (exampleCountMap.get(lesson.id) || 0),
+      },
       isFree: lesson.lessonOrder <= FREE_LESSON_LIMIT,
       isLocked: lesson.lessonOrder > FREE_LESSON_LIMIT && !hasPremium,
     })),
@@ -37,7 +48,8 @@ router.get('/:id', asyncHandler(async (req, res) => {
   if (!(await canAccessLesson(req, lesson.lessonOrder))) {
     return res.status(403).json(lessonLockedResponse)
   }
-  res.json({ lesson: { ...lesson, isFree: lesson.lessonOrder <= FREE_LESSON_LIMIT, isLocked: false } })
+  const totalSentences = lesson.sentences.length + lesson.vocabulary.filter((v) => v.example).length
+  res.json({ lesson: { ...lesson, isFree: lesson.lessonOrder <= FREE_LESSON_LIMIT, isLocked: false, totalSentences } })
 }))
 
 export default router

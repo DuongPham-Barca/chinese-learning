@@ -63,6 +63,8 @@ export interface LessonDetail {
   lessonOrder: number
   title: string
   isFree: boolean
+  isLocked: boolean
+  totalSentences: number
   vocabulary: Vocabulary[]
   sentences: Sentence[]
 }

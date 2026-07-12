@@ -94,9 +94,9 @@ function page(req: import('express').Request) {
   return { page, limit, skip: (page - 1) * limit }
 }
 
-function lessonOut(lesson: any) {
+function lessonOut(lesson: any, exampleCount = 0) {
   const { lessonOrder, _count, ...rest } = lesson
-  return { ...rest, order: lessonOrder, vocabularyCount: _count?.vocabulary ?? 0, sentenceCount: _count?.sentences ?? 0 }
+  return { ...rest, order: lessonOrder, vocabularyCount: _count?.vocabulary ?? 0, sentenceCount: (_count?.sentences ?? 0) + exampleCount }
 }
 
 function vocabOut(vocab: any) {
@@ -209,13 +209,21 @@ router.get('/lessons', asyncHandler(async (req, res) => {
     prisma.lesson.count({ where }),
     prisma.lesson.findMany({ where, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } }, orderBy, skip: p.skip, take: p.limit }),
   ])
-  res.json({ success: true, data: lessons.map(lessonOut), pagination: { page: p.page, limit: p.limit, total, totalPages: Math.ceil(total / p.limit) } })
+  const lessonIds = lessons.map(l => l.id)
+  const vocabExamples = lessonIds.length ? await prisma.vocabulary.groupBy({
+    by: ['lessonId'],
+    where: { lessonId: { in: lessonIds }, example: { not: null } },
+    _count: true,
+  }) : []
+  const exampleCountMap = new Map(vocabExamples.map(v => [v.lessonId, v._count]))
+  res.json({ success: true, data: lessons.map(lesson => lessonOut(lesson, exampleCountMap.get(lesson.id) || 0)), pagination: { page: p.page, limit: p.limit, total, totalPages: Math.ceil(total / p.limit) } })
 }))
 
 router.get('/lessons/:id', asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id }, include: { level: { select: { id: true, name: true } }, vocabulary: { orderBy: { order: 'asc' } }, sentences: true, _count: { select: { vocabulary: true, sentences: true } } } })
   if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
-  return success(res, { ...lessonOut(lesson), vocabulary: lesson.vocabulary.map(vocabOut), sentences: lesson.sentences })
+  const exampleCount = lesson.vocabulary.filter((v) => v.example).length
+  return success(res, { ...lessonOut(lesson, exampleCount), vocabulary: lesson.vocabulary.map(vocabOut), sentences: lesson.sentences })
 }))
 
 router.post('/lessons', asyncHandler(async (req, res) => {
@@ -252,7 +260,8 @@ router.put('/lessons/:id', asyncHandler(async (req, res) => {
   if (parsed.data.isPublished !== undefined) data.isPublished = parsed.data.isPublished
   if (parsed.data.expReward !== undefined) data.expReward = parsed.data.expReward
   const lesson = await prisma.lesson.update({ where: { id: req.params.id }, data, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
-  return success(res, lessonOut(lesson), 'Cập nhật bài học thành công')
+  const exampleCount = await prisma.vocabulary.count({ where: { lessonId: lesson.id, example: { not: null } } })
+  return success(res, lessonOut(lesson, exampleCount), 'Cập nhật bài học thành công')
 }))
 
 router.delete('/lessons/:id', asyncHandler(async (req, res) => {
@@ -265,7 +274,8 @@ router.patch('/lessons/:id/status', asyncHandler(async (req, res) => {
   const parsed = statusSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const lesson = await prisma.lesson.update({ where: { id: req.params.id }, data: parsed.data, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
-  return success(res, lessonOut(lesson), 'Cập nhật trạng thái bài học thành công')
+  const exampleCount = await prisma.vocabulary.count({ where: { lessonId: lesson.id, example: { not: null } } })
+  return success(res, lessonOut(lesson, exampleCount), 'Cập nhật trạng thái bài học thành công')
 }))
 
 router.patch('/lessons/reorder', asyncHandler(async (req, res) => {

@@ -103,7 +103,6 @@ export function LessonEditor({
                 </Field>
                 <Field label="Lesson Order" error={errors.order}><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
                 <Field label="Mô tả" wide><textarea value={form.description || ""} onChange={(event) => set("description", event.target.value)} /></Field>
-                <Field label="Thời lượng học dự kiến"><input type="number" min={1} defaultValue={15} /></Field>
                 <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
                 <Field label="EXP Reward"><input type="number" min={0} value={form.expReward} onChange={(event) => set("expReward", Number(event.target.value))} /></Field>
                 <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Bài học miễn phí</label>

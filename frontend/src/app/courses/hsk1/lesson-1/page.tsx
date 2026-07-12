@@ -48,7 +48,7 @@ function LearningInfoCard({ lesson }: { lesson: LessonDetail }) {
   return (
     <section className={styles.infoCard}>
       <i><Icon name="book" /></i>
-      <p>Bạn sẽ học: <strong>{lesson.vocabulary.length} từ vựng</strong>, <strong>{lesson.sentences.length} câu luyện tập</strong>. <span>Thời gian ước tính: <b>~{lesson.vocabulary.length + lesson.sentences.length} phút</b>.</span></p>
+      <p>Bạn sẽ học: <strong>{lesson.vocabulary.length} từ vựng</strong>, <strong>{lesson.totalSentences} câu luyện tập</strong>.</p>
     </section>
   )
 }
@@ -60,11 +60,11 @@ function LearningModuleCard({ type, lesson, level, lessonOrder }: { type: "flash
     ? `/lessons/${level}/${lesson.id}/pronunciation`
     : `/courses/${level}/lesson-${lessonOrder}/${type}`
   const labels = {
-    flashcard: { title: "Flashcard", badge: "Mới", description: `Học ${lesson.vocabulary.length} từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh.`, duration: `${Math.max(5, lesson.vocabulary.length)} phút` },
-    pronunciation: { title: "Luyện phát âm", badge: "Mới", description: "Nghe câu mẫu và tự luyện phát âm tiếng Trung.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
-    dictation: { title: "Dictation & Sắp xếp", badge: "Mới", description: "Luyện nghe và ghép câu hoàn chỉnh từ các đoạn hội thoại thực tế.", duration: `${Math.max(5, lesson.sentences.length * 2)} phút` },
+    flashcard: { title: "Flashcard", badge: "Mới", description: `Học ${lesson.vocabulary.length} từ vựng cốt lõi thông qua hệ thống lặp lại ngắt quãng thông minh.` },
+    pronunciation: { title: "Luyện phát âm", badge: "Mới", description: "Nghe câu mẫu và tự luyện phát âm tiếng Trung." },
+    dictation: { title: "Dictation & Sắp xếp", badge: "Mới", description: "Luyện nghe và ghép câu hoàn chỉnh từ các đoạn hội thoại thực tế." },
   }
-  const { title, badge, description, duration } = labels[type]
+  const { title, badge, description } = labels[type]
   const imgSrc = type === "flashcard" ? "/lesson-flashcard.png" : "/lesson-dictation.png"
 
   return (
@@ -77,7 +77,7 @@ function LearningModuleCard({ type, lesson, level, lessonOrder }: { type: "flash
       ) : (
         <div className={styles.warning}><Icon name="warning" /><span>{isPronunciation ? "Nên hoàn thành Flashcard trước khi luyện phát âm." : "Nên hoàn thành phần Flashcard để có kết quả luyện tập tốt nhất."}</span></div>
       )}
-      <footer className={styles.moduleFooter}><span><Icon name="clock" />{duration}</span><Link className={isFlashcard || isPronunciation ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Bắt đầu học" : "Bắt đầu luyện"}</Link></footer>
+      <footer className={styles.moduleFooter}><Link className={isFlashcard || isPronunciation ? styles.primaryButton : styles.outlineButton} href={href}>{isFlashcard ? "Bắt đầu học" : "Bắt đầu luyện"}</Link></footer>
     </article>
   )
 }

@@ -23,7 +23,7 @@ function LessonHeader({ lesson, level, progress }: { lesson: LessonDetail; level
         </Link>
         <div className={styles.detailTitle}>
           <strong>{lesson.title}</strong>
-          <span>{level.toUpperCase()} - {lesson.vocabulary.length} từ vựng - {lesson.sentences.length} câu luyện tập</span>
+          <span>{level.toUpperCase()} - {lesson.vocabulary.length} từ vựng - {lesson.totalSentences} câu luyện tập</span>
         </div>
         <div className={styles.headerProgress}>
           <span className={styles.miniTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></span>
@@ -96,7 +96,7 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
           <div className={styles.infoIllustration}><SharedIcon name="bookOpen" size={32} /></div>
           <div>
             <h2>Bạn sẽ học gì</h2>
-            <p>Bài học gồm <strong>{lesson.vocabulary.length} từ vựng</strong> và <strong>{lesson.sentences.length} câu luyện tập</strong>, các chế độ học tự bật/tắt theo dữ liệu thật của bài.</p>
+            <p>Bài học gồm <strong>{lesson.vocabulary.length} từ vựng</strong> và <strong>{lesson.totalSentences} câu luyện tập</strong>, các chế độ học tự bật/tắt theo dữ liệu thật của bài.</p>
           </div>
         </motion.section>
         <motion.section className={styles.moduleGrid} variants={containerVariants} initial="hidden" animate="visible">
