@@ -47,7 +47,7 @@ export type LessonEditorTarget = {
   topicId: string
 }
 
-export type PracticeMode = "pronunciation" | "dictation" | "arrange" | "reaction"
+export type PracticeMode = "speaking" | "dictation" | "arrange" | "reaction"
 
 export type PracticeSentence = {
   id: string

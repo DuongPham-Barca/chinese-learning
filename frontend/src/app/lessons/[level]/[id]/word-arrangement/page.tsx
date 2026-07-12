@@ -32,7 +32,7 @@ function tokenizeSentence(sentenceZh: string): Token[] {
 }
 
 function buildQuestions(items: Vocabulary[]): SentenceQuestion[] {
-  return items.filter((v) => v.example).map((item) => {
+  return items.filter((item) => item.example).map((item) => {
     const answer = tokenizeSentence(item.example!)
     return {
       id: item.id,

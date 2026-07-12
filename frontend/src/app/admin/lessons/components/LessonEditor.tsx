@@ -77,7 +77,7 @@ export function LessonEditor({
 
   async function submit() {
     const nextErrors: Record<string, string> = {}
-    if (!form.levelId) nextErrors.levelId = "Chon HSK level"
+    if (!form.levelId) nextErrors.levelId = "Chọn HSK level"
     if (!form.title.trim()) nextErrors.title = "Nhập tên bài học"
     if (form.order < 0) nextErrors.order = "Thu tu khong duoc am"
     if (Object.keys(nextErrors).length) return setErrors(nextErrors)
@@ -93,7 +93,7 @@ export function LessonEditor({
           {activeTab === "basic" && (
             <div className={styles.editorSection}>
               <div className={styles.formGrid}>
-                <Field label="Ten bai hoc" error={errors.title}><input value={form.title} onChange={(event) => set("title", event.target.value)} placeholder="VD: Giới thiệu gia đình" /></Field>
+                <Field label="Tên bài học" error={errors.title}><input value={form.title} onChange={(event) => set("title", event.target.value)} placeholder="VD: Giới thiệu gia đình" /></Field>
                 <Field label="HSK level" error={errors.levelId}><select value={form.levelId} onChange={(event) => { set("levelId", event.target.value); setTopicId("") }}>{levels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></Field>
                 <Field label="Chủ đề" helper={!filteredTopics.length ? "Chưa có chủ đề phù hợp cho HSK đã chọn." : undefined}>
                   <select value={topicId} onChange={(event) => setTopicId(event.target.value)}>
@@ -104,7 +104,7 @@ export function LessonEditor({
                 <Field label="Lesson Order" error={errors.order}><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
                 <Field label="Mô tả" wide><textarea value={form.description || ""} onChange={(event) => set("description", event.target.value)} /></Field>
                 <Field label="Thời lượng học dự kiến"><input type="number" min={1} defaultValue={15} /></Field>
-                <Field label="Trang thai"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
+                <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
                 <Field label="EXP Reward"><input type="number" min={0} value={form.expReward} onChange={(event) => set("expReward", Number(event.target.value))} /></Field>
                 <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Bài học miễn phí</label>
                 {!filteredTopics.length && <div className={styles.wideField}><AdminButton secondary icon="plus" onClick={onCreateTopic}>Tạo chủ đề mới</AdminButton></div>}
@@ -113,9 +113,9 @@ export function LessonEditor({
             </div>
           )}
           {activeTab === "vocabulary" && <VocabularyManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
-          {activeTab === "sentences" && <SentenceManager onImport={onImport} />}
+          {activeTab === "sentences" && <SentenceManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
           {activeTab === "settings" && <div className={styles.settingsPanel}><h3>Cài đặt bài học</h3><label><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Miễn phí cho người học mới</label><label><input type="checkbox" checked={form.isPublished} onChange={(event) => set("isPublished", event.target.checked)} /> Xuất bản trên ứng dụng học</label><label><input type="checkbox" defaultChecked /> Cho phép hiển thị trong lesson path</label></div>}
-          {activeTab === "preview" && selectedLevel && <div className={styles.previewPanel} style={{ "--accent": getHskMeta(selectedLevel).accent, "--soft": getHskMeta(selectedLevel).soft } as CSSProperties}><div className={styles.previewHero}>{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <AdminIcon name="book" />}</div><div><div className={styles.badgeRow}><HskBadge level={selectedLevel} /><StatusBadge published={form.isPublished} /></div><h3>{form.title || "Ten bai hoc"}</h3><p>{form.description || "Mô tả ngắn của bài học sẽ hiển thị tại đây."}</p><span>{detail?.vocabulary.length || 0} từ vựng</span><span>{detail?.sentenceCount || 0} câu luyện tập</span></div></div>}
+          {activeTab === "preview" && selectedLevel && <div className={styles.previewPanel} style={{ "--accent": getHskMeta(selectedLevel).accent, "--soft": getHskMeta(selectedLevel).soft } as CSSProperties}><div className={styles.previewHero}>{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <AdminIcon name="book" />}</div><div><div className={styles.badgeRow}><HskBadge level={selectedLevel} /><StatusBadge published={form.isPublished} /></div><h3>{form.title || "Tên bài học"}</h3><p>{form.description || "Mô tả ngắn của bài học sẽ hiển thị tại đây."}</p><span>{detail?.vocabulary.length || 0} từ vựng</span><span>{detail?.sentences.length || detail?.sentenceCount || 0} câu luyện tập</span></div></div>}
         </section>
       </div>
       <div className={styles.modalActions}><AdminButton secondary onClick={onClose} disabled={saving}>Đóng</AdminButton><AdminButton icon="check" onClick={submit} disabled={saving}>{saving ? "Đang lưu..." : "Lưu bài học"}</AdminButton></div>

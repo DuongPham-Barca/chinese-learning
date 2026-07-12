@@ -43,7 +43,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
     let active = true
     api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${id}`)
       .then((response) => {
-        if (active) setItems(response.data.vocabulary.filter((v) => v.example))
+        if (active) setItems(response.data.vocabulary.filter((item) => item.example))
       })
       .catch(() => {
         if (active) setLoadError("Không thể tải dữ liệu nghe chép.")

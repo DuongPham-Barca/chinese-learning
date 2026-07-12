@@ -51,7 +51,7 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
     let active = true
     api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${id}`)
       .then((response) => {
-        if (active) setItems(response.data.vocabulary.filter((v) => v.example))
+        if (active) setItems(response.data.vocabulary.filter((item) => item.example))
       })
       .catch(() => {
         if (active) setLoadError("Không thể tải dữ liệu phản xạ.")

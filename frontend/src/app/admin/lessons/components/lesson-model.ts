@@ -26,9 +26,9 @@ export const DEFAULT_TOPIC_DRAFT: TopicDraft = {
 }
 
 export const SAMPLE_SENTENCES: PracticeSentence[] = [
-  { id: "sen-1", order: 1, sentenceVi: "Đây là bố của tôi.", sentenceZh: "这是我的爸爸。", audioUrl: "/audio/example.mp3", modes: ["pronunciation", "dictation"] },
+  { id: "sen-1", order: 1, sentenceVi: "Đây là bố của tôi.", sentenceZh: "这是我的爸爸。", audioUrl: "/audio/example.mp3", modes: ["speaking", "dictation"] },
   { id: "sen-2", order: 2, sentenceVi: "Gia đình bạn có mấy người?", sentenceZh: "你家有几口人？", modes: ["arrange", "reaction"] },
-  { id: "sen-3", order: 3, sentenceVi: "Tôi là học sinh.", sentenceZh: "我是学生。", modes: ["pronunciation"] },
+  { id: "sen-3", order: 3, sentenceVi: "Tôi là học sinh.", sentenceZh: "我是学生。", modes: ["speaking"] },
 ]
 
 function normalize(value: string) {
@@ -70,8 +70,8 @@ export function buildTopics(levels: AdminLevel[], lessons: AdminLesson[], localT
       current.unshift({
         id: `unassigned-${level.id}`,
         levelId: level.id,
-        title: "Chưa phân chủ đề",
-        description: "Các bài học đang có trong hệ thống nhưng chưa có topic backend để gán chính thức.",
+        title: "",
+        description: "",
         icon: "list",
         order: 0,
         status: "draft",

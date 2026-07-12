@@ -24,8 +24,8 @@ function minutes(value: number) {
 export function getLearningModules(lesson: LessonDetail, level: string): LearningModule[] {
   const wordCount = lesson.vocabulary.length
   const sentenceCount = lesson.sentences.length
-  const reflexCount = lesson.vocabulary.filter((item) => item.example).length
-  const quizCount = reflexCount >= 2 ? reflexCount * 4 : 0
+  const exampleCount = lesson.vocabulary.filter((item) => item.example).length
+  const quizCount = exampleCount >= 2 ? exampleCount * 4 : 0
   const baseHref = `/lessons/${level}/${lesson.id}`
 
   return [
@@ -54,12 +54,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Nhập chữ Hán",
         "So sánh và sửa lỗi",
       ],
-      duration: minutes(Math.ceil(reflexCount * 1.5)),
+      duration: minutes(Math.ceil(exampleCount * 1.5)),
       href: `${baseHref}/dictation`,
       icon: "headphones",
       image: "/lesson-dictation.png",
       status: "active",
-      totalItems: reflexCount,
+      totalItems: exampleCount,
     },
     {
       id: "word-arrangement",
@@ -70,12 +70,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Kiểm tra trật tự câu",
         "Hiển thị đáp án và giải thích",
       ],
-      duration: minutes(reflexCount),
+      duration: minutes(exampleCount),
       href: `${baseHref}/word-arrangement`,
       icon: "keyboard",
       image: "/lesson-flashcard.png",
       status: "active",
-      totalItems: reflexCount,
+      totalItems: exampleCount,
     },
     {
       id: "reflex",
@@ -86,12 +86,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Kiểm tra đáp án",
         "Xem giải thích",
       ],
-      duration: minutes(reflexCount),
+      duration: minutes(exampleCount),
       href: `${baseHref}/reflex`,
       icon: "translate",
       image: "/lesson-dictation.png",
       status: "active",
-      totalItems: reflexCount,
+      totalItems: exampleCount,
     },
     {
       id: "speaking",
@@ -102,12 +102,12 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
         "Ghi âm và chấm phát âm",
         "Nhận phản hồi từng chữ",
       ],
-      duration: minutes(reflexCount * 1.5),
+      duration: minutes(exampleCount * 1.5),
       href: `${baseHref}/speaking`,
       icon: "mic",
       image: "/lesson-dictation.png",
       status: "active",
-      totalItems: reflexCount,
+      totalItems: exampleCount,
     },
     {
       id: "quiz",

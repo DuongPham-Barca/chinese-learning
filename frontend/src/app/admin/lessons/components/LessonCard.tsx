@@ -37,12 +37,12 @@ export function LessonCard({
           <h4>{lesson.title}</h4>
           <button type="button" className={styles.mobileMenu} title="Actions" aria-label="Actions"><AdminIcon name="menu" /></button>
         </div>
-        <div className={styles.badgeRow}><HskBadge level={level} /><span className={styles.topicBadge}>{topicTitle}</span><StatusBadge published={lesson.isPublished} /></div>
+        <div className={styles.badgeRow}><HskBadge level={level} />{topicTitle && <span className={styles.topicBadge}>{topicTitle}</span>}<StatusBadge published={lesson.isPublished} /></div>
         <p>{lesson.description || lesson.slug || "Chưa có mô tả ngắn cho bài học."}</p>
         <div className={styles.lessonMetrics}>
-          <span><AdminIcon name="language" />{lesson.vocabularyCount} tu</span>
-          <span><AdminIcon name="quiz" />{lesson.sentenceCount} cau</span>
-          <span><AdminIcon name="clock" />15 phut</span>
+          <span><AdminIcon name="language" />{lesson.vocabularyCount} từ</span>
+          <span><AdminIcon name="quiz" />{lesson.sentenceCount} câu</span>
+          <span><AdminIcon name="clock" />15 phút</span>
         </div>
         <footer>
           <span>Cập nhật {formatDate(lesson.updatedAt)}</span>

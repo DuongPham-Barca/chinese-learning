@@ -71,7 +71,7 @@ export function LessonTable({
             <td><span className={styles.dragHandle}>::</span> Bai {String(lesson.order).padStart(2, "0")}</td>
             <td><strong>{lesson.title}</strong><small>{lesson.description || lesson.slug}</small></td>
             <td><HskBadge level={level} /></td>
-            <td><span className={styles.topicBadge}>{topicTitle}</span></td>
+            <td>{topicTitle ? <span className={styles.topicBadge}>{topicTitle}</span> : null}</td>
             <td>{lesson.vocabularyCount} từ / {lesson.sentenceCount} câu</td>
             <td><StatusBadge published={lesson.isPublished} /></td>
             <td>{formatDate(lesson.updatedAt)}</td>

@@ -26,6 +26,12 @@ export async function bulkCreateVocabularies(lessonId: string, payload: { items:
   const response = await api.post<AdminItemResponse<AdminVocabulary[]>>(`/admin/lessons/${lessonId}/vocabularies/bulk`, payload)
   return response.data
 }
+export async function importVocabularyExamples(lessonId: string, file: File) {
+  const formData = new FormData()
+  formData.append("file", file)
+  const response = await api.post<AdminItemResponse<{ imported: AdminVocabulary[]; totalRows: number; added: number; skipped: Array<{ row: number; issue: string }> }>>(`/admin/lessons/${lessonId}/vocabularies/import-examples`, formData)
+  return response.data
+}
 export async function updateVocabulary(id: string, payload: Partial<VocabularyPayload>) {
   const response = await api.put<AdminItemResponse<AdminVocabulary>>(`/admin/vocabularies/${id}`, payload)
   return response.data

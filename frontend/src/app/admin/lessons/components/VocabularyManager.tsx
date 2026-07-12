@@ -76,8 +76,8 @@ function VocabularyFormModal({ saving, onClose, onSubmit }: { saving: boolean; o
   function set<K extends keyof VocabularyPayload>(key: K, value: VocabularyPayload[K]) { setForm((current) => ({ ...current, [key]: value })); setErrors((current) => ({ ...current, [key]: "" })) }
   async function submit() {
     const nextErrors: Record<string, string> = {}
-    if (!form.chinese.trim()) nextErrors.chinese = "Nhap chu Han"
-    if (!form.pinyin.trim()) nextErrors.pinyin = "Nhap pinyin"
+    if (!form.chinese.trim()) nextErrors.chinese = "Nhập chữ Hán"
+    if (!form.pinyin.trim()) nextErrors.pinyin = "Nhập pinyin"
     if (!form.vietnamese.trim()) nextErrors.vietnamese = "Nhập nghĩa tiếng Việt"
     if (Object.keys(nextErrors).length) return setErrors(nextErrors)
     const result = await onSubmit(form)
@@ -106,7 +106,7 @@ function VocabularyFormModal({ saving, onClose, onSubmit }: { saving: boolean; o
           </div>
         </aside>
       </div>
-      <div className={styles.modalActions}><AdminButton secondary onClick={onClose} disabled={saving}>Hủy</AdminButton><AdminButton icon="check" onClick={submit} disabled={saving}>{saving ? "Dang luu..." : "Lưu từ vựng"}</AdminButton></div>
+      <div className={styles.modalActions}><AdminButton secondary onClick={onClose} disabled={saving}>Hủy</AdminButton><AdminButton icon="check" onClick={submit} disabled={saving}>{saving ? "Đang lưu..." : "Lưu từ vựng"}</AdminButton></div>
     </LessonModal>
   )
 }

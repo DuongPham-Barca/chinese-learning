@@ -17,6 +17,18 @@ export interface AdminVocabulary {
   updatedAt: string
 }
 
+export interface AdminSentence {
+  id: string
+  lessonId: string
+  sentenceVi: string
+  sentenceZh: string
+  audioUrl: string | null
+  example?: string
+  exampleMeaning?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface AdminLesson {
   id: string
   levelId: string
@@ -36,7 +48,7 @@ export interface AdminLesson {
   updatedAt: string
 }
 
-export interface AdminLessonDetail extends AdminLesson { vocabulary: AdminVocabulary[] }
+export interface AdminLessonDetail extends AdminLesson { vocabulary: AdminVocabulary[]; sentences: AdminSentence[] }
 
 export type LessonPayload = {
   levelId: string

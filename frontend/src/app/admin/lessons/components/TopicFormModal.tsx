@@ -41,7 +41,7 @@ export function TopicFormModal({
   function submit() {
     const nextErrors: Record<string, string> = {}
     if (!form.title.trim()) nextErrors.title = "Nhập tên chủ đề"
-    if (!form.levelId) nextErrors.levelId = "Chon HSK level"
+    if (!form.levelId) nextErrors.levelId = "Chọn HSK level"
     if (form.order < 0) nextErrors.order = "Thứ tự không được âm"
     if (Object.keys(nextErrors).length) return setErrors(nextErrors)
     onSubmit(form)

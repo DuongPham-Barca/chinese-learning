@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { AdminButton, PageHeader } from "@/components/admin/admin-ui"
 import { getLevels, type AdminLevel } from "@/services/admin-level.service"
 import { createLesson, deleteLesson, getLessonById, getLessons, updateLesson, type AdminLesson, type AdminLessonDetail, type LessonPayload } from "@/services/admin-lesson.service"
-import { createVocabulary, deleteVocabulary, type VocabularyPayload } from "@/services/admin-vocabulary.service"
+import { createVocabulary, deleteVocabulary, importVocabularyExamples, type VocabularyPayload } from "@/services/admin-vocabulary.service"
 import { HskLevelTabs } from "./components/HskLevelTabs"
 import { LessonFilters } from "./components/LessonFilters"
 import { TopicList } from "./components/TopicCard"
@@ -166,6 +166,15 @@ export default function AdminLessonsPage() {
     }
   }
 
+  async function importExampleFile(file: File) {
+    if (!detail) throw new Error("Cần mở Lesson Editor của bài học trước khi import câu luyện tập")
+    const response = await importVocabularyExamples(detail.id, file)
+    setDetail((await getLessonById(detail.id)).data)
+    await loadLessons()
+    setToast({ variant: "success", message: `Đã import ${response.data.added} câu example` })
+    return response.data
+  }
+
   function saveTopic(draft: TopicDraft) {
     if (topicModal && topicModal !== "create") {
       setLocalTopics((current) => current.map((topic) => topic.id === topicModal.id ? { ...topic, ...draft, lessons: topic.lessons } : topic))
@@ -230,7 +239,7 @@ export default function AdminLessonsPage() {
 
       {topicModal && <TopicFormModal levels={levels} topic={topicModal === "create" ? null : topicModal} defaultLevelId={defaultLevelId} onClose={() => setTopicModal(null)} onSubmit={saveTopic} />}
       {editorLesson && <LessonEditor levels={levels} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} defaultTopicId={editorTopicId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onDeleteVocabulary={(id) => void removeVocabulary(id)} onImport={() => setImportOpen(true)} onCreateTopic={() => setTopicModal("create")} />}
-      {importOpen && <ExcelImportWizard levels={levels} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} defaultLevelId={defaultLevelId} defaultTopicId={selectedTopicId} defaultLessonName={detail?.title} onClose={() => setImportOpen(false)} />}
+      {importOpen && <ExcelImportWizard levels={levels} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} defaultLevelId={defaultLevelId} defaultTopicId={selectedTopicId} defaultLessonName={detail?.title} onImportExamples={importExampleFile} onClose={() => setImportOpen(false)} />}
       {deleteTarget && <DeleteConfirmModal title={deleteTarget.kind === "topic" ? "Xóa chủ đề" : "Xóa bài học"} description={deleteTarget.kind === "topic" ? `Bạn sắp xóa chủ đề "${deleteTarget.topic.title}".` : `Bạn sắp xóa bài học "${deleteTarget.lesson.title}".`} facts={deleteTarget.kind === "topic" ? [{ label: "Số bài học bên trong", value: deleteTarget.topic.lessons.length }, { label: "Số từ vựng liên quan", value: deleteTarget.topic.lessons.reduce((sum, lesson) => sum + lesson.vocabularyCount, 0) }] : [{ label: "Số từ vựng", value: deleteTarget.lesson.vocabularyCount }, { label: "Số câu luyện tập", value: deleteTarget.lesson.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
       {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}
     </motion.div>

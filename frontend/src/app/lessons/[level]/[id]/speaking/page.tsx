@@ -99,7 +99,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
     let active = true
     api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${id}`)
       .then((response) => {
-        if (active) setItems(response.data.vocabulary.filter((v) => v.example))
+        if (active) setItems(response.data.vocabulary.filter((item) => item.example))
       })
       .catch(() => {
         if (active) setLoadError("Không thể tải dữ liệu luyện nói.")

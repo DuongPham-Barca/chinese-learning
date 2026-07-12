@@ -1,10 +1,16 @@
 import { LevelType, Prisma } from '@prisma/client'
 import { Router } from 'express'
+import multer from 'multer'
+import * as XLSX from 'xlsx'
 import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
 import { prisma } from '../../lib/prisma'
 
 const router = Router()
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+})
 
 const levelTypes = Object.values(LevelType)
 const url = z.preprocess((v) => v === '' ? null : v, z.string().url().nullable().optional())
@@ -96,6 +102,22 @@ function lessonOut(lesson: any) {
 function vocabOut(vocab: any) {
   const { hanzi, meaningVi, ...rest } = vocab
   return { ...rest, chinese: hanzi, vietnamese: meaningVi }
+}
+
+function cell(row: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key]
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim()
+  }
+  return ''
+}
+
+function readSheetRows(buffer: Buffer) {
+  const workbook = XLSX.read(buffer, { type: 'buffer' })
+  const sheetName = workbook.SheetNames[0]
+  if (!sheetName) return []
+  const sheet = workbook.Sheets[sheetName]
+  return XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '', raw: false })
 }
 
 router.get('/levels', asyncHandler(async (req, res) => {
@@ -191,9 +213,9 @@ router.get('/lessons', asyncHandler(async (req, res) => {
 }))
 
 router.get('/lessons/:id', asyncHandler(async (req, res) => {
-  const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id }, include: { level: { select: { id: true, name: true } }, vocabulary: { orderBy: { order: 'asc' } }, _count: { select: { vocabulary: true, sentences: true } } } })
+  const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id }, include: { level: { select: { id: true, name: true } }, vocabulary: { orderBy: { order: 'asc' } }, sentences: true, _count: { select: { vocabulary: true, sentences: true } } } })
   if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
-  return success(res, { ...lessonOut(lesson), vocabulary: lesson.vocabulary.map(vocabOut) })
+  return success(res, { ...lessonOut(lesson), vocabulary: lesson.vocabulary.map(vocabOut), sentences: lesson.sentences })
 }))
 
 router.post('/lessons', asyncHandler(async (req, res) => {
@@ -304,6 +326,66 @@ router.patch('/vocabularies/reorder', asyncHandler(async (req, res) => {
   if (!parsed.success) return invalid(res, parsed)
   await prisma.$transaction(parsed.data.items.map((i) => prisma.vocabulary.update({ where: { id: i.id }, data: { order: i.order } })))
   return success(res, { count: parsed.data.items.length }, 'Sắp xếp từ vựng thành công')
+}))
+
+router.post('/lessons/:lessonId/vocabularies/import-examples', importUpload.single('file'), asyncHandler(async (req, res) => {
+  const lesson = await prisma.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true } })
+  if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
+  if (!req.file) return error(res, 400, 'Chọn file Excel hoặc CSV để import', { file: 'File is required' })
+
+  const rows = readSheetRows(req.file.buffer)
+  const candidates = rows.map((row, index) => ({
+    row: index + 2,
+    id: cell(row, ['id', 'vocabularyId', 'vocabId']),
+    chinese: cell(row, ['chinese', 'hanzi', 'Chinese', 'Hanzi']),
+    pinyin: cell(row, ['pinyin', 'Pinyin']),
+    vietnamese: cell(row, ['vietnamese', 'meaningVi', 'meaning_vi', 'Vietnamese']),
+    example: cell(row, ['example', 'exampleZh', 'sentenceZh', 'Example']),
+    examplePinyin: cell(row, ['example_pinyin', 'examplePinyin', 'sentencePinyin', 'ExamplePinyin']),
+    exampleMeaning: cell(row, ['example_meaning', 'exampleMeaning', 'exampleVi', 'sentenceVi', 'ExampleMeaning']),
+    audioUrl: cell(row, ['audioUrl', 'audio', 'Audio']) || null,
+    imageUrl: cell(row, ['imageUrl', 'image', 'Image']) || null,
+    order: Number(cell(row, ['order', 'Order'])) || index + 1,
+  }))
+  const valid = candidates.filter((item) => item.example)
+  const skipped = candidates.filter((item) => !item.example).map((item) => ({
+    row: item.row,
+    issue: 'Thiếu cột example',
+  }))
+
+  const imported = await prisma.$transaction(async (tx) => {
+    const existing = await tx.vocabulary.findMany({ where: { lessonId: lesson.id } })
+    const byHanzi = new Map(existing.map((item) => [item.hanzi.trim().toLowerCase(), item]))
+    const output = []
+    for (const item of valid) {
+      const data = {
+        example: blankToNull(item.example),
+        examplePinyin: blankToNull(item.examplePinyin),
+        exampleMeaning: blankToNull(item.exampleMeaning),
+        ...(item.audioUrl !== null ? { audioUrl: item.audioUrl } : {}),
+        ...(item.imageUrl !== null ? { imageUrl: item.imageUrl } : {}),
+      }
+      const target = item.id ? existing.find((v) => v.id === item.id) : byHanzi.get(item.chinese.trim().toLowerCase())
+      if (target) {
+        output.push(await tx.vocabulary.update({ where: { id: target.id }, data }))
+      } else {
+        output.push(await tx.vocabulary.create({
+          data: {
+            lessonId: lesson.id,
+            hanzi: item.chinese || item.example,
+            pinyin: item.pinyin || item.examplePinyin || '',
+            meaningVi: item.vietnamese || item.exampleMeaning || '',
+            audioUrl: item.audioUrl,
+            imageUrl: item.imageUrl,
+            order: item.order,
+            ...data,
+          },
+        }))
+      }
+    }
+    return output
+  })
+  return success(res, { imported: imported.map(vocabOut), totalRows: candidates.length, added: imported.length, skipped }, 'Import câu luyện tập vào example thành công', 201)
 }))
 
 export default router

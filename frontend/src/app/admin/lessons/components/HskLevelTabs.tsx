@@ -29,9 +29,8 @@ export function HskLevelTabs({ levels, selectedLevelId, onSelect }: { levels: Le
               <span className={styles.levelDot} />
               <strong>{item.level.name}</strong>
               <small>{item.description}</small>
-              <em>{item.topics} chủ đề</em>
               <em>{item.lessons} bài học</em>
-              <em>{item.vocabulary} tu</em>
+              <em>{item.vocabulary} từ</em>
             </button>
           )
         })}
