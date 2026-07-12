@@ -238,7 +238,7 @@ export default function AdminProfilePage() {
             </div>
             <div className={styles.infoRow}>
               <span>Mục tiêu ngày</span>
-              <strong>{profile.dailyTarget || "Chưa cập nhật"} phút</strong>
+              <strong>{profile.dailyTarget || "Chưa cập nhật"}</strong>
             </div>
           </div>
           <div className={styles.formActions}>

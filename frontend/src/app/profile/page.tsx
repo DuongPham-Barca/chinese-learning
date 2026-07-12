@@ -12,10 +12,10 @@ import styles from "./profile.module.css"
 const levels = ["HSK1", "HSK2", "HSK3", "HSK4", "HSK5", "HSK6"]
 const goals = ["Giao tiếp", "Thi HSK", "Công việc", "Du lịch"]
 const dailyTargets = [
-  { value: "10", label: "10 phút" },
-  { value: "20", label: "20 phút" },
-  { value: "30", label: "30 phút" },
-  { value: "60", label: "60 phút" },
+  { value: "10", label: "10" },
+  { value: "20", label: "20" },
+  { value: "30", label: "30" },
+  { value: "60", label: "60" },
 ]
 const genders = ["Nam", "Nữ", "Khác"]
 const countries = ["Việt Nam", "Trung Quốc", "Đài Loan", "Khác"]

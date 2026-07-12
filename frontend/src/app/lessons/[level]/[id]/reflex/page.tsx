@@ -144,7 +144,11 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
             {translationStatus !== "idle" && translationStatus !== "revealed" && <div className={styles.answerReview}><p>Đáp án: <strong>{item.example}</strong></p></div>}
             <div className={styles.actionRow}>
               <button className={styles.secondaryButton} type="button" onClick={revealAnswer}>Xem đáp án</button>
-              <button className={styles.primaryButton} type="button" onClick={checkTranslation} disabled={!answer.trim()}>Kiểm tra</button>
+              {(translationStatus === "correct" || translationStatus === "revealed") ? (
+                <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Xem kết quả"} <SharedIcon name="arrowRight" size={15} /></button>
+              ) : (
+                <button className={styles.primaryButton} type="button" onClick={checkTranslation} disabled={!answer.trim()}>Kiểm tra</button>
+              )}
             </div>
           </motion.section>
         </motion.div>
@@ -154,17 +158,6 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
           <div className={styles.accuracyRow}><span><b>{correct}/{attempts || totalItems}</b> đúng</span></div>
         </div>
       </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          <span>{translationStatus === "correct" || translationStatus === "revealed" ? "Chuyển sang câu tiếp theo" : "Kiểm tra câu dịch của bạn"}</span>
-          {(translationStatus === "correct" || translationStatus === "revealed") ? (
-            <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Xem kết quả"} <SharedIcon name="arrowRight" size={15} /></button>
-          ) : (
-            <button className={styles.primaryButton} type="button" onClick={checkTranslation} disabled={!answer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
-          )}
-        </div>
-      </aside>
     </LessonLayout>
   )
 }

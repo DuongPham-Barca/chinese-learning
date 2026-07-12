@@ -276,8 +276,11 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
             {recordState === "listening" && (
               <>
                 <div className={`${styles.waveform} ${styles.wavePlaying}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
-                <div className={styles.recordingStatus}>Đang nghe... Bấm lần nữa để dừng</div>
+                <div className={styles.recordingStatus}>Đang nghe...</div>
                 {transcript && <p className={styles.transcriptText}>{transcript}</p>}
+                <div className={styles.actionRow}>
+                  <button className={styles.primaryButton} type="button" onClick={stopListening}>Dừng <SharedIcon name="pause" size={15} /></button>
+                </div>
               </>
             )}
             {recordState === "processing" && <div className={styles.processingArea}><div className={styles.spinner} /><div>Đang nhận diện giọng nói...</div></div>}
@@ -307,36 +310,14 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
               <div className={styles.answerReview}>
                 <p>Đáp án chuẩn: <strong>{item.example}</strong></p>
               </div>
-            </motion.section>
-          )}
-        </motion.div>
-      </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          {recordState === "done" ? (
-            <>
-              <span>Chuyển sang câu tiếp theo</span>
               <div className={styles.actionRow}>
                 <button className={styles.secondaryButton} type="button" onClick={retry}>Nói lại</button>
                 <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button>
               </div>
-            </>
-          ) : recordState === "listening" ? (
-            <>
-              <span>Bấm dừng để nhận kết quả</span>
-              <button className={styles.primaryButton} type="button" onClick={stopListening}>Dừng <SharedIcon name="pause" size={15} /></button>
-            </>
-          ) : (
-            <>
-              <span>Bấm micro để luyện nói</span>
-              <div className={styles.actionRow}>
-                <button className={styles.secondaryButton} type="button" onClick={retry}>Thử lại</button>
-              </div>
-            </>
+            </motion.section>
           )}
-        </div>
-      </aside>
+        </motion.div>
+      </section>
     </LessonLayout>
   )
 }

@@ -181,16 +181,12 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
             <div className={styles.choiceGrid}>
               {question.choices.map((choice) => <button type="button" className={`${styles.quizChoice} ${selected === choice ? styles.quizChoiceSelected : ""}`} key={choice} onClick={() => setSelected(choice)}>{choice}</button>)}
             </div>
+            <div className={styles.actionRow}>
+              <button className={styles.primaryButton} type="button" onClick={submit} disabled={!selected}>{current + 1 >= questions.length ? "Nộp bài" : "Câu tiếp theo"} <SharedIcon name="arrowRight" size={15} /></button>
+            </div>
           </motion.section>
         </AnimatePresence>
       </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          <span>{selected ? "Sẵn sàng chấm câu trả lời" : "Chọn một đáp án"}</span>
-          <button className={styles.primaryButton} type="button" onClick={submit} disabled={!selected}>{current + 1 >= questions.length ? "Nộp bài" : "Câu tiếp theo"} <SharedIcon name="arrowRight" size={15} /></button>
-        </div>
-      </aside>
     </LessonLayout>
   )
 }

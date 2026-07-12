@@ -208,6 +208,13 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
                 <p>Giải thích: đối chiếu lại thứ tự chữ Hán với nghĩa tiếng Việt phía trên.</p>
               </div>
             )}
+            <div className={styles.actionRow}>
+              {status === "success" ? (
+                <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button>
+              ) : (
+                <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={selected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
+              )}
+            </div>
           </motion.section>
         </motion.div>
 
@@ -216,17 +223,6 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
           <div className={styles.accuracyRow}><span><b>{correct}/{attempts}</b> đúng</span></div>
         </div>
       </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          <span>{status === "success" ? "Sẵn sàng sang câu tiếp theo" : "Kiểm tra trật tự câu"}</span>
-          {status === "success" ? (
-            <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button>
-          ) : (
-            <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={selected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
-          )}
-        </div>
-      </aside>
     </LessonLayout>
   )
 }

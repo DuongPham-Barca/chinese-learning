@@ -448,14 +448,10 @@ export default function PronunciationDictationPage({ params }: { params: Promise
               <p className={styles.inputHelp}><SharedIcon name="translate" size={14} />Nhập câu tiếng Trung bạn vừa nghe</p>
               {dictStatus === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
               {dictStatus === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {sentence.chinese}</strong>}
-            </motion.section>
-
-            <aside className={styles.stickyStudyBar}>
-              <div className={styles.stickyStudyInner}>
-                <span>{dictStatus === "success" ? "Sẵn sàng sang câu tiếp theo" : "Kiểm tra phần nhập tiếng Trung"}</span>
+              <div className={styles.actionRow}>
                 {dictStatus === "success" ? <button className={styles.primaryButton} type="button" onClick={nextSentence}>{currentQ + 1 < totalQ ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkDictAnswer} disabled={!dictAnswer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>}
               </div>
-            </aside>
+            </motion.section>
 
             <div className={styles.practiceStatus}>
               <div className={styles.dots}>{Array.from({ length: totalQ }, (_, index) => <i key={index} className={index < currentQ || (index === currentQ && dictStatus === "success") ? styles.dotDone : ""} />)}</div>

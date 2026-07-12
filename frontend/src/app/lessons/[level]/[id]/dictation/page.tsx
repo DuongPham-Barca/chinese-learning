@@ -166,6 +166,9 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
               <button className={styles.audioBtn} type="button" onClick={togglePlay}><SharedIcon name="volume2" size={15} />Nghe lại audio</button>
             </div>
           )}
+          <div className={styles.actionRow}>
+            {status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>}
+          </div>
         </motion.section>
         </motion.div>
 
@@ -174,13 +177,6 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
           <div className={styles.accuracyRow}><span><b>{errors}</b> lỗi</span><span><strong>{accuracy}%</strong> chính xác</span></div>
         </div>
       </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          <span>{status === "success" ? "Sẵn sàng sang câu tiếp theo" : "Kiểm tra phần nhập tiếng Trung"}</span>
-          {status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>}
-        </div>
-      </aside>
     </LessonLayout>
   )
 }

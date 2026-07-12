@@ -145,7 +145,7 @@ export default function FlashcardStudyPage() {
           <div className={styles.bottomArea}>
             <FlashcardActions onReview={markReview} onKnown={markKnown} />
             <FlashcardStats known={known} review={review} remaining={remaining} />
-            <footer className={styles.footerInfo}><span>▣ Độ chính xác: {flashcards.length > 0 ? Math.round((known / (known + review || 1)) * 100) : 0}%</span><span><Icon name="clock" />Thời gian còn lại: {Math.max(1, flashcards.length - current)} phút</span></footer>
+            <footer className={styles.footerInfo}><span>▣ Độ chính xác: {flashcards.length > 0 ? Math.round((known / (known + review || 1)) * 100) : 0}%</span></footer>
           </div>
         </div>
       </section>

@@ -256,6 +256,9 @@ export default function PracticeStagePage({ params }: { params: Promise<{ level:
                 <textarea id="dictation-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Gõ câu bạn vừa nghe..." autoFocus />
                 {status === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
                 {status === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {sentence.sentenceZh}</strong>}
+                <div className={styles.actionRow}>
+                  {status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextDictation}>{current + 1 < totalItems ? "Câu tiếp theo" : "Sang Luyện câu"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkDictation} disabled={!answer.trim()}>Check answer <SharedIcon name="arrowRight" size={15} /></button>}
+                </div>
               </motion.section>
             </motion.div>
           ) : (
@@ -268,22 +271,14 @@ export default function PracticeStagePage({ params }: { params: Promise<{ level:
                 <div className={styles.tokenBank}>{available.map((token, index) => <button type="button" className={styles.tokenChip} key={`${token}-${index}`} onClick={() => addToken(token)}>{token}</button>)}</div>
                 {sentenceStatus === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
                 {sentenceStatus === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {sentenceQuestion.answer.join("")}</strong>}
+                <div className={styles.actionRow}>
+                  {sentenceStatus === "success" ? <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkSentence} disabled={sentenceSelected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>}
+                </div>
               </motion.section>
             </motion.div>
           )}
         </AnimatePresence>
       </section>
-
-      <aside className={styles.stickyStudyBar}>
-        <div className={styles.stickyStudyInner}>
-          <span>{part === "dictation" ? "Part 1 - Nghe chép" : "Part 2 - Luyện câu"}</span>
-          {part === "dictation" ? (
-            status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextDictation}>{current + 1 < totalItems ? "Câu tiếp theo" : "Sang Luyện câu"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkDictation} disabled={!answer.trim()}>Check answer <SharedIcon name="arrowRight" size={15} /></button>
-          ) : (
-            sentenceStatus === "success" ? <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkSentence} disabled={sentenceSelected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
-          )}
-        </div>
-      </aside>
     </LessonLayout>
   )
 }

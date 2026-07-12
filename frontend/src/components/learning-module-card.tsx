@@ -39,7 +39,6 @@ export default function LearningModuleCard({ module, progress }: { module: Learn
         <i><em style={{ width: `${percent}%` }} /></i>
       </div>
       <footer className={styles.moduleFooter}>
-        <span className={styles.duration}><SharedIcon name="clock" size={14} />{module.duration}</span>
         {disabled ? (
           <span className={styles.disabledAction}>{module.totalItems === 0 ? "Chưa có dữ liệu" : "Sắp ra mắt"}</span>
         ) : (
