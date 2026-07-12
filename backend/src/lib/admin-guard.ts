@@ -55,8 +55,8 @@ export const adminGuard: RequestHandler = (req, res, next) => {
         res.status(error.statusCode).json({
           success: false,
           message: error.statusCode === 403
-            ? 'Ban khong co quyen thuc hien thao tac nay'
-            : 'Chua dang nhap',
+            ? 'Bạn không có quyền thực hiện thao tác này'
+            : 'Chưa đăng nhập',
         })
         return
       }

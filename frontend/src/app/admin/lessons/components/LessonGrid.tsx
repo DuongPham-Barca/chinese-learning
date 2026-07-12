@@ -64,7 +64,7 @@ export function LessonTable({
   return (
     <AdminTable className={styles.lessonTable}>
       <thead>
-        <tr><th>Thu tu</th><th>Bai hoc</th><th>Cap do</th><th>Topic</th><th>Noi dung</th><th>Hoan thien</th><th>Trang thai</th><th>Cap nhat</th><th>Actions</th></tr>
+        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Topic</th><th>Nội dung</th><th>Hoàn thiện</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {lessons.map((lesson) => (
@@ -73,11 +73,11 @@ export function LessonTable({
             <td><strong>{lesson.title}</strong><small>{lesson.description || lesson.slug}</small></td>
             <td><HskBadge level={level} /></td>
             <td><span className={styles.topicBadge}>{topicTitle}</span></td>
-            <td>{lesson.vocabularyCount} tu / {lesson.sentenceCount} cau</td>
+            <td>{lesson.vocabularyCount} từ / {lesson.sentenceCount} câu</td>
             <td><ContentCompletion lesson={lesson} /></td>
             <td><StatusBadge published={lesson.isPublished} /></td>
             <td>{formatDate(lesson.updatedAt)}</td>
-            <td><div className={styles.actions}><IconButton icon="eye" label="Xem" onClick={() => onView(lesson)} /><IconButton icon="edit" label="Sua" onClick={() => onEdit(lesson)} /><IconButton icon="copy" label="Nhan ban" onClick={() => onDuplicate(lesson)} /><IconButton icon="trash" label="Xoa" danger onClick={() => onDelete(lesson)} /></div></td>
+            <td><div className={styles.actions}><IconButton icon="eye" label="Xem" onClick={() => onView(lesson)} /><IconButton icon="edit" label="Sửa" onClick={() => onEdit(lesson)} /><IconButton icon="copy" label="Nhân bản" onClick={() => onDuplicate(lesson)} /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(lesson)} /></div></td>
           </tr>
         ))}
       </tbody>
@@ -88,10 +88,10 @@ export function LessonTable({
 export function NoLessons({ onCreate, onImport }: { onCreate: () => void; onImport: () => void }) {
   return (
     <div className={styles.emptyState}>
-      <h3>Chu de nay chua co bai hoc</h3>
-      <p>Tao bai hoc dau tien hoac import nhieu bai hoc bang Excel.</p>
+      <h3>Chủ đề này chưa có bài học</h3>
+      <p>Tạo bài học đầu tiên hoặc import nhiều bài học bằng Excel.</p>
       <div>
-        <AdminButton icon="plus" onClick={onCreate}>Tao bai hoc</AdminButton>
+        <AdminButton icon="plus" onClick={onCreate}>Tạo bài học</AdminButton>
         <AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton>
       </div>
     </div>

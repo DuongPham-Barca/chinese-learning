@@ -24,11 +24,11 @@ export function IconButton({ icon, label, onClick, danger = false }: { icon: Adm
 export function LessonModal({ title, size = "md", onClose, children }: { title: string; size?: "md" | "lg" | "xl"; onClose: () => void; children: ReactNode }) {
   return (
     <>
-      <button className={styles.scrim} onClick={onClose} aria-label="Dong modal" />
+      <button className={styles.scrim} onClick={onClose} aria-label="Đóng modal" />
       <section className={`${styles.modal} ${styles[`modal${size.toUpperCase()}`]} ${syncStyles.clientModal}`} role="dialog" aria-modal="true">
         <header className={styles.modalHeader}>
           <h2>{title}</h2>
-          <button className={styles.modalClose} onClick={onClose} type="button" aria-label="Dong">x</button>
+          <button className={styles.modalClose} onClick={onClose} type="button" aria-label="Đóng">x</button>
         </header>
         {children}
       </section>
@@ -66,5 +66,5 @@ export function LoadingState() {
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return <div className={styles.stateBox}><strong>Khong the tai du lieu</strong><p>{message}</p><button type="button" onClick={onRetry}>Tai lai</button></div>
+  return <div className={styles.stateBox}><strong>Không thể tải dữ liệu</strong><p>{message}</p><button type="button" onClick={onRetry}>Tải lại</button></div>
 }

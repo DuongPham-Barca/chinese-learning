@@ -73,7 +73,7 @@ export default function AdminLessonsPage() {
       const response = await getLessons({ limit: 200, sort: "order" })
       setLessons(response.data)
     } catch (e) {
-      setError(apiMessage(e, "Khong the tai danh sach bai hoc"))
+      setError(apiMessage(e, "Không thể tải danh sách bài học"))
     } finally {
       setLoading(false)
     }
@@ -82,7 +82,7 @@ export default function AdminLessonsPage() {
   useEffect(() => {
     let active = true
     queueMicrotask(() => {
-      if (active) void loadLevels().catch((e) => setToast({ variant: "error", message: apiMessage(e, "Khong the tai cap do") }))
+      if (active) void loadLevels().catch((e) => setToast({ variant: "error", message: apiMessage(e, "Không thể tải cấp độ") }))
     })
     return () => { active = false }
   }, [loadLevels])
@@ -116,7 +116,7 @@ export default function AdminLessonsPage() {
     setDetail(null)
     if (lesson !== "create") {
       try { setDetail((await getLessonById(lesson.id)).data) }
-      catch (e) { setToast({ variant: "error", message: apiMessage(e, "Khong the tai chi tiet bai hoc") }) }
+      catch (e) { setToast({ variant: "error", message: apiMessage(e, "Không thể tải chi tiết bài học") }) }
     }
   }
 
@@ -126,11 +126,11 @@ export default function AdminLessonsPage() {
       if (editorLesson && editorLesson !== "create") await updateLesson(editorLesson.id, payload)
       else await createLesson(payload)
       await loadLessons()
-      setToast({ variant: "success", message: "Da luu bai hoc" })
+      setToast({ variant: "success", message: "Đã lưu bài học" })
       setEditorLesson(null)
       return null
     } catch (e) {
-      setToast({ variant: "error", message: apiMessage(e, "Khong the luu bai hoc") })
+      setToast({ variant: "error", message: apiMessage(e, "Không thể lưu bài học") })
       return apiErrors(e)
     } finally {
       setSaving(false)
@@ -138,16 +138,16 @@ export default function AdminLessonsPage() {
   }
 
   async function addVocabulary(payload: VocabularyPayload) {
-    if (!detail) return { lesson: "Can luu hoac chon bai hoc truoc khi them tu vung" }
+    if (!detail) return { lesson: "Cần lưu hoặc chọn bài học trước khi thêm từ vựng" }
     setSaving(true)
     try {
       await createVocabulary(detail.id, payload)
       setDetail((await getLessonById(detail.id)).data)
       await loadLessons()
-      setToast({ variant: "success", message: "Da them tu vung" })
+      setToast({ variant: "success", message: "Đã thêm từ vựng" })
       return null
     } catch (e) {
-      setToast({ variant: "error", message: apiMessage(e, "Khong the luu tu vung") })
+      setToast({ variant: "error", message: apiMessage(e, "Không thể lưu từ vựng") })
       return apiErrors(e)
     } finally {
       setSaving(false)
@@ -160,19 +160,19 @@ export default function AdminLessonsPage() {
       await deleteVocabulary(id)
       setDetail((await getLessonById(detail.id)).data)
       await loadLessons()
-      setToast({ variant: "success", message: "Da xoa tu vung" })
+      setToast({ variant: "success", message: "Đã xóa từ vựng" })
     } catch (e) {
-      setToast({ variant: "error", message: apiMessage(e, "Khong the xoa tu vung") })
+      setToast({ variant: "error", message: apiMessage(e, "Không thể xóa từ vựng") })
     }
   }
 
   function saveTopic(draft: TopicDraft) {
     if (topicModal && topicModal !== "create") {
       setLocalTopics((current) => current.map((topic) => topic.id === topicModal.id ? { ...topic, ...draft, lessons: topic.lessons } : topic))
-      setToast({ variant: "success", message: "Da cap nhat chu de tren UI" })
+      setToast({ variant: "success", message: "Đã cập nhật chủ đề trên UI" })
     } else {
       setLocalTopics((current) => [...current, { id: makeTopicId(), ...draft, lessons: [] }])
-      setToast({ variant: "success", message: "Da tao chu de tren UI" })
+      setToast({ variant: "success", message: "Đã tạo chủ đề trên UI" })
     }
     setTopicModal(null)
   }
@@ -184,14 +184,14 @@ export default function AdminLessonsPage() {
       if (deleteTarget.kind === "lesson") {
         await deleteLesson(deleteTarget.lesson.id)
         await loadLessons()
-        setToast({ variant: "success", message: "Da xoa bai hoc" })
+        setToast({ variant: "success", message: "Đã xóa bài học" })
       } else {
         setLocalTopics((current) => current.filter((topic) => topic.id !== deleteTarget.topic.id))
-        setToast({ variant: "success", message: "Da xoa chu de tren UI" })
+        setToast({ variant: "success", message: "Đã xóa chủ đề trên UI" })
       }
       setDeleteTarget(null)
     } catch (e) {
-      setToast({ variant: "error", message: apiMessage(e, "Khong the xoa noi dung") })
+      setToast({ variant: "error", message: apiMessage(e, "Không thể xóa nội dung") })
     } finally {
       setSaving(false)
     }
@@ -204,23 +204,23 @@ export default function AdminLessonsPage() {
     <motion.div className={syncStyles.clientAlignedPage} variants={containerVariants} initial="hidden" animate="visible">
       <motion.div variants={itemVariants}>
         <PageHeader
-          eyebrow={<span>Quan ly bai hoc / {selectedLevel?.name || "HSK"}</span>}
-          title="Quan ly bai hoc"
-          subtitle="Quan ly cap do, chu de, bai hoc va noi dung hoc tieng Trung"
-          actions={<><AdminButton secondary icon="plus" onClick={() => setTopicModal("create")}>Tao chu de</AdminButton><AdminButton icon="plus" onClick={() => void openEditor("create")}>Tao bai hoc</AdminButton><AdminButton secondary icon="download" onClick={() => setImportOpen(true)}>Import Excel</AdminButton></>}
+          eyebrow={<span>Quản lý bài học / {selectedLevel?.name || "HSK"}</span>}
+          title="Quản lý bài học"
+          subtitle="Quản lý cấp độ, chủ đề, bài học và nội dung học tiếng Trung"
+          actions={<><AdminButton secondary icon="plus" onClick={() => setTopicModal("create")}>Tạo chủ đề</AdminButton><AdminButton icon="plus" onClick={() => void openEditor("create")}>Tạo bài học</AdminButton><AdminButton secondary icon="download" onClick={() => setImportOpen(true)}>Import Excel</AdminButton></>}
         />
       </motion.div>
 
       <motion.div variants={itemVariants} className={styles.breadcrumb}>
-        <button type="button" onClick={() => { setSelectedTopicId(""); setEditorLesson(null) }}>Quan ly bai hoc</button>
+        <button type="button" onClick={() => { setSelectedTopicId(""); setEditorLesson(null) }}>Quản lý bài học</button>
         {selectedLevel && <><span>/</span><button type="button">{selectedLevel.name}</button></>}
-        {selectedTopicId && <><span>/</span><button type="button">{selectedTopics.find((topic) => topic.id === selectedTopicId)?.title || "Chu de"}</button></>}
+        {selectedTopicId && <><span>/</span><button type="button">{selectedTopics.find((topic) => topic.id === selectedTopicId)?.title || "Chủ đề"}</button></>}
       </motion.div>
 
       <motion.div variants={itemVariants} className={styles.managementShell}>
         <HskLevelTabs levels={levelSummaries} selectedLevelId={defaultLevelId} onSelect={(levelId) => { setSelectedLevelId(levelId); setSelectedTopicId("") }} />
         <main className={styles.contentPane}>
-          {selectedLevel && activeMeta && <section className={`${styles.levelOverview} ${syncStyles.clientPanel}`} style={{ "--accent": activeMeta.accent, "--soft": activeMeta.soft } as CSSProperties}><div><span className={styles.levelDot} /><strong>{selectedLevel.name}</strong><p>{selectedLevel.description || activeMeta.description}</p></div><dl><div><dt>Chu de</dt><dd>{selectedTopics.length}</dd></div><div><dt>Bai hoc</dt><dd>{selectedTopics.reduce((sum, topic) => sum + topic.lessons.length, 0)}</dd></div><div><dt>Tu vung</dt><dd>{selectedTopics.reduce((sum, topic) => sum + topic.lessons.reduce((lessonSum, lesson) => lessonSum + lesson.vocabularyCount, 0), 0)}</dd></div></dl></section>}
+          {selectedLevel && activeMeta && <section className={`${styles.levelOverview} ${syncStyles.clientPanel}`} style={{ "--accent": activeMeta.accent, "--soft": activeMeta.soft } as CSSProperties}><div><span className={styles.levelDot} /><strong>{selectedLevel.name}</strong><p>{selectedLevel.description || activeMeta.description}</p></div><dl><div><dt>Chủ đề</dt><dd>{selectedTopics.length}</dd></div><div><dt>Bài học</dt><dd>{selectedTopics.reduce((sum, topic) => sum + topic.lessons.length, 0)}</dd></div><div><dt>Từ vựng</dt><dd>{selectedTopics.reduce((sum, topic) => sum + topic.lessons.reduce((lessonSum, lesson) => lessonSum + lesson.vocabularyCount, 0), 0)}</dd></div></dl></section>}
           <LessonFilters search={search} status={status} topicId={selectedTopicId} sort={sort} view={view} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} onSearch={setSearch} onStatus={setStatus} onTopic={setSelectedTopicId} onSort={setSort} onView={setView} onRefresh={() => void loadLessons()} />
           {loading && <LoadingState />}
           {!loading && error && <ErrorState message={error} onRetry={() => void loadLessons()} />}
@@ -231,7 +231,7 @@ export default function AdminLessonsPage() {
       {topicModal && <TopicFormModal levels={levels} topic={topicModal === "create" ? null : topicModal} defaultLevelId={defaultLevelId} onClose={() => setTopicModal(null)} onSubmit={saveTopic} />}
       {editorLesson && <LessonEditor levels={levels} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} defaultTopicId={editorTopicId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onDeleteVocabulary={(id) => void removeVocabulary(id)} onImport={() => setImportOpen(true)} onCreateTopic={() => setTopicModal("create")} />}
       {importOpen && <ExcelImportWizard levels={levels} topics={selectedLevel ? (topicsByLevel.get(selectedLevel.id) || []) : []} defaultLevelId={defaultLevelId} defaultTopicId={selectedTopicId} defaultLessonName={detail?.title} onClose={() => setImportOpen(false)} />}
-      {deleteTarget && <DeleteConfirmModal title={deleteTarget.kind === "topic" ? "Xoa chu de" : "Xoa bai hoc"} description={deleteTarget.kind === "topic" ? `Ban sap xoa chu de "${deleteTarget.topic.title}".` : `Ban sap xoa bai hoc "${deleteTarget.lesson.title}".`} facts={deleteTarget.kind === "topic" ? [{ label: "So bai hoc ben trong", value: deleteTarget.topic.lessons.length }, { label: "So tu vung lien quan", value: deleteTarget.topic.lessons.reduce((sum, lesson) => sum + lesson.vocabularyCount, 0) }] : [{ label: "So tu vung", value: deleteTarget.lesson.vocabularyCount }, { label: "So cau luyen tap", value: deleteTarget.lesson.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
+      {deleteTarget && <DeleteConfirmModal title={deleteTarget.kind === "topic" ? "Xóa chủ đề" : "Xóa bài học"} description={deleteTarget.kind === "topic" ? `Bạn sắp xóa chủ đề "${deleteTarget.topic.title}".` : `Bạn sắp xóa bài học "${deleteTarget.lesson.title}".`} facts={deleteTarget.kind === "topic" ? [{ label: "Số bài học bên trong", value: deleteTarget.topic.lessons.length }, { label: "Số từ vựng liên quan", value: deleteTarget.topic.lessons.reduce((sum, lesson) => sum + lesson.vocabularyCount, 0) }] : [{ label: "Số từ vựng", value: deleteTarget.lesson.vocabularyCount }, { label: "Số câu luyện tập", value: deleteTarget.lesson.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
       {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}
     </motion.div>
   )

@@ -5,13 +5,13 @@ import type { HskLevelKey, LessonTopic, LevelSummary, PracticeSentence, TopicDra
 export const HSK_ORDER: HskLevelKey[] = ["hsk1", "hsk2", "hsk3", "hsk4", "hsk5", "hsk6", "communication"]
 
 export const HSK_META: Record<HskLevelKey, { label: string; description: string; accent: string; soft: string }> = {
-  hsk1: { label: "HSK1", description: "Nen tang phat am, chao hoi va cau rat ngan.", accent: "#16a34a", soft: "#ecfdf5" },
-  hsk2: { label: "HSK2", description: "Giao tiep doi song, gia dinh, mua sam co ban.", accent: "#2563eb", soft: "#eef6ff" },
-  hsk3: { label: "HSK3", description: "Mo rong ngu phap, sinh hoat va cong viec.", accent: "#7c3aed", soft: "#f5f3ff" },
-  hsk4: { label: "HSK4", description: "Chu de xa hoi, hoc tap va quan diem ca nhan.", accent: "#ea580c", soft: "#fff7ed" },
-  hsk5: { label: "HSK5", description: "Doc hieu dai, thanh ngu va bieu dat truu tuong.", accent: "#dc2626", soft: "#fef2f2" },
-  hsk6: { label: "HSK6", description: "Ngon ngu hoc thuat, tin tuc va van phong nang cao.", accent: "#9333ea", soft: "#faf5ff" },
-  communication: { label: "Giao tiep", description: "Tinh huong nghe noi thuc te ngoai khung HSK.", accent: "#0f766e", soft: "#f0fdfa" },
+  hsk1: { label: "HSK1", description: "Nền tảng phát âm, chào hỏi và câu rất ngắn.", accent: "#16a34a", soft: "#ecfdf5" },
+  hsk2: { label: "HSK2", description: "Giao tiếp đời sống, gia đình, mua sắm cơ bản.", accent: "#2563eb", soft: "#eef6ff" },
+  hsk3: { label: "HSK3", description: "Mở rộng ngữ pháp, sinh hoạt và công việc.", accent: "#7c3aed", soft: "#f5f3ff" },
+  hsk4: { label: "HSK4", description: "Chủ đề xã hội, học tập và quan điểm cá nhân.", accent: "#ea580c", soft: "#fff7ed" },
+  hsk5: { label: "HSK5", description: "Đọc hiểu dài, thành ngữ và biểu đạt trừu tượng.", accent: "#dc2626", soft: "#fef2f2" },
+  hsk6: { label: "HSK6", description: "Ngôn ngữ học thuật, tin tức và văn phòng nâng cao.", accent: "#9333ea", soft: "#faf5ff" },
+  communication: { label: "Giao tiep", description: "Tình huống nghe nói thực tế ngoài khung HSK.", accent: "#0f766e", soft: "#f0fdfa" },
 }
 
 export const DEFAULT_TOPIC_DRAFT: TopicDraft = {
@@ -26,9 +26,9 @@ export const DEFAULT_TOPIC_DRAFT: TopicDraft = {
 }
 
 export const SAMPLE_SENTENCES: PracticeSentence[] = [
-  { id: "sen-1", order: 1, sentenceVi: "Day la bo cua toi.", sentenceZh: "这是我的爸爸。", audioUrl: "/audio/example.mp3", modes: ["pronunciation", "dictation"] },
-  { id: "sen-2", order: 2, sentenceVi: "Gia dinh ban co may nguoi?", sentenceZh: "你家有几口人？", modes: ["arrange", "reaction"] },
-  { id: "sen-3", order: 3, sentenceVi: "Toi la hoc sinh.", sentenceZh: "我是学生。", modes: ["pronunciation"] },
+  { id: "sen-1", order: 1, sentenceVi: "Đây là bố của tôi.", sentenceZh: "这是我的爸爸。", audioUrl: "/audio/example.mp3", modes: ["pronunciation", "dictation"] },
+  { id: "sen-2", order: 2, sentenceVi: "Gia đình bạn có mấy người?", sentenceZh: "你家有几口人？", modes: ["arrange", "reaction"] },
+  { id: "sen-3", order: 3, sentenceVi: "Tôi là học sinh.", sentenceZh: "我是学生。", modes: ["pronunciation"] },
 ]
 
 function normalize(value: string) {
@@ -70,8 +70,8 @@ export function buildTopics(levels: AdminLevel[], lessons: AdminLesson[], localT
       current.unshift({
         id: `unassigned-${level.id}`,
         levelId: level.id,
-        title: "Chua phan chu de",
-        description: "Cac bai hoc dang co trong he thong nhung chua co topic backend de gan chinh thuc.",
+        title: "Chưa phân chủ đề",
+        description: "Các bài học đang có trong hệ thống nhưng chưa có topic backend để gán chính thức.",
         icon: "list",
         order: 0,
         status: "draft",

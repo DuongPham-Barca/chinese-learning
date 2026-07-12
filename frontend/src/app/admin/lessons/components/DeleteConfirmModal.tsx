@@ -26,8 +26,8 @@ export function DeleteConfirmModal({
         <dl>{facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
       </div>
       <div className={styles.modalActions}>
-        <AdminButton secondary disabled={saving} onClick={onClose}>Huy</AdminButton>
-        <button className={styles.dangerAction} disabled={saving} onClick={onConfirm} type="button">{saving ? "Dang xoa..." : "Xoa"}</button>
+        <AdminButton secondary disabled={saving} onClick={onClose}>Hủy</AdminButton>
+        <button className={styles.dangerAction} disabled={saving} onClick={onConfirm} type="button">{saving ? "Đang xóa..." : "Xóa"}</button>
       </div>
     </LessonModal>
   )

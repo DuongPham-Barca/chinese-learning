@@ -9,7 +9,7 @@ const router = Router()
 const levelTypes = Object.values(LevelType)
 const url = z.preprocess((v) => v === '' ? null : v, z.string().url().nullable().optional())
 const levelSchema = z.object({
-  name: z.string().trim().min(1, 'Ten cap do la bat buoc'),
+  name: z.string().trim().min(1, 'Tên cấp độ là bắt buộc'),
   slug: z.string().trim().optional(),
   description: z.string().trim().nullable().optional(),
   imageUrl: url,
@@ -17,8 +17,8 @@ const levelSchema = z.object({
   isPublished: z.boolean().optional().default(true),
 })
 const lessonSchema = z.object({
-  levelId: z.string().trim().min(1, 'Cap do la bat buoc'),
-  title: z.string().trim().min(1, 'Ten bai hoc la bat buoc'),
+  levelId: z.string().trim().min(1, 'Cấp độ là bắt buộc'),
+  title: z.string().trim().min(1, 'Tên bài học là bắt buộc'),
   slug: z.string().trim().optional(),
   description: z.string().trim().nullable().optional(),
   imageUrl: url,
@@ -28,9 +28,9 @@ const lessonSchema = z.object({
   expReward: z.coerce.number().int().min(0),
 })
 const vocabSchema = z.object({
-  chinese: z.string().trim().min(1, 'Tu tieng Trung la bat buoc'),
-  pinyin: z.string().trim().min(1, 'Pinyin la bat buoc'),
-  vietnamese: z.string().trim().min(1, 'Nghia tieng Viet la bat buoc'),
+  chinese: z.string().trim().min(1, 'Từ tiếng Trung là bắt buộc'),
+  pinyin: z.string().trim().min(1, 'Pinyin là bắt buộc'),
+  vietnamese: z.string().trim().min(1, 'Nghĩa tiếng Việt là bắt buộc'),
   example: z.string().trim().nullable().optional(),
   examplePinyin: z.string().trim().nullable().optional(),
   exampleMeaning: z.string().trim().nullable().optional(),
@@ -59,7 +59,7 @@ function invalid(res: import('express').Response, parsed: { error: z.ZodError })
     const field = String(issue.path[0] || 'form')
     if (!errors[field]) errors[field] = issue.message
   }
-  return error(res, 400, 'Du lieu khong hop le', errors)
+  return error(res, 400, 'Dữ liệu không hợp lệ', errors)
 }
 
 function slugify(value: string) {
@@ -116,7 +116,7 @@ router.get('/levels', asyncHandler(async (req, res) => {
 
 router.get('/levels/:id', asyncHandler(async (req, res) => {
   const level = await prisma.level.findUnique({ where: { id: req.params.id }, include: { _count: { select: { lessons: true } } } })
-  if (!level) return error(res, 404, 'Khong tim thay cap do')
+  if (!level) return error(res, 404, 'Không tìm thấy cấp độ')
   return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined })
 }))
 
@@ -126,9 +126,9 @@ router.post('/levels', asyncHandler(async (req, res) => {
   const slug = slugify(parsed.data.slug || parsed.data.name)
   try {
     const level = await prisma.level.create({ data: { ...parsed.data, slug, type: inferLevelType(parsed.data.name, slug), description: blankToNull(parsed.data.description) }, include: { _count: { select: { lessons: true } } } })
-    return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Tao cap do thanh cong', 201)
+    return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Tạo cấp độ thành công', 201)
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug da ton tai', { slug: 'Slug da ton tai' })
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug đã tồn tại', { slug: 'Slug đã tồn tại' })
     throw e
   }
 }))
@@ -141,34 +141,34 @@ router.put('/levels/:id', asyncHandler(async (req, res) => {
   if (parsed.data.description !== undefined) data.description = blankToNull(parsed.data.description)
   try {
     const level = await prisma.level.update({ where: { id: req.params.id }, data, include: { _count: { select: { lessons: true } } } })
-    return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Cap nhat cap do thanh cong')
+    return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Cập nhật cấp độ thành công')
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') return error(res, 404, 'Khong tim thay cap do')
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug da ton tai', { slug: 'Slug da ton tai' })
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') return error(res, 404, 'Không tìm thấy cấp độ')
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug đã tồn tại', { slug: 'Slug đã tồn tại' })
     throw e
   }
 }))
 
 router.delete('/levels/:id', asyncHandler(async (req, res) => {
   const lessonCount = await prisma.lesson.count({ where: { levelId: req.params.id } })
-  if (lessonCount) return error(res, 400, 'Khong the xoa cap do dang co bai hoc')
+  if (lessonCount) return error(res, 400, 'Không thể xóa cấp độ đang có bài học')
   const deleted = await prisma.level.deleteMany({ where: { id: req.params.id } })
-  if (!deleted.count) return error(res, 404, 'Khong tim thay cap do')
-  return success(res, { id: req.params.id }, 'Xoa cap do thanh cong')
+  if (!deleted.count) return error(res, 404, 'Không tìm thấy cấp độ')
+  return success(res, { id: req.params.id }, 'Xóa cấp độ thành công')
 }))
 
 router.patch('/levels/:id/status', asyncHandler(async (req, res) => {
   const parsed = statusSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const level = await prisma.level.update({ where: { id: req.params.id }, data: parsed.data, include: { _count: { select: { lessons: true } } } })
-  return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Cap nhat trang thai cap do thanh cong')
+  return success(res, { ...level, lessonCount: level._count.lessons, _count: undefined }, 'Cập nhật trạng thái cấp độ thành công')
 }))
 
 router.patch('/levels/reorder', asyncHandler(async (req, res) => {
   const parsed = reorderSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   await prisma.$transaction(parsed.data.items.map((i) => prisma.level.update({ where: { id: i.id }, data: { order: i.order } })))
-  return success(res, { count: parsed.data.items.length }, 'Sap xep cap do thanh cong')
+  return success(res, { count: parsed.data.items.length }, 'Sắp xếp cấp độ thành công')
 }))
 
 router.get('/lessons', asyncHandler(async (req, res) => {
@@ -192,7 +192,7 @@ router.get('/lessons', asyncHandler(async (req, res) => {
 
 router.get('/lessons/:id', asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id }, include: { level: { select: { id: true, name: true } }, vocabulary: { orderBy: { order: 'asc' } }, _count: { select: { vocabulary: true, sentences: true } } } })
-  if (!lesson) return error(res, 404, 'Khong tim thay bai hoc')
+  if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
   return success(res, { ...lessonOut(lesson), vocabulary: lesson.vocabulary.map(vocabOut) })
 }))
 
@@ -200,13 +200,13 @@ router.post('/lessons', asyncHandler(async (req, res) => {
   const parsed = lessonSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const level = await prisma.level.findUnique({ where: { id: parsed.data.levelId } })
-  if (!level) return error(res, 404, 'Khong tim thay cap do')
+  if (!level) return error(res, 404, 'Không tìm thấy cấp độ')
   const slug = slugify(parsed.data.slug || parsed.data.title)
   try {
     const lesson = await prisma.lesson.create({ data: { levelId: level.id, levelType: level.type || LevelType.HSK6, title: parsed.data.title, slug, description: blankToNull(parsed.data.description), imageUrl: parsed.data.imageUrl ?? null, lessonOrder: parsed.data.order, isFree: parsed.data.isFree, isPublished: parsed.data.isPublished, expReward: parsed.data.expReward }, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
-    return success(res, lessonOut(lesson), 'Tao bai hoc thanh cong', 201)
+    return success(res, lessonOut(lesson), 'Tạo bài học thành công', 201)
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug bai hoc da ton tai trong cap do nay', { slug: 'Slug da ton tai' })
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug bài học đã tồn tại trong cấp độ này', { slug: 'Slug đã tồn tại' })
     throw e
   }
 }))
@@ -217,7 +217,7 @@ router.put('/lessons/:id', asyncHandler(async (req, res) => {
   const data: any = {}
   if (parsed.data.levelId) {
     const level = await prisma.level.findUnique({ where: { id: parsed.data.levelId } })
-    if (!level) return error(res, 404, 'Khong tim thay cap do')
+    if (!level) return error(res, 404, 'Không tìm thấy cấp độ')
     data.levelId = level.id
     data.levelType = level.type || LevelType.HSK6
   }
@@ -230,27 +230,27 @@ router.put('/lessons/:id', asyncHandler(async (req, res) => {
   if (parsed.data.isPublished !== undefined) data.isPublished = parsed.data.isPublished
   if (parsed.data.expReward !== undefined) data.expReward = parsed.data.expReward
   const lesson = await prisma.lesson.update({ where: { id: req.params.id }, data, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
-  return success(res, lessonOut(lesson), 'Cap nhat bai hoc thanh cong')
+  return success(res, lessonOut(lesson), 'Cập nhật bài học thành công')
 }))
 
 router.delete('/lessons/:id', asyncHandler(async (req, res) => {
   const deleted = await prisma.lesson.deleteMany({ where: { id: req.params.id } })
-  if (!deleted.count) return error(res, 404, 'Khong tim thay bai hoc')
-  return success(res, { id: req.params.id }, 'Xoa bai hoc thanh cong')
+  if (!deleted.count) return error(res, 404, 'Không tìm thấy bài học')
+  return success(res, { id: req.params.id }, 'Xóa bài học thành công')
 }))
 
 router.patch('/lessons/:id/status', asyncHandler(async (req, res) => {
   const parsed = statusSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const lesson = await prisma.lesson.update({ where: { id: req.params.id }, data: parsed.data, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
-  return success(res, lessonOut(lesson), 'Cap nhat trang thai bai hoc thanh cong')
+  return success(res, lessonOut(lesson), 'Cập nhật trạng thái bài học thành công')
 }))
 
 router.patch('/lessons/reorder', asyncHandler(async (req, res) => {
   const parsed = reorderSchema.required({ levelId: true }).safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   await prisma.$transaction(parsed.data.items.map((i) => prisma.lesson.update({ where: { id: i.id }, data: { lessonOrder: i.order } })))
-  return success(res, { count: parsed.data.items.length }, 'Sap xep bai hoc thanh cong')
+  return success(res, { count: parsed.data.items.length }, 'Sắp xếp bài học thành công')
 }))
 
 router.get('/lessons/:lessonId/vocabularies', asyncHandler(async (req, res) => {
@@ -262,18 +262,18 @@ router.post('/lessons/:lessonId/vocabularies', asyncHandler(async (req, res) => 
   const parsed = vocabSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const lesson = await prisma.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true } })
-  if (!lesson) return error(res, 404, 'Khong tim thay bai hoc')
+  if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
   const item = await prisma.vocabulary.create({ data: { lessonId: lesson.id, hanzi: parsed.data.chinese, pinyin: parsed.data.pinyin, meaningVi: parsed.data.vietnamese, example: blankToNull(parsed.data.example), examplePinyin: blankToNull(parsed.data.examplePinyin), exampleMeaning: blankToNull(parsed.data.exampleMeaning), audioUrl: parsed.data.audioUrl ?? null, imageUrl: parsed.data.imageUrl ?? null, order: parsed.data.order } })
-  return success(res, vocabOut(item), 'Tao tu vung thanh cong', 201)
+  return success(res, vocabOut(item), 'Tạo từ vựng thành công', 201)
 }))
 
 router.post('/lessons/:lessonId/vocabularies/bulk', asyncHandler(async (req, res) => {
   const parsed = z.object({ items: z.array(vocabSchema).min(1) }).safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   const lesson = await prisma.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true } })
-  if (!lesson) return error(res, 404, 'Khong tim thay bai hoc')
+  if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
   const items = await prisma.$transaction(parsed.data.items.map((i) => prisma.vocabulary.create({ data: { lessonId: lesson.id, hanzi: i.chinese, pinyin: i.pinyin, meaningVi: i.vietnamese, example: blankToNull(i.example), examplePinyin: blankToNull(i.examplePinyin), exampleMeaning: blankToNull(i.exampleMeaning), audioUrl: i.audioUrl ?? null, imageUrl: i.imageUrl ?? null, order: i.order } })))
-  return success(res, items.map(vocabOut), 'Them nhieu tu vung thanh cong', 201)
+  return success(res, items.map(vocabOut), 'Thêm nhiều từ vựng thành công', 201)
 }))
 
 router.put('/vocabularies/:id', asyncHandler(async (req, res) => {
@@ -290,20 +290,20 @@ router.put('/vocabularies/:id', asyncHandler(async (req, res) => {
   if (parsed.data.imageUrl !== undefined) data.imageUrl = parsed.data.imageUrl
   if (parsed.data.order !== undefined) data.order = parsed.data.order
   const item = await prisma.vocabulary.update({ where: { id: req.params.id }, data })
-  return success(res, vocabOut(item), 'Cap nhat tu vung thanh cong')
+  return success(res, vocabOut(item), 'Cập nhật từ vựng thành công')
 }))
 
 router.delete('/vocabularies/:id', asyncHandler(async (req, res) => {
   const deleted = await prisma.vocabulary.deleteMany({ where: { id: req.params.id } })
-  if (!deleted.count) return error(res, 404, 'Khong tim thay tu vung')
-  return success(res, { id: req.params.id }, 'Xoa tu vung thanh cong')
+  if (!deleted.count) return error(res, 404, 'Không tìm thấy từ vựng')
+  return success(res, { id: req.params.id }, 'Xóa từ vựng thành công')
 }))
 
 router.patch('/vocabularies/reorder', asyncHandler(async (req, res) => {
   const parsed = reorderSchema.required({ lessonId: true }).safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
   await prisma.$transaction(parsed.data.items.map((i) => prisma.vocabulary.update({ where: { id: i.id }, data: { order: i.order } })))
-  return success(res, { count: parsed.data.items.length }, 'Sap xep tu vung thanh cong')
+  return success(res, { count: parsed.data.items.length }, 'Sắp xếp từ vựng thành công')
 }))
 
 export default router

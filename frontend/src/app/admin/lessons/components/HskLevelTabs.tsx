@@ -11,8 +11,8 @@ export function HskLevelTabs({ levels, selectedLevelId, onSelect }: { levels: Le
   return (
     <aside className={`${styles.levelRail} ${syncStyles.clientCard}`}>
       <div className={styles.levelRailHeader}>
-        <span>Cap do</span>
-        <button type="button" title="Thu gon" aria-label="Thu gon"><AdminIcon name="menu" /></button>
+        <span>Cấp độ</span>
+        <button type="button" title="Thu gọn" aria-label="Thu gọn"><AdminIcon name="menu" /></button>
       </div>
       <div className={styles.levelCards}>
         {levels.map((item) => {
@@ -29,8 +29,8 @@ export function HskLevelTabs({ levels, selectedLevelId, onSelect }: { levels: Le
               <span className={styles.levelDot} />
               <strong>{item.level.name}</strong>
               <small>{item.description}</small>
-              <em>{item.topics} chu de</em>
-              <em>{item.lessons} bai hoc</em>
+              <em>{item.topics} chủ đề</em>
+              <em>{item.lessons} bài học</em>
               <em>{item.vocabulary} tu</em>
             </button>
           )

@@ -17,12 +17,12 @@ CREATE UNIQUE INDEX "levels_slug_key" ON "levels"("slug");
 
 INSERT INTO "levels" ("id", "type", "name", "slug", "description", "order", "is_published")
 VALUES
-  ('level_hsk1', 'HSK1', 'HSK 1', 'hsk-1', 'Tu vung va mau cau co ban HSK 1', 1, true),
-  ('level_hsk2', 'HSK2', 'HSK 2', 'hsk-2', 'Tu vung va mau cau co ban HSK 2', 2, true),
-  ('level_hsk3', 'HSK3', 'HSK 3', 'hsk-3', 'Noi dung trung cap HSK 3', 3, true),
-  ('level_hsk4', 'HSK4', 'HSK 4', 'hsk-4', 'Noi dung trung cap HSK 4', 4, true),
-  ('level_hsk5', 'HSK5', 'HSK 5', 'hsk-5', 'Noi dung nang cao HSK 5', 5, true),
-  ('level_hsk6', 'HSK6', 'HSK 6', 'hsk-6', 'Noi dung nang cao HSK 6', 6, true)
+  ('level_hsk1', 'HSK1', 'HSK 1', 'hsk-1', 'Từ vựng và mẫu câu cơ bản HSK 1', 1, true),
+  ('level_hsk2', 'HSK2', 'HSK 2', 'hsk-2', 'Từ vựng và mẫu câu cơ bản HSK 2', 2, true),
+  ('level_hsk3', 'HSK3', 'HSK 3', 'hsk-3', 'Nội dung trung cấp HSK 3', 3, true),
+  ('level_hsk4', 'HSK4', 'HSK 4', 'hsk-4', 'Nội dung trung cấp HSK 4', 4, true),
+  ('level_hsk5', 'HSK5', 'HSK 5', 'hsk-5', 'Nội dung nâng cao HSK 5', 5, true),
+  ('level_hsk6', 'HSK6', 'HSK 6', 'hsk-6', 'Nội dung nâng cao HSK 6', 6, true)
 ON CONFLICT ("slug") DO NOTHING;
 
 ALTER TABLE "Lesson" ADD COLUMN "level_id" TEXT;

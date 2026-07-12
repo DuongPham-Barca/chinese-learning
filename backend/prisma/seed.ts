@@ -23,12 +23,12 @@ type LessonSeed = {
 }
 
 const levelSeeds: Array<{ id: string; type: LevelType; name: string; slug: string; description: string; order: number }> = [
-  { id: 'level_hsk1', type: LevelType.HSK1, name: 'HSK 1', slug: 'hsk-1', description: 'Tu vung va mau cau co ban HSK 1', order: 1 },
-  { id: 'level_hsk2', type: LevelType.HSK2, name: 'HSK 2', slug: 'hsk-2', description: 'Tu vung va mau cau co ban HSK 2', order: 2 },
-  { id: 'level_hsk3', type: LevelType.HSK3, name: 'HSK 3', slug: 'hsk-3', description: 'Noi dung trung cap HSK 3', order: 3 },
-  { id: 'level_hsk4', type: LevelType.HSK4, name: 'HSK 4', slug: 'hsk-4', description: 'Noi dung trung cap HSK 4', order: 4 },
-  { id: 'level_hsk5', type: LevelType.HSK5, name: 'HSK 5', slug: 'hsk-5', description: 'Noi dung nang cao HSK 5', order: 5 },
-  { id: 'level_hsk6', type: LevelType.HSK6, name: 'HSK 6', slug: 'hsk-6', description: 'Noi dung nang cao HSK 6', order: 6 },
+  { id: 'level_hsk1', type: LevelType.HSK1, name: 'HSK 1', slug: 'hsk-1', description: 'Từ vựng và mẫu câu cơ bản HSK 1', order: 1 },
+  { id: 'level_hsk2', type: LevelType.HSK2, name: 'HSK 2', slug: 'hsk-2', description: 'Từ vựng và mẫu câu cơ bản HSK 2', order: 2 },
+  { id: 'level_hsk3', type: LevelType.HSK3, name: 'HSK 3', slug: 'hsk-3', description: 'Nội dung trung cấp HSK 3', order: 3 },
+  { id: 'level_hsk4', type: LevelType.HSK4, name: 'HSK 4', slug: 'hsk-4', description: 'Nội dung trung cấp HSK 4', order: 4 },
+  { id: 'level_hsk5', type: LevelType.HSK5, name: 'HSK 5', slug: 'hsk-5', description: 'Nội dung nâng cao HSK 5', order: 5 },
+  { id: 'level_hsk6', type: LevelType.HSK6, name: 'HSK 6', slug: 'hsk-6', description: 'Nội dung nâng cao HSK 6', order: 6 },
 ]
 
 function levelIdFor(type: LevelType): string {

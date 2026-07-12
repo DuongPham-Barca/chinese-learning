@@ -48,7 +48,7 @@ export function TopicCard({
   return (
     <article className={`${styles.topicCard} ${syncStyles.clientCard} ${syncStyles.clientTopic}`} style={{ "--accent": meta.accent, "--soft": meta.soft } as CSSProperties}>
       <header className={styles.topicHeader}>
-        <button className={styles.expandButton} type="button" onClick={() => setExpanded((value) => !value)} aria-label={expanded ? "Thu gon" : "Mo rong"}>
+        <button className={styles.expandButton} type="button" onClick={() => setExpanded((value) => !value)} aria-label={expanded ? "Thu gọn" : "Mở rộng"}>
           <AdminIcon name={expanded ? "chevronDown" : "chevronRight"} />
         </button>
         <div className={styles.topicCover}>
@@ -60,16 +60,16 @@ export function TopicCard({
           <p>{topic.description}</p>
         </div>
         <div className={styles.topicStats}>
-          <span><strong>{topic.lessons.length}</strong>bai hoc</span>
-          <span><strong>{vocabCount}</strong>tu vung</span>
-          <span><strong>{sentenceCount}</strong>cau</span>
+          <span><strong>{topic.lessons.length}</strong>bài học</span>
+          <span><strong>{vocabCount}</strong>từ vựng</span>
+          <span><strong>{sentenceCount}</strong>câu</span>
         </div>
         <div className={styles.topicActions}>
-          <AdminButton secondary icon="eye" onClick={() => setExpanded(true)}>Xem bai hoc</AdminButton>
-          <AdminButton secondary icon="plus" onClick={() => onAddLesson(topic)}>Them bai hoc</AdminButton>
-          {canManageTopic && <IconButton icon="edit" label="Sua chu de" onClick={() => onEditTopic(topic)} />}
-          {canManageTopic && <IconButton icon="sort" label="Sap xep" />}
-          {canManageTopic && <IconButton icon="trash" label="Xoa chu de" danger onClick={() => onDeleteTopic(topic)} />}
+          <AdminButton secondary icon="eye" onClick={() => setExpanded(true)}>Xem bài học</AdminButton>
+          <AdminButton secondary icon="plus" onClick={() => onAddLesson(topic)}>Thêm bài học</AdminButton>
+          {canManageTopic && <IconButton icon="edit" label="Sửa chủ đề" onClick={() => onEditTopic(topic)} />}
+          {canManageTopic && <IconButton icon="sort" label="Sắp xếp" />}
+          {canManageTopic && <IconButton icon="trash" label="Xóa chủ đề" danger onClick={() => onDeleteTopic(topic)} />}
         </div>
       </header>
       {expanded && (
@@ -91,9 +91,9 @@ export function TopicList(props: Omit<Parameters<typeof TopicCard>[0], "topic"> 
   if (!props.topics.length) {
     return (
       <div className={styles.emptyState}>
-        <h3>{props.level.name} chua co chu de nao</h3>
-        <p>Hay tao chu de dau tien de bat dau xay dung noi dung theo cau truc HSK - Chu de - Bai hoc.</p>
-        <div><AdminButton icon="plus" onClick={props.onCreateTopic}>Tao chu de</AdminButton></div>
+        <h3>{props.level.name} chưa có chủ đề nào</h3>
+        <p>Hãy tạo chủ đề đầu tiên để bắt đầu xây dựng nội dung theo cấu trúc HSK - Chủ đề - Bài học.</p>
+        <div><AdminButton icon="plus" onClick={props.onCreateTopic}>Tạo chủ đề</AdminButton></div>
       </div>
     )
   }

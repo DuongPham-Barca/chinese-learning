@@ -11,9 +11,9 @@ const levelSchema = z.enum(['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'])
 const roleSchema = z.enum(['USER', 'ADMIN'])
 const planSchema = z.enum(['2months', '6months', '12months'])
 const userSchema = z.object({
-  username: z.string().trim().min(1, 'Ten nguoi dung la bat buoc').max(50),
-  email: z.preprocess((v) => v === '' ? null : v, z.string().trim().email('Email khong hop le').nullable().optional()),
-  password: z.string().min(6, 'Mat khau toi thieu 6 ky tu').optional(),
+  username: z.string().trim().min(1, 'Tên người dùng là bắt buộc').max(50),
+  email: z.preprocess((v) => v === '' ? null : v, z.string().trim().email('Email không hợp lệ').nullable().optional()),
+  password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự').optional(),
   phone: z.preprocess((v) => v === '' ? null : v, z.string().trim().nullable().optional()),
   level: levelSchema.optional(),
   role: roleSchema.optional().default('USER'),
@@ -35,7 +35,7 @@ function invalid(res: import('express').Response, parsed: { error: z.ZodError })
     const field = String(issue.path[0] || 'form')
     if (!errors[field]) errors[field] = issue.message
   }
-  return error(res, 400, 'Du lieu khong hop le', errors)
+  return error(res, 400, 'Dữ liệu không hợp lệ', errors)
 }
 
 function page(req: import('express').Request) {
@@ -143,7 +143,7 @@ router.get('/users', asyncHandler(async (req, res) => {
 
 router.get('/users/:id', asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.params.id }, include: { ...userInclude, progress: { orderBy: { createdAt: 'desc' }, take: 10, include: { lesson: { select: { id: true, title: true, levelType: true, lessonOrder: true } } } } } })
-  if (!user) return error(res, 404, 'Khong tim thay nguoi dung')
+  if (!user) return error(res, 404, 'Không tìm thấy người dùng')
   return success(res, { ...out(user), recentProgress: user.progress })
 }))
 
@@ -164,9 +164,9 @@ router.post('/users', asyncHandler(async (req, res) => {
       },
       include: userInclude,
     })
-    return success(res, out(user), 'Tao nguoi dung thanh cong', 201)
+    return success(res, out(user), 'Tạo người dùng thành công', 201)
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Ten nguoi dung hoac email da ton tai')
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Tên người dùng hoặc email đã tồn tại')
     throw e
   }
 }))
@@ -185,10 +185,10 @@ router.put('/users/:id', asyncHandler(async (req, res) => {
   if (parsed.data.subscriptionUntil !== undefined) data.subscriptionUntil = parsed.data.subscriptionUntil ? new Date(parsed.data.subscriptionUntil) : null
   try {
     const user = await prisma.user.update({ where: { id: req.params.id }, data, include: userInclude })
-    return success(res, out(user), 'Cap nhat nguoi dung thanh cong')
+    return success(res, out(user), 'Cập nhật người dùng thành công')
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') return error(res, 404, 'Khong tim thay nguoi dung')
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Ten nguoi dung hoac email da ton tai')
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') return error(res, 404, 'Không tìm thấy người dùng')
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Tên người dùng hoặc email đã tồn tại')
     throw e
   }
 }))
@@ -207,16 +207,16 @@ router.patch('/users/:id/premium', asyncHandler(async (req, res) => {
     await tx.subscription.create({ data: { userId: target.id, planId, amount: planAmount(planId), status: SubStatus.CONFIRMED, transferContent: `ADMIN_UNLOCK_${target.id}`, startedAt, expiresAt, confirmedAt: startedAt, confirmedBy: admin.id } })
     return tx.user.update({ where: { id: target.id }, data: { isPremium: true, subscriptionUntil: expiresAt }, include: userInclude })
   })
-  if (!user) return error(res, 404, 'Khong tim thay nguoi dung')
-  return success(res, out(user), 'Mo khoa premium thanh cong')
+  if (!user) return error(res, 404, 'Không tìm thấy người dùng')
+  return success(res, out(user), 'Mở khóa premium thành công')
 }))
 
 router.delete('/users/:id', asyncHandler(async (req, res) => {
   const admin = res.locals.admin as { id: string }
-  if (req.params.id === admin.id) return error(res, 400, 'Khong the xoa tai khoan admin dang dang nhap')
+  if (req.params.id === admin.id) return error(res, 400, 'Không thể xóa tài khoản admin đang đăng nhập')
   const deleted = await prisma.user.deleteMany({ where: { id: req.params.id, role: Role.USER } })
-  if (!deleted.count) return error(res, 404, 'Khong tim thay nguoi dung')
-  return success(res, { id: req.params.id }, 'Xoa nguoi dung thanh cong')
+  if (!deleted.count) return error(res, 404, 'Không tìm thấy người dùng')
+  return success(res, { id: req.params.id }, 'Xóa người dùng thành công')
 }))
 
 export default router

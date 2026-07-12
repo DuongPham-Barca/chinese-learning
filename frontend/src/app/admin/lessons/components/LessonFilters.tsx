@@ -37,28 +37,28 @@ export function LessonFilters({
     <section className={`${styles.filters} ${syncStyles.clientCard}`}>
       <label className={styles.searchBox}>
         <AdminIcon name="search" />
-        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Tim chu de hoac bai hoc..." />
+        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Tìm chủ đề hoặc bài học..." />
       </label>
       <div className={styles.filterControls}>
         <select value={topicId} onChange={(event) => onTopic(event.target.value)}>
-          <option value="">Tat ca chu de</option>
+          <option value="">Tất cả chủ đề</option>
           {topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.title}</option>)}
         </select>
         <select value={status} onChange={(event) => onStatus(event.target.value)}>
-          <option value="">Tat ca trang thai</option>
+          <option value="">Tất cả trạng thái</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
         </select>
         <select value={sort} onChange={(event) => onSort(event.target.value)}>
-          <option value="order">Theo thu tu</option>
-          <option value="updatedAt">Cap nhat gan nhat</option>
-          <option value="title">Ten A-Z</option>
+          <option value="order">Theo thứ tự</option>
+          <option value="updatedAt">Cập nhật gần nhất</option>
+          <option value="title">Tên A-Z</option>
         </select>
-        <div className={styles.segmentedControl} aria-label="Che do xem">
+        <div className={styles.segmentedControl} aria-label="Chế độ xem">
           <button type="button" className={view === "grid" ? styles.segmentActive : ""} onClick={() => onView("grid")} title="Grid view"><AdminIcon name="grid" /></button>
           <button type="button" className={view === "table" ? styles.segmentActive : ""} onClick={() => onView("table")} title="Table view"><AdminIcon name="list" /></button>
         </div>
-        <AdminButton secondary icon="filter" onClick={onRefresh}>Tai lai</AdminButton>
+        <AdminButton secondary icon="filter" onClick={onRefresh}>Tải lại</AdminButton>
       </div>
     </section>
   )
