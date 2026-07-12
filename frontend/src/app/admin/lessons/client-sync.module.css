@@ -1,0 +1,18 @@
+.clientAlignedPage{--client-blue:#2563eb;--client-blue-hover:#1d4ed8;--client-blue-soft:#eff6ff;--client-blue-line:#dbeafe;--client-text:#0f172a;--client-body:#475569;--client-muted:#64748b;--client-faint:#94a3b8;--client-border:#e2e8f0;--client-cream:#fffdf8;position:relative;margin:-8px -4px 0;padding:8px 4px 28px}
+.clientAlignedPage:before{position:absolute;z-index:-1;inset:-32px -28px auto;height:360px;content:"";background:radial-gradient(circle at 8% 0,rgba(37,99,235,.12),transparent 310px),radial-gradient(circle at 92% 8%,rgba(96,165,250,.1),transparent 360px),linear-gradient(180deg,var(--client-cream),rgba(255,253,248,0))}
+.clientPanel{border-color:#bfdbfe!important;border-radius:24px!important;background:linear-gradient(135deg,#fff 0%,#f8fbff 58%,#eef6ff 100%)!important;box-shadow:0 22px 55px rgba(37,99,235,.1)!important}
+.clientCard{border-color:var(--client-border)!important;border-radius:18px!important;background:#fff!important;box-shadow:0 14px 34px rgba(51,65,85,.06)!important}
+.clientTopic{position:relative;border-left-width:0!important;border-radius:18px!important}
+.clientTopic:before{position:absolute;top:0;right:0;left:0;height:4px;content:"";background:linear-gradient(90deg,var(--accent,#2563eb),#60a5fa)}
+.clientLesson{position:relative;min-height:236px;overflow:hidden;border-radius:18px!important;transition:transform .2s,box-shadow .2s,border-color .2s}
+.clientLesson:before{position:absolute;top:0;right:0;left:0;height:4px;content:"";background:linear-gradient(90deg,var(--client-blue),#60a5fa)}
+.clientLesson:hover{transform:translateY(-2px);border-color:#bfdbfe!important;box-shadow:0 18px 42px rgba(37,99,235,.13)!important}
+.clientThumb{background:linear-gradient(135deg,#eff6ff,#fff)!important}
+.clientThumb span{border-radius:15px!important;background:var(--client-blue)!important;box-shadow:0 9px 18px rgba(37,99,235,.22)!important}
+.clientProgress i{height:8px!important;background:var(--client-blue-line)!important}
+.clientProgress em{background:linear-gradient(90deg,var(--client-blue),#60a5fa)!important}
+.clientModal{border-radius:22px!important;box-shadow:0 28px 70px rgba(15,23,42,.28)!important}
+.clientSoftBox{border-color:#bfdbfe!important;border-radius:18px!important;background:linear-gradient(135deg,#f8fbff,#fff)!important}
+.clientIconBubble{border-radius:20px!important;color:#fff!important;background:linear-gradient(135deg,var(--client-blue),#60a5fa)!important;box-shadow:0 12px 24px rgba(37,99,235,.25)!important}
+.clientPill{border-radius:999px!important}
+@media(max-width:760px){.clientAlignedPage{margin-inline:0;padding-inline:0}.clientPanel{border-radius:20px!important}.clientLesson{grid-template-columns:1fr!important}.clientThumb{min-height:156px!important}}
