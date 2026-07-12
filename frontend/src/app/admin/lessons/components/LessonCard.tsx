@@ -5,7 +5,6 @@ import AdminIcon from "@/components/admin/admin-icons"
 import type { AdminLesson } from "@/services/admin-lesson.service"
 import type { AdminLevel } from "@/services/admin-level.service"
 import { formatDate } from "./lesson-model"
-import { ContentCompletion } from "./ContentCompletion"
 import { HskBadge, IconButton, StatusBadge } from "./LessonShared"
 import syncStyles from "../client-sync.module.css"
 import styles from "../lessons.module.css"
@@ -45,7 +44,6 @@ export function LessonCard({
           <span><AdminIcon name="quiz" />{lesson.sentenceCount} cau</span>
           <span><AdminIcon name="clock" />15 phut</span>
         </div>
-        <ContentCompletion lesson={lesson} />
         <footer>
           <span>Cập nhật {formatDate(lesson.updatedAt)}</span>
           <div className={styles.actions}>

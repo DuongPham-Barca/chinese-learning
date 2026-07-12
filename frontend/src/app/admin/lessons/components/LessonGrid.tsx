@@ -4,7 +4,6 @@ import { AdminButton, AdminTable } from "@/components/admin/admin-ui"
 import type { AdminLesson } from "@/services/admin-lesson.service"
 import type { AdminLevel } from "@/services/admin-level.service"
 import { formatDate } from "./lesson-model"
-import { ContentCompletion } from "./ContentCompletion"
 import { HskBadge, IconButton, StatusBadge } from "./LessonShared"
 import { LessonCard } from "./LessonCard"
 import styles from "../lessons.module.css"
@@ -64,7 +63,7 @@ export function LessonTable({
   return (
     <AdminTable className={styles.lessonTable}>
       <thead>
-        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Topic</th><th>Nội dung</th><th>Hoàn thiện</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
+        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Topic</th><th>Nội dung</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {lessons.map((lesson) => (
@@ -74,7 +73,6 @@ export function LessonTable({
             <td><HskBadge level={level} /></td>
             <td><span className={styles.topicBadge}>{topicTitle}</span></td>
             <td>{lesson.vocabularyCount} từ / {lesson.sentenceCount} câu</td>
-            <td><ContentCompletion lesson={lesson} /></td>
             <td><StatusBadge published={lesson.isPublished} /></td>
             <td>{formatDate(lesson.updatedAt)}</td>
             <td><div className={styles.actions}><IconButton icon="eye" label="Xem" onClick={() => onView(lesson)} /><IconButton icon="edit" label="Sửa" onClick={() => onEdit(lesson)} /><IconButton icon="copy" label="Nhân bản" onClick={() => onDuplicate(lesson)} /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(lesson)} /></div></td>
