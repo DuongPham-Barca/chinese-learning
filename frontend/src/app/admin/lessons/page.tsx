@@ -53,6 +53,7 @@ export default function AdminLessonsPage() {
   const [detail, setDetail] = useState<AdminLessonDetail | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminLesson | null>(null)
+  const [vocabularyDeleteTarget, setVocabularyDeleteTarget] = useState<AdminLessonDetail["vocabulary"][number] | null>(null)
 
   const loadLevels = useCallback(async () => {
     const response = await getLevels({ limit: 100, sort: "order" })
@@ -162,13 +163,17 @@ export default function AdminLessonsPage() {
 
   async function removeVocabulary(id: string) {
     if (!detail) return
+    setSaving(true)
     try {
       await deleteVocabulary(id)
       setDetail((await getLessonById(detail.id)).data)
       await loadLessons()
+      setVocabularyDeleteTarget(null)
       setToast({ variant: "success", message: "Đã xóa từ vựng" })
     } catch (e) {
       setToast({ variant: "error", message: apiMessage(e, "Không thể xóa từ vựng") })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -242,9 +247,10 @@ export default function AdminLessonsPage() {
         </main>
       </motion.div>
 
-      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onUpdateVocabulary={editVocabulary} onDeleteVocabulary={(id) => void removeVocabulary(id)} onImport={() => setImportOpen(true)} />}
+      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onUpdateVocabulary={editVocabulary} onDeleteVocabulary={(id) => setVocabularyDeleteTarget(detail?.vocabulary.find((vocab) => vocab.id === id) || null)} onImport={() => setImportOpen(true)} />}
       {importOpen && <ExcelImportWizard levels={levels} lessons={lessons} defaultLevelId={defaultLevelId} defaultLessonId={detail?.id} onImport={importFile} onClose={() => setImportOpen(false)} />}
       {deleteTarget && <DeleteConfirmModal title="Xóa bài học" description={`Bạn sắp xóa bài học "${deleteTarget.title}".`} facts={[{ label: "Số từ vựng", value: deleteTarget.vocabularyCount }, { label: "Số câu luyện tập", value: deleteTarget.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
+      {vocabularyDeleteTarget && <DeleteConfirmModal title="Xóa từ vựng" description={`Bạn sắp xóa từ "${vocabularyDeleteTarget.chinese}" khỏi bài học này.`} facts={[{ label: "Pinyin", value: vocabularyDeleteTarget.pinyin }, { label: "Nghĩa", value: vocabularyDeleteTarget.vietnamese }, { label: "Thứ tự", value: vocabularyDeleteTarget.order }]} saving={saving} onClose={() => setVocabularyDeleteTarget(null)} onConfirm={() => void removeVocabulary(vocabularyDeleteTarget.id)} />}
       {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}
     </motion.div>
   )

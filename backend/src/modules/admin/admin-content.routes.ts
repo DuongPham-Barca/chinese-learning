@@ -336,7 +336,14 @@ router.put('/vocabularies/:id', asyncHandler(async (req, res) => {
 }))
 
 router.delete('/vocabularies/:id', asyncHandler(async (req, res) => {
-  const deleted = await prisma.vocabulary.deleteMany({ where: { id: req.params.id } })
+  const deleted = await prisma.$transaction(async (tx) => {
+    await tx.progress.updateMany({
+      where: { vocabId: req.params.id },
+      data: { vocabId: null },
+    })
+
+    return tx.vocabulary.deleteMany({ where: { id: req.params.id } })
+  })
   if (!deleted.count) return error(res, 404, 'Không tìm thấy từ vựng')
   return success(res, { id: req.params.id }, 'Xóa từ vựng thành công')
 }))
