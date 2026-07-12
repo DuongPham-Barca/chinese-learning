@@ -12,7 +12,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/a
 const ADMIN_ROUTE_SESSION_KEY = "admin-route-session"
 
 const mainMenu: Array<[string, string, AdminIconName]> = [
-  ["/admin", "Tổng quan", "grid"], ["/admin/lessons", "Bài học", "book"], ["/admin/users", "Người dùng", "users"], ["/admin/vocabulary", "Từ vựng", "language"], ["/admin/practice", "Câu luyện tập", "headphones"], ["/admin/dictation", "Dictation", "mic"], ["/admin/arrange", "Sắp xếp câu", "list"], ["/leaderboard", "Bảng xếp hạng", "chart"],
+  ["/admin", "Tổng quan", "grid"], ["/admin/lessons", "Bài học", "book"], ["/admin/users", "Người dùng", "users"], ["/leaderboard", "Bảng xếp hạng", "chart"],
 ]
 
 function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
