@@ -28,6 +28,14 @@ function addMonths(date: Date, months: number) {
   return next
 }
 
+function sendEmailInBackground(to: string | null, subject: string, html: string, context: string) {
+  if (!to) return
+
+  void sendEmail(to, subject, html).catch((err) => {
+    console.error(`Failed to send ${context} email:`, err)
+  })
+}
+
 export async function createSubscription(userId: string, planId: SubscriptionPlanId, transferContent: string) {
   const plan = getPlanConfig(planId)
   const sub = await prisma.subscription.create({
@@ -94,16 +102,15 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
     return confirmed
   })
 
-  try {
-    if (!sub.user.email) throw new Error('User email is not configured')
-    await sendEmail(sub.user.email, 'Xác nhận kích hoạt Pro',
-      `<p>Chào ${sub.user.username},</p>
-   <p>Yêu cầu nâng cấp Pro của bạn đã được <strong>xác nhận</strong>.</p>
-   <p>Thời hạn: ${expiresAt.toLocaleDateString('vi-VN')}</p>
-   <p>Cảm ơn bạn đã đồng hành cùng ChineseDict!</p>`)
-  } catch (err) {
-    console.error('Failed to send subscription confirmation email:', err)
-  }
+  sendEmailInBackground(
+    sub.user.email,
+    'Pro upgrade confirmed',
+    `<p>Hello ${sub.user.username},</p>
+     <p>Your Pro upgrade request has been confirmed.</p>
+     <p>Expires at: ${expiresAt.toLocaleDateString('vi-VN')}</p>
+     <p>Thank you for using ChineseDict.</p>`,
+    'subscription confirmation',
+  )
 
   return confirmed
 }
@@ -127,15 +134,14 @@ export async function rejectSubscription(id: string, confirmedBy: string) {
     },
   })
 
-  try {
-    if (!sub.user.email) throw new Error('User email is not configured')
-    await sendEmail(sub.user.email, 'Yêu cầu nâng cấp Pro bị từ chối',
-      `<p>Chào ${sub.user.username},</p>
-   <p>Yêu cầu nâng cấp Pro của bạn đã bị <strong>từ chối</strong>.</p>
-   <p>Vui lòng kiểm tra lại thông tin chuyển khoản hoặc liên hệ admin để được hỗ trợ.</p>`)
-  } catch (err) {
-    console.error('Failed to send subscription rejection email:', err)
-  }
+  sendEmailInBackground(
+    sub.user.email,
+    'Pro upgrade rejected',
+    `<p>Hello ${sub.user.username},</p>
+     <p>Your Pro upgrade request has been rejected.</p>
+     <p>Please check your transfer information or contact the administrator for support.</p>`,
+    'subscription rejection',
+  )
 
   return rejected
 }
