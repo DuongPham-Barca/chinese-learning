@@ -16,7 +16,7 @@ function requiredEnv(name: string): string {
 }
 
 function emailFrom() {
-  return optionalEnv('SMTP_FROM') || optionalEnv('SMTP_FROM') || requiredEnv('SMTP_USER')
+  return optionalEnv('EMAIL_FROM') || optionalEnv('SMTP_FROM') || requiredEnv('SMTP_USER')
 }
 
 let smtpTransporter: nodemailer.Transporter | null = null
