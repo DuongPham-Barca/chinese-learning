@@ -1,4 +1,4 @@
-import { SubStatus, SubscriptionPlan } from '@prisma/client'
+import { Prisma, SubStatus, SubscriptionPlan } from '@prisma/client'
 import { sendEmail } from '../../lib/mail'
 import { prisma } from '../../lib/prisma'
 
@@ -53,8 +53,8 @@ export async function createSubscription(userId: string, planId: SubscriptionPla
       amount: sub.amount,
       transferContent: sub.transferContent,
     })
-  } catch (error) {
-    console.error('Failed to send Telegram subscription notification:', error)
+  } catch (err) {
+    console.error('Failed to send Telegram subscription notification:', err)
   }
 
   return sub
@@ -74,7 +74,7 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
   const startedAt = new Date()
   const expiresAt = addMonths(startedAt, plan.months)
 
-  const confirmed = await prisma.$transaction(async (tx) => {
+  const confirmed = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const confirmed = await tx.subscription.update({
       where: { id },
       data: {
@@ -101,8 +101,8 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
    <p>Yêu cầu nâng cấp Pro của bạn đã được <strong>xác nhận</strong>.</p>
    <p>Thời hạn: ${expiresAt.toLocaleDateString('vi-VN')}</p>
    <p>Cảm ơn bạn đã đồng hành cùng ChineseDict!</p>`)
-  } catch (error) {
-    console.error('Failed to send subscription confirmation email:', error)
+  } catch (err) {
+    console.error('Failed to send subscription confirmation email:', err)
   }
 
   return confirmed
@@ -133,8 +133,8 @@ export async function rejectSubscription(id: string, confirmedBy: string) {
       `<p>Chào ${sub.user.username},</p>
    <p>Yêu cầu nâng cấp Pro của bạn đã bị <strong>từ chối</strong>.</p>
    <p>Vui lòng kiểm tra lại thông tin chuyển khoản hoặc liên hệ admin để được hỗ trợ.</p>`)
-  } catch (error) {
-    console.error('Failed to send subscription rejection email:', error)
+  } catch (err) {
+    console.error('Failed to send subscription rejection email:', err)
   }
 
   return rejected

@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { AdminButton, PageHeader } from "@/components/admin/admin-ui"
 import { getLevels, type AdminLevel } from "@/services/admin-level.service"
 import { createLesson, deleteLesson, getLessonById, getLessons, updateLesson, type AdminLesson, type AdminLessonDetail, type LessonPayload } from "@/services/admin-lesson.service"
-import { createVocabulary, deleteVocabulary, importAll, type VocabularyPayload } from "@/services/admin-vocabulary.service"
+import { createVocabulary, deleteVocabulary, importAll, updateVocabulary, type VocabularyPayload } from "@/services/admin-vocabulary.service"
 import { HskLevelTabs } from "./components/HskLevelTabs"
 import { LessonFilters } from "./components/LessonFilters"
 import { LessonEditor } from "./components/LessonEditor"
@@ -143,6 +143,23 @@ export default function AdminLessonsPage() {
     }
   }
 
+  async function editVocabulary(id: string, payload: Partial<VocabularyPayload>) {
+    if (!detail) return { lesson: "Cần lưu hoặc chọn bài học trước khi sửa từ vựng" }
+    setSaving(true)
+    try {
+      await updateVocabulary(id, payload)
+      setDetail((await getLessonById(detail.id)).data)
+      await loadLessons()
+      setToast({ variant: "success", message: "Đã cập nhật từ vựng" })
+      return null
+    } catch (e) {
+      setToast({ variant: "error", message: apiMessage(e, "Không thể lưu từ vựng") })
+      return apiErrors(e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function removeVocabulary(id: string) {
     if (!detail) return
     try {
@@ -225,7 +242,7 @@ export default function AdminLessonsPage() {
         </main>
       </motion.div>
 
-      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onDeleteVocabulary={(id) => void removeVocabulary(id)} onImport={() => setImportOpen(true)} />}
+      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onUpdateVocabulary={editVocabulary} onDeleteVocabulary={(id) => void removeVocabulary(id)} onImport={() => setImportOpen(true)} />}
       {importOpen && <ExcelImportWizard levels={levels} lessons={lessons} defaultLevelId={defaultLevelId} defaultLessonId={detail?.id} onImport={importFile} onClose={() => setImportOpen(false)} />}
       {deleteTarget && <DeleteConfirmModal title="Xóa bài học" description={`Bạn sắp xóa bài học "${deleteTarget.title}".`} facts={[{ label: "Số từ vựng", value: deleteTarget.vocabularyCount }, { label: "Số câu luyện tập", value: deleteTarget.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
       {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}

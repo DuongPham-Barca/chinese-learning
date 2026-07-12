@@ -55,6 +55,16 @@ export async function importAll(lessonId: string, file: File) {
   return response.data
 }
 
+export async function fetchVocabularyImage(query: string) {
+  const response = await api.post<AdminItemResponse<{ url: string; source: string }>>("/admin/vocabularies/fetch-image", { query })
+  return response.data.data
+}
+
+export async function fetchBulkVocabularyImages(lessonId: string) {
+  const response = await api.post<AdminItemResponse<{ updated: number; total: number; results: Array<{ id: string; chinese: string; imageUrl: string | null; error?: string }> }>>("/admin/vocabularies/fetch-images-bulk", { lessonId })
+  return response.data.data
+}
+
 export async function reorderVocabularies(payload: { lessonId: string; items: Array<{ id: string; order: number }> }) {
   const response = await api.patch<AdminItemResponse<{ count: number }>>("/admin/vocabularies/reorder", payload)
   return response.data

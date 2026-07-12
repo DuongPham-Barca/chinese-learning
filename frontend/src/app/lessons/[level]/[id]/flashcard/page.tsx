@@ -95,12 +95,22 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
 
         <motion.div key={card.id} className={`${styles.flashScene} ${flipped ? styles.flipped : ""}`} variants={cardVariants} initial="hidden" animate="visible" onClick={() => setFlipped((value) => !value)} onKeyDown={(event) => { if (event.key === "Enter") setFlipped((value) => !value) }} role="button" tabIndex={0} aria-label="Lật thẻ">
           <div className={styles.flashCard}>
-            <div className={`${styles.cardFace} ${styles.cardFront}`}>
+            <div className={`${styles.cardFace} ${styles.cardFront} ${card.imageUrl ? styles.cardFrontWithImage : ""}`}>
+              {card.imageUrl && (
+                <div className={styles.flashImageWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className={styles.flashImage} src={card.imageUrl} alt="" />
+                </div>
+              )}
               <strong>{card.hanzi}</strong>
               <small>{card.pinyin}</small>
               <button type="button" className={styles.audioButton} onClick={(event) => { event.stopPropagation(); speak() }} aria-label={`Phát âm ${card.hanzi}`}><SharedIcon name="volume2" size={29} /></button>
             </div>
             <div className={`${styles.cardFace} ${styles.cardBack}`}>
+              {card.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className={styles.flashBackImage} src={card.imageUrl} alt="" />
+              )}
               <small>Nghĩa tiếng Việt</small>
               <strong>{card.meaningVi}</strong>
               <p>{card.hanzi} - {card.pinyin}</p>

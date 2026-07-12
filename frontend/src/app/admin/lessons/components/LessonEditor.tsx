@@ -16,11 +16,10 @@ import { getHskMeta, slugify } from "./lesson-model"
 import type { EditorTab } from "./types"
 import styles from "../lessons.module.css"
 
-const tabs: Array<{ id: EditorTab; label: string; icon: "book" | "language" | "quiz" | "settings" | "eye" }> = [
+const tabs: Array<{ id: EditorTab; label: string; icon: "book" | "language" | "quiz" | "eye" }> = [
   { id: "basic", label: "Thông tin bài học", icon: "book" },
   { id: "vocabulary", label: "Từ vựng", icon: "language" },
   { id: "sentences", label: "Câu luyện tập", icon: "quiz" },
-  { id: "settings", label: "Cài đặt", icon: "settings" },
   { id: "preview", label: "Xem trước", icon: "eye" },
 ]
 
@@ -33,6 +32,7 @@ export function LessonEditor({
   onClose,
   onSaveLesson,
   onAddVocabulary,
+  onUpdateVocabulary,
   onDeleteVocabulary,
   onImport,
 }: {
@@ -44,6 +44,7 @@ export function LessonEditor({
   onClose: () => void
   onSaveLesson: (payload: LessonPayload) => Promise<Record<string, string> | null>
   onAddVocabulary: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
+  onUpdateVocabulary: (id: string, payload: Partial<VocabularyPayload>) => Promise<Record<string, string> | null>
   onDeleteVocabulary: (id: string) => void
   onImport: () => void
 }) {
@@ -92,13 +93,11 @@ export function LessonEditor({
                 <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
                 <Field label="EXP Reward"><input type="number" min={0} value={form.expReward} onChange={(event) => set("expReward", Number(event.target.value))} /></Field>
                 <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Bài học miễn phí</label>
-                <div className={styles.wideField}><UploadDropzone title="Thumbnail bài học" helper="Kéo thả hoặc click để chọn ảnh. UI kiểm tra định dạng PNG/JPG/WEBP và dung lượng trước khi gửi." previewUrl={form.imageUrl || undefined} /></div>
               </div>
             </div>
           )}
-          {activeTab === "vocabulary" && <VocabularyManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
+          {activeTab === "vocabulary" && <VocabularyManager vocabularies={detail?.vocabulary || []} lessonId={detail?.id || ""} saving={saving} onAdd={onAddVocabulary} onUpdate={onUpdateVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
           {activeTab === "sentences" && <SentenceManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
-          {activeTab === "settings" && <div className={styles.settingsPanel}><h3>Cài đặt bài học</h3><label><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Miễn phí cho người học mới</label><label><input type="checkbox" checked={form.isPublished} onChange={(event) => set("isPublished", event.target.checked)} /> Xuất bản trên ứng dụng học</label><label><input type="checkbox" defaultChecked /> Cho phép hiển thị trong lesson path</label></div>}
           {activeTab === "preview" && selectedLevel && <div className={styles.previewPanel} style={{ "--accent": getHskMeta(selectedLevel).accent, "--soft": getHskMeta(selectedLevel).soft } as CSSProperties}><div className={styles.previewHero}>{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <AdminIcon name="book" />}</div><div><div className={styles.badgeRow}><HskBadge level={selectedLevel} /><StatusBadge published={form.isPublished} /></div><h3>{form.title || "Tên bài học"}</h3><p>{form.description || "Mô tả ngắn của bài học sẽ hiển thị tại đây."}</p><span>{detail?.vocabulary.length || 0} từ vựng</span><span>{detail?.sentences.length || detail?.sentenceCount || 0} câu luyện tập</span></div></div>}
         </section>
       </div>

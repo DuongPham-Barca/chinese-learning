@@ -203,7 +203,13 @@ export default function LearnNewWordsPage({ params }: { params: Promise<{ level:
                 aria-label={flipped ? "Lật về mặt chữ Hán" : "Lật thẻ để xem nghĩa"}
               >
                 <span className={styles.learnFlipCard}>
-                  <span className={`${styles.learnFace} ${styles.learnFaceFront}`}>
+                  <span className={`${styles.learnFace} ${styles.learnFaceFront} ${word.imageUrl ? styles.learnFaceWithImage : ""}`}>
+                    {word.imageUrl && (
+                      <span className={styles.learnImageWrap}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img className={styles.learnImage} src={word.imageUrl} alt="" />
+                      </span>
+                    )}
                     <strong className={styles.learnHanzi}>{word.hanzi}</strong>
                     <span className={styles.learnPinyin}>{word.pinyin}</span>
                     <small>Chạm để lật thẻ</small>

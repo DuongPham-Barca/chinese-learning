@@ -482,16 +482,16 @@ router.put('/me', requireCurrentUser, parseAvatarUpload, asyncHandler(async (req
       select: publicUserSelect,
     })
     res.json(serializePublicUser(user))
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2002') {
         return res.status(409).json(usernameTakenResponse)
       }
-      if (error.code === 'P2025') {
+      if (err.code === 'P2025') {
         return res.status(401).json({ error: 'Unauthorized' })
       }
     }
-    throw error
+    throw err
   }
 }))
 

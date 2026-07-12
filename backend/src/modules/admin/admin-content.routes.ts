@@ -5,11 +5,21 @@ import * as XLSX from 'xlsx'
 import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
 import { prisma } from '../../lib/prisma'
+import { uploadImage } from '../../lib/cloudflare-r2'
 
 const router = Router()
 const importUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+})
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (allowed.includes(file.mimetype)) return cb(null, true)
+    cb(new Error('Chỉ chấp nhận file ảnh JPEG, PNG, WEBP, GIF'))
+  },
 })
 
 const levelTypes = Object.values(LevelType)
@@ -497,6 +507,108 @@ router.post('/lessons/:lessonId/import', importUpload.single('file'), asyncHandl
     added: importedVocabs.length + importedSentences.length,
     skipped,
   }, 'Import thành công', 201)
+}))
+
+router.post('/upload', imageUpload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) return error(res, 400, 'Chọn file ảnh để upload', { file: 'File is required' })
+  try {
+    const url = await uploadImage('vocab', req.file.buffer, req.file.mimetype)
+    return success(res, { url }, 'Upload ảnh thành công', 201)
+  } catch (e) {
+    return error(res, 500, 'Không thể upload ảnh lên server')
+  }
+}))
+
+async function fetchImageUrls(query: string): Promise<string[]> {
+  const url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+  })
+  const html = await res.text()
+  const images: string[] = []
+
+  const vqdMatch = html.match(/vqd=([^"&]+)/)
+  if (!vqdMatch) return images
+
+  const apiUrl = `https://duckduckgo.com/i.js?q=${encodeURIComponent(query)}&vqd=${vqdMatch[1]}&f=,,,&o=json`
+  const apiRes = await fetch(apiUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+  })
+  const data = await apiRes.json() as { results?: Array<{ image: string }> }
+  if (data.results) {
+    for (const r of data.results) {
+      if (r.image) images.push(r.image)
+    }
+  }
+  return images
+}
+
+router.post('/vocabularies/fetch-image', asyncHandler(async (req, res) => {
+  const { query } = req.body || {}
+  if (!query || !query.trim()) return error(res, 400, 'Nhập từ cần tìm ảnh', { query: 'Query is required' })
+
+  const urls = await fetchImageUrls(query.trim())
+  if (!urls.length) return error(res, 404, 'Không tìm thấy ảnh phù hợp')
+
+  for (const imageUrl of urls) {
+    try {
+      const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) })
+      if (!imgRes.ok) continue
+      const buffer = Buffer.from(await imgRes.arrayBuffer())
+      const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+      if (buffer.length < 1024) continue
+      const url = await uploadImage('vocab', buffer, contentType)
+      return success(res, { url, source: imageUrl }, 'Tìm ảnh thành công', 201)
+    } catch {
+      continue
+    }
+  }
+
+  return error(res, 404, 'Không thể tải ảnh từ các nguồn tìm được')
+}))
+
+router.post('/vocabularies/fetch-images-bulk', asyncHandler(async (req, res) => {
+  const { lessonId } = req.body || {}
+  if (!lessonId) return error(res, 400, 'Thiếu lessonId')
+
+  const vocabularies = await prisma.vocabulary.findMany({
+    where: { lessonId, imageUrl: null },
+    orderBy: { order: 'asc' },
+  })
+
+  if (!vocabularies.length) return success(res, { updated: 0, total: 0, results: [] }, 'Không có từ vựng nào thiếu ảnh')
+
+  const results: Array<{ id: string; chinese: string; imageUrl: string | null; error?: string }> = []
+
+  for (const vocab of vocabularies) {
+    try {
+      const urls = await fetchImageUrls(vocab.hanzi)
+      let uploadedUrl: string | null = null
+      for (const imageUrl of urls) {
+        try {
+          const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) })
+          if (!imgRes.ok) continue
+          const buffer = Buffer.from(await imgRes.arrayBuffer())
+          const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+          if (buffer.length < 1024) continue
+          uploadedUrl = await uploadImage('vocab', buffer, contentType)
+          break
+        } catch {
+          continue
+        }
+      }
+      if (uploadedUrl) {
+        await prisma.vocabulary.update({ where: { id: vocab.id }, data: { imageUrl: uploadedUrl } })
+        results.push({ id: vocab.id, chinese: vocab.hanzi, imageUrl: uploadedUrl })
+      } else {
+        results.push({ id: vocab.id, chinese: vocab.hanzi, imageUrl: null, error: 'Không tìm thấy ảnh' })
+      }
+    } catch {
+      results.push({ id: vocab.id, chinese: vocab.hanzi, imageUrl: null, error: 'Lỗi xử lý' })
+    }
+  }
+
+  return success(res, { updated: results.filter((r) => r.imageUrl).length, total: vocabularies.length, results }, 'Hoàn tất tìm ảnh hàng loạt')
 }))
 
 export default router

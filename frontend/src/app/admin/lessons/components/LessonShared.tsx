@@ -1,7 +1,7 @@
 "use client"
 
 /* eslint-disable @next/next/no-img-element */
-import type { CSSProperties, ReactNode } from "react"
+import { useRef, type CSSProperties, type ReactNode } from "react"
 import AdminIcon, { type AdminIconName } from "@/components/admin/admin-icons"
 import type { AdminLevel } from "@/services/admin-level.service"
 import { getHskMeta } from "./lesson-model"
@@ -40,17 +40,19 @@ export function Field({ label, helper, error, children, wide = false }: { label:
   return <label className={`${styles.field} ${wide ? styles.wideField : ""}`}><span>{label}</span>{children}{helper && <em>{helper}</em>}{error && <small>{error}</small>}</label>
 }
 
-export function UploadDropzone({ title, helper, previewUrl, compact = false }: { title: string; helper: string; previewUrl?: string; compact?: boolean }) {
+export function UploadDropzone({ title, helper, previewUrl, compact = false, onFile }: { title: string; helper: string; previewUrl?: string; compact?: boolean; onFile?: (file: File | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null)
   return (
-    <div className={`${styles.uploadDropzone} ${syncStyles.clientSoftBox} ${compact ? styles.compactDropzone : ""}`}>
+    <div className={`${styles.uploadDropzone} ${syncStyles.clientSoftBox} ${compact ? styles.compactDropzone : ""}`} onClick={() => inputRef.current?.click()}>
+      <input ref={inputRef} type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; if (file) onFile?.(file); event.target.value = "" }} />
       {previewUrl ? <img src={previewUrl} alt="" /> : <i><AdminIcon name="upload" /></i>}
       <div>
         <strong>{title}</strong>
         <span>{helper}</span>
         <div className={styles.uploadActions}>
-          <button type="button">Chon file</button>
-          <button type="button">Thay anh</button>
-          <button type="button">Xoa</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Chon file</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Thay anh</button>
+          {previewUrl && <button type="button" onClick={(e) => { e.stopPropagation(); onFile?.(null) }}>Xoa</button>}
         </div>
       </div>
     </div>

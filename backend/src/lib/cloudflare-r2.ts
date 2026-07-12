@@ -43,6 +43,35 @@ export function isAvatarContentType(value: string): value is AvatarContentType {
   return value in avatarContentTypes
 }
 
+export async function uploadImage(
+  prefix: string,
+  buffer: Buffer,
+  contentType: string,
+): Promise<string> {
+  const endpoint = requiredEnv('R2_ENDPOINT')
+  const accessKeyId = requiredEnv('R2_ACCESS_KEY')
+  const secretAccessKey = requiredEnv('R2_SECRET_KEY')
+  const bucket = requiredEnv('R2_BUCKET')
+  const publicUrl = requiredEnv('R2_PUBLIC_URL').replace(/\/$/, '')
+  const ext = contentType.split('/')[1] || 'jpg'
+  const key = `image/${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`
+  const client = new S3Client({
+    region: 'auto',
+    endpoint,
+    credentials: { accessKeyId, secretAccessKey },
+  })
+
+  await client.send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+    CacheControl: 'public, max-age=31536000, immutable',
+  }))
+
+  return `${publicUrl}/${key}`
+}
+
 export async function uploadAvatar(
   userId: string,
   buffer: Buffer,

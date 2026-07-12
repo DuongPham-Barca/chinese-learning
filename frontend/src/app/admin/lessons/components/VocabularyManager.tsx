@@ -6,6 +6,8 @@ import AdminIcon from "@/components/admin/admin-icons"
 import { AdminButton, AdminTable } from "@/components/admin/admin-ui"
 import type { AdminVocabulary } from "@/services/admin-lesson.service"
 import type { VocabularyPayload } from "@/services/admin-vocabulary.service"
+import { fetchVocabularyImage, fetchBulkVocabularyImages } from "@/services/admin-vocabulary.service"
+import { uploadImage } from "@/services/upload.service"
 import { Field, IconButton, LessonModal, UploadDropzone } from "./LessonShared"
 import styles from "../lessons.module.css"
 
@@ -18,32 +20,63 @@ function vocabStatus(vocab: AdminVocabulary) {
 
 export function VocabularyManager({
   vocabularies,
+  lessonId,
   saving,
   onAdd,
+  onUpdate,
   onDelete,
   onImport,
 }: {
   vocabularies: AdminVocabulary[]
+  lessonId: string
   saving: boolean
   onAdd: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
+  onUpdate: (id: string, payload: Partial<VocabularyPayload>) => Promise<Record<string, string> | null>
   onDelete: (id: string) => void
   onImport: () => void
 }) {
   const [search, setSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingVocab, setEditingVocab] = useState<AdminVocabulary | null>(null)
+  const [bulkFetching, setBulkFetching] = useState(false)
+  const [bulkResult, setBulkResult] = useState<{ updated: number; total: number } | null>(null)
   const filtered = useMemo(() => vocabularies.filter((item) => `${item.chinese} ${item.pinyin} ${item.vietnamese}`.toLowerCase().includes(search.toLowerCase())), [search, vocabularies])
+
+  function openCreate() { setEditingVocab(null); setModalOpen(true) }
+  function openEdit(vocab: AdminVocabulary) { setEditingVocab(vocab); setModalOpen(true) }
+
+  async function handleBulkFetch() {
+    setBulkFetching(true)
+    setBulkResult(null)
+    try {
+      const result = await fetchBulkVocabularyImages(lessonId)
+      setBulkResult({ updated: result.updated, total: result.total })
+    } catch {
+      setBulkResult({ updated: 0, total: 0 })
+    } finally {
+      setBulkFetching(false)
+    }
+  }
 
   return (
     <section className={styles.managerPanel}>
       <header className={styles.managerHeader}>
         <div><span>Tổng số từ vựng</span><strong>{vocabularies.length}</strong></div>
         <label className={styles.searchBox}><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tim chu Han, pinyin, nghia..." /></label>
-        <AdminButton icon="plus" onClick={() => setModalOpen(true)}>Thêm từ vựng</AdminButton>
+        <AdminButton icon="plus" onClick={openCreate}>Thêm từ vựng</AdminButton>
         <AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton>
+        <AdminButton secondary icon="image" onClick={handleBulkFetch} disabled={bulkFetching}>{bulkFetching ? "Đang tìm..." : "Tìm ảnh cho tất cả"}</AdminButton>
         <AdminButton secondary icon="sort">Sắp xếp</AdminButton>
       </header>
+      {bulkResult && (
+        <div className={styles.stateBox}>
+          {bulkResult.updated > 0
+            ? `Đã tìm và gán ảnh cho ${bulkResult.updated}/${bulkResult.total} từ vựng`
+            : "Không tìm thấy ảnh mới cho từ vựng nào"}
+        </div>
+      )}
       {!filtered.length ? (
-        <div className={styles.emptyState}><h3>Bài học chưa có từ vựng</h3><p>Bạn có thể thêm từng từ hoặc import nhiều từ bằng Excel.</p><div><AdminButton icon="plus" onClick={() => setModalOpen(true)}>Thêm từ vựng</AdminButton><AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton></div></div>
+        <div className={styles.emptyState}><h3>Bài học chưa có từ vựng</h3><p>Bạn có thể thêm từng từ hoặc import nhiều từ bằng Excel.</p><div><AdminButton icon="plus" onClick={openCreate}>Thêm từ vựng</AdminButton><AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton></div></div>
       ) : (
         <AdminTable className={styles.vocabularyTable}>
           <thead><tr><th></th><th>Order</th><th>Anh</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa tiếng Việt</th><th>Ví dụ</th><th>Audio</th><th>Trạng thái</th><th>Actions</th></tr></thead>
@@ -59,21 +92,47 @@ export function VocabularyManager({
                 <td>{vocab.example || "Chua co"}</td>
                 <td>{vocab.audioUrl ? <button className={styles.playButton} type="button"><AdminIcon name="play" />Play</button> : "Chua co"}</td>
                 <td><span className={styles.contentStatus}>{vocabStatus(vocab)}</span></td>
-                <td><div className={styles.actions}><IconButton icon="edit" label="Sửa" /><IconButton icon="copy" label="Nhân bản" /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(vocab.id)} /></div></td>
+                <td><div className={styles.actions}><IconButton icon="edit" label="Sửa" onClick={() => openEdit(vocab)} /><IconButton icon="copy" label="Nhân bản" /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(vocab.id)} /></div></td>
               </tr>
             ))}
           </tbody>
         </AdminTable>
       )}
-      {modalOpen && <VocabularyFormModal saving={saving} onClose={() => setModalOpen(false)} onSubmit={async (payload) => { const result = await onAdd(payload); if (!result) setModalOpen(false); return result }} />}
+      {modalOpen && <VocabularyFormModal vocab={editingVocab} saving={saving} onClose={() => { setModalOpen(false); setEditingVocab(null) }} onSubmit={async (payload) => { const result = editingVocab ? await onUpdate(editingVocab.id, payload) : await onAdd(payload); if (!result) { setModalOpen(false); setEditingVocab(null) }; return result }} />}
     </section>
   )
 }
 
-function VocabularyFormModal({ saving, onClose, onSubmit }: { saving: boolean; onClose: () => void; onSubmit: (payload: VocabularyPayload) => Promise<Record<string, string> | null> }) {
-  const [form, setForm] = useState<VocabularyPayload>({ chinese: "", pinyin: "", vietnamese: "", example: "", examplePinyin: "", exampleMeaning: "", imageUrl: "", audioUrl: "", order: 1 })
+function VocabularyFormModal({ vocab, saving, onClose, onSubmit }: { vocab: AdminVocabulary | null; saving: boolean; onClose: () => void; onSubmit: (payload: VocabularyPayload) => Promise<Record<string, string> | null> }) {
+  const [form, setForm] = useState<VocabularyPayload>(() => vocab ? { chinese: vocab.chinese, pinyin: vocab.pinyin, vietnamese: vocab.vietnamese, example: vocab.example || "", examplePinyin: vocab.examplePinyin || "", exampleMeaning: vocab.exampleMeaning || "", imageUrl: vocab.imageUrl || "", audioUrl: vocab.audioUrl || "", order: vocab.order } : { chinese: "", pinyin: "", vietnamese: "", example: "", examplePinyin: "", exampleMeaning: "", imageUrl: "", audioUrl: "", order: 1 })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [uploading, setUploading] = useState(false)
+  const [fetchingImage, setFetchingImage] = useState(false)
   function set<K extends keyof VocabularyPayload>(key: K, value: VocabularyPayload[K]) { setForm((current) => ({ ...current, [key]: value })); setErrors((current) => ({ ...current, [key]: "" })) }
+  async function handleFile(file: File | null) {
+    if (file === null) { set("imageUrl", ""); return }
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      set("imageUrl", url)
+    } catch {
+      setErrors((current) => ({ ...current, imageUrl: "Upload ảnh thất bại" }))
+    } finally {
+      setUploading(false)
+    }
+  }
+  async function handleAutoFetch() {
+    if (!form.chinese.trim()) { setErrors((current) => ({ ...current, chinese: "Nhập chữ Hán trước khi tìm ảnh" })); return }
+    setFetchingImage(true)
+    try {
+      const result = await fetchVocabularyImage(form.chinese.trim())
+      set("imageUrl", result.url)
+    } catch {
+      setErrors((current) => ({ ...current, imageUrl: "Không tìm thấy ảnh phù hợp" }))
+    } finally {
+      setFetchingImage(false)
+    }
+  }
   async function submit() {
     const nextErrors: Record<string, string> = {}
     if (!form.chinese.trim()) nextErrors.chinese = "Nhập chữ Hán"
@@ -85,7 +144,7 @@ function VocabularyFormModal({ saving, onClose, onSubmit }: { saving: boolean; o
   }
 
   return (
-    <LessonModal title="Thêm từ vựng" size="lg" onClose={onClose}>
+    <LessonModal title={vocab ? "Sửa từ vựng" : "Thêm từ vựng"} size="lg" onClose={onClose}>
       <div className={styles.vocabFormLayout}>
         <div className={styles.formGrid}>
           <Field label="Chữ Hán" error={errors.chinese}><input value={form.chinese} onChange={(event) => set("chinese", event.target.value)} /></Field>
@@ -98,15 +157,11 @@ function VocabularyFormModal({ saving, onClose, onSubmit }: { saving: boolean; o
           <Field label="Thu tu"><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
         </div>
         <aside className={styles.mediaColumn}>
-          <UploadDropzone title="Ảnh từ vựng" helper="PNG, JPG, JPEG, WEBP. Ảnh nên vuông hoặc tỉ lệ 4:3 để hiển thị đẹp trên flashcard." previewUrl={form.imageUrl || undefined} />
-          <div className={styles.audioBox}>
-            <strong>Audio</strong>
-            <p>Hiển thị audio hiện tại, play, replace hoặc remove nếu service hiện tại hỗ trợ.</p>
-            <div><button type="button"><AdminIcon name="play" /> Play</button><button type="button">Replace</button><button type="button">Remove</button></div>
-          </div>
+          <UploadDropzone title="Ảnh từ vựng" helper="PNG, JPG, JPEG, WEBP. Ảnh nên vuông hoặc tỉ lệ 4:3 để hiển thị đẹp trên flashcard." previewUrl={form.imageUrl || undefined} onFile={handleFile} />
+          <AdminButton secondary icon="image" onClick={handleAutoFetch} disabled={fetchingImage} style={{ width: "100%", marginTop: 8 }}>{fetchingImage ? "Đang tìm ảnh..." : "🔍 Tìm ảnh tự động"}</AdminButton>
         </aside>
       </div>
-      <div className={styles.modalActions}><AdminButton secondary onClick={onClose} disabled={saving}>Hủy</AdminButton><AdminButton icon="check" onClick={submit} disabled={saving}>{saving ? "Đang lưu..." : "Lưu từ vựng"}</AdminButton></div>
+      <div className={styles.modalActions}><AdminButton secondary onClick={onClose} disabled={saving || uploading || fetchingImage}>Hủy</AdminButton><AdminButton icon="check" onClick={submit} disabled={saving || uploading || fetchingImage}>{fetchingImage ? "Đang tìm ảnh..." : uploading ? "Đang upload ảnh..." : saving ? "Đang lưu..." : vocab ? "Lưu thay đổi" : "Lưu từ vựng"}</AdminButton></div>
     </LessonModal>
   )
 }

@@ -46,6 +46,7 @@ export interface Vocabulary {
   example?: string | null
   examplePinyin?: string | null
   exampleMeaning?: string | null
+  imageUrl: string | null
   audioUrl: string | null
 }
 
