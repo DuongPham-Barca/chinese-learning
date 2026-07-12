@@ -16,7 +16,14 @@ function requiredEnv(name: string): string {
 }
 
 function emailFrom() {
-  return optionalEnv('EMAIL_FROM') || optionalEnv('SMTP_FROM') || requiredEnv('SMTP_USER')
+  return optionalEnv('EMAIL_FROM') || optionalEnv('SMTP_FROM') || optionalEnv('BREVO_SENDER_EMAIL') || requiredEnv('SMTP_USER')
+}
+
+function brevoSender() {
+  return {
+    email: optionalEnv('BREVO_SENDER_EMAIL') || emailFrom(),
+    name: optionalEnv('BREVO_SENDER_NAME') || 'ChineseDict',
+  }
 }
 
 let smtpTransporter: nodemailer.Transporter | null = null
@@ -90,7 +97,34 @@ async function sendWithResend(to: string, subject: string, html: string) {
   }
 }
 
+async function sendWithBrevo(to: string, subject: string, html: string) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': requiredEnv('BREVO_API_KEY'),
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender: brevoSender(),
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Brevo email failed (${response.status}): ${body}`)
+  }
+}
+
 export async function sendEmail(to: string, subject: string, html: string) {
+  if (optionalEnv('BREVO_API_KEY')) {
+    await sendWithBrevo(to, subject, html)
+    return
+  }
+
   if (optionalEnv('RESEND_API_KEY')) {
     await sendWithResend(to, subject, html)
     return
