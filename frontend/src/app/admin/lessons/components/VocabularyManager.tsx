@@ -11,13 +11,6 @@ import { uploadImage } from "@/services/upload.service"
 import { Field, IconButton, LessonModal, UploadDropzone } from "./LessonShared"
 import styles from "../lessons.module.css"
 
-function vocabStatus(vocab: AdminVocabulary) {
-  if (!vocab.imageUrl) return "Thiếu ảnh"
-  if (!vocab.audioUrl) return "Thiếu audio"
-  if (!vocab.example) return "Thiếu ví dụ"
-  return "Đầy đủ"
-}
-
 export function VocabularyManager({
   vocabularies,
   lessonId,
@@ -79,7 +72,7 @@ export function VocabularyManager({
         <div className={styles.emptyState}><h3>Bài học chưa có từ vựng</h3><p>Bạn có thể thêm từng từ hoặc import nhiều từ bằng Excel.</p><div><AdminButton icon="plus" onClick={openCreate}>Thêm từ vựng</AdminButton><AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton></div></div>
       ) : (
         <AdminTable className={styles.vocabularyTable}>
-          <thead><tr><th></th><th>Order</th><th>Anh</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa tiếng Việt</th><th>Ví dụ</th><th>Audio</th><th>Trạng thái</th><th>Actions</th></tr></thead>
+          <thead><tr><th></th><th>Order</th><th>Anh</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa tiếng Việt</th><th>Ví dụ</th><th>Actions</th></tr></thead>
           <tbody>
             {filtered.map((vocab) => (
               <tr key={vocab.id}>
@@ -90,8 +83,6 @@ export function VocabularyManager({
                 <td>{vocab.pinyin}</td>
                 <td>{vocab.vietnamese}</td>
                 <td>{vocab.example || "Chua co"}</td>
-                <td>{vocab.audioUrl ? <button className={styles.playButton} type="button"><AdminIcon name="play" />Play</button> : "Chua co"}</td>
-                <td><span className={styles.contentStatus}>{vocabStatus(vocab)}</span></td>
                 <td><div className={styles.actions}><IconButton icon="edit" label="Sửa" onClick={() => openEdit(vocab)} /><IconButton icon="copy" label="Nhân bản" /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(vocab.id)} /></div></td>
               </tr>
             ))}
