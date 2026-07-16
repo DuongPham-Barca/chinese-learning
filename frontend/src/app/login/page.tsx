@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { API_BASE_URL } from "@/lib/api"
 import styles from "./login.module.css"
 
@@ -74,7 +75,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <p className={styles.terms}>Bằng cách tiếp tục, bạn đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a> của ChineseDict.</p>
+        <p className={styles.terms}>Bằng cách tiếp tục, bạn đồng ý với <Link href="/terms">Điều khoản sử dụng</Link> và <Link href="/privacy">Chính sách bảo mật</Link> của ChineseDict.</p>
         </div>
       </section>
     </main>

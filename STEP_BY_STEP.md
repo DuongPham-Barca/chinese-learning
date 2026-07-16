@@ -1,135 +1,43 @@
-# Kế Hoạch Chi Tiết A-Z — Chinese Learning App
+# ChineseDict - Trạng thái triển khai
 
-## Thứ tự làm từng file — KHÔNG conflict
+> Cập nhật: 16/07/2026. Kế hoạch ban đầu đã hoàn tất và được thay bằng checklist vận hành dưới đây.
 
----
+## Phạm vi hiện có
 
-## Phase 1: Backend trước (xây xong hết API mới đụng Frontend)
+- [x] Backend Express/TypeScript và PostgreSQL qua Prisma
+- [x] Frontend Next.js App Router
+- [x] Google OAuth, hồ sơ và cài đặt tài khoản
+- [x] HSK1-HSK6, flashcard, dictation, word arrangement, quiz và speaking
+- [x] Audio qua Web Speech API hoặc tệp audio của nội dung
+- [x] EXP, tiến độ và bảng xếp hạng
+- [x] Admin dashboard và CRUD nội dung/người dùng
+- [x] Thanh toán chuyển khoản, QR, lịch sử subscription và xác nhận admin/Telegram
+- [x] 3 bài miễn phí đầu mỗi HSK; Pro còn hạn mở toàn bộ
 
-### Bước 1 — Docker + Config
+## Thứ tự chạy local
 
-```
-① docker-compose.yml
-② backend/package.json
-③ backend/tsconfig.json
-④ backend/.env
-```
+1. Cấu hình biến môi trường trong `backend/.env` và `frontend/.env.local`.
+2. Chạy migration Prisma từ thư mục `backend`.
+3. Khởi động backend tại cổng 4000.
+4. Khởi động frontend tại cổng 3000.
+5. Kiểm tra đăng nhập, một bài miễn phí, một bài khóa và luồng gửi yêu cầu thanh toán.
 
-Chạy: `docker compose up -d`
+```powershell
+cd backend
+npm run db:migrate
+npm run dev
 
-### Bước 2 — Schema + Migration
-
-```
-⑤ backend/prisma/schema.prisma
-```
-
-Chạy: `npx prisma migrate dev --name init`
-
-### Bước 3 — Seed data
-
-```
-⑥ backend/prisma/seed.ts
-```
-
-Chạy: `npx prisma db seed`
-
-### Bước 4 — Server + Middleware
-
-```
-⑦ backend/src/server.ts                   (entry point, express app)
-⑧ backend/src/middleware/authMiddleware.ts (JWT verify)
+cd ..\frontend
+npm run dev
 ```
 
-### Bước 5 — API routes (từng module độc lập)
+## Checklist phát hành
 
-```
-⑨  backend/src/modules/auth/auth.routes.ts
-⑩  backend/src/modules/lessons/lessons.routes.ts
-⑪  backend/src/modules/vocabulary/vocabulary.routes.ts
-⑫  backend/src/modules/sentences/sentences.routes.ts
-⑬  backend/src/modules/progress/progress.routes.ts
-⑭  backend/src/modules/leaderboard/leaderboard.routes.ts
-```
-
-Test từng cái bằng Postman/Curl xong hẵng qua FE.
-
----
-
-## Phase 2: Frontend (sau khi API chạy ngon)
-
-### Bước 6 — Setup FE
-
-```
-⑮ frontend/package.json      (create-next-app)
-⑯ frontend/src/lib/api.ts    (axios instance)
-⑰ frontend/src/store/userStore.ts (Zustand store)
-```
-
-### Bước 7 — Auth FE
-
-```
-⑱ frontend/src/app/login/page.tsx
-⑲ frontend/src/app/register/page.tsx
-⑳ frontend/src/hooks/useAuth.ts
-```
-
-### Bước 8 — Layout + Dashboard
-
-```
-㉑ frontend/src/components/Navbar.tsx
-㉒ frontend/src/app/page.tsx              (Home)
-㉓ frontend/src/app/dashboard/page.tsx
-```
-
-### Bước 9 — Lesson list + detail
-
-```
-㉔ frontend/src/app/lessons/[level]/page.tsx
-㉕ frontend/src/app/lessons/[level]/[id]/page.tsx
-```
-
-### Bước 10 — Flashcard
-
-```
-㉖ frontend/src/components/FlashCard.tsx
-㉗ frontend/src/app/lessons/[level]/[id]/flashcard/page.tsx
-```
-
-### Bước 11 — Dictation + Sorting
-
-```
-㉘ frontend/src/components/DictationBox.tsx
-㉙ frontend/src/app/lessons/[level]/[id]/dictation/page.tsx
-㉚ frontend/src/components/WordSorting.tsx
-```
-
-> **Lưu ý:** Dictation và Sorting không conflict, có thể code song song.
-
-### Bước 12 — Gamification
-
-```
-㉛ frontend/src/components/ExpBar.tsx
-㉜ frontend/src/components/LeaderboardTable.tsx
-㉝ frontend/src/app/leaderboard/page.tsx
-```
-
----
-
-## Nguyên tắc vàng
-
-> **Không chạm FE trước khi API của module đó chạy được.**
-> Xây từ dưới lên: **DB → API → Component → Page**
-
-## Scope v1
-
-- [x] 2 folder riêng: `backend/` + `frontend/`
-- [x] PostgreSQL qua Docker
-- [x] Flashcard (lật thẻ, đã thuộc/cần ôn)
-- [x] Dictation (gõ chữ Hán, check xanh/đỏ)
-- [x] Word Sorting (chip sắp xếp)
-- [x] Auth (register/login JWT)
-- [x] EXP system (cộng điểm, thanh progress)
-- [x] Leaderboard all-time (Top)
-- [ ] ❌ Audio (dùng Web Speech API tạm)
-- [ ] ❌ Thanh toán (bỏ qua)
-- [ ] ❌ Admin CRUD (bỏ qua)
+- [ ] Migration production đã ở trạng thái applied
+- [ ] Backend typecheck thành công
+- [ ] Frontend lint và production build thành công
+- [ ] API từ chối level/period không hợp lệ bằng HTTP 400
+- [ ] Bài 1-3 từng HSK mở miễn phí; bài 4 trở đi trả HTTP 403 nếu chưa có Pro
+- [ ] Pro còn hạn truy cập được toàn bộ; Pro hết hạn bị khóa lại
+- [ ] Một user không thể tạo hai yêu cầu payment `PENDING`
+- [ ] Xác nhận lặp lại không cộng hạn hai lần

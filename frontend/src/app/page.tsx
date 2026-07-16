@@ -103,7 +103,7 @@ export default function HomePage() {
       >
         <motion.div variants={heroItemVariants} className={styles.heroCopy}>
           <motion.span variants={heroItemVariants} className={styles.badge}><Icon name="sparkles" />Nền tảng học tiếng Trung thế hệ mới</motion.span>
-          <motion.h1 variants={heroItemVariants}>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng.</motion.h1>
+          <motion.h1 variants={heroItemVariants}>Học tiếng Trung chủ động — <span>Chinh phục HSK</span> dễ dàng</motion.h1>
           <motion.p variants={heroItemVariants}>Hệ thống học tiếng Trung hiện đại với Flashcard, Dictation, luyện phát âm và giáo trình HSK đầy đủ.</motion.p>
           <motion.div variants={heroItemVariants} className={styles.heroButtons}>{user ? (
   <button onClick={() => document.getElementById("roadmap")?.scrollIntoView({ behavior: "smooth" })} className={styles.primaryButton}>Bắt đầu học miễn phí <b>→</b></button>
@@ -261,9 +261,9 @@ export default function HomePage() {
       >
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}><Brand /><p>Nền tảng học tiếng Trung hiện đại — Flashcard, Dictation, và giáo trình HSK đầy đủ.</p><div className={styles.socials}><span>f</span><span>◎</span><span>▶</span><span>◯</span></div></div>
-          <div><h3>ChineseDict</h3><a href="#home">Giới thiệu</a><a href="#footer">Liên hệ</a><a href="#footer">Blog</a></div>
+          <div><h3>ChineseDict</h3><a href="#home">Giới thiệu</a><a href="#footer">Liên hệ</a><Link href="/leaderboard">Bảng xếp hạng</Link></div>
           <div><h3>Sản phẩm</h3><a href="#features">Flashcard</a><a href="#features">Dictation</a><a href="#roadmap">HSK</a></div>
-          <div><h3>Hỗ trợ</h3><a href="#footer">FAQ</a><a href="#footer">Chính sách</a><a href="#footer">Điều khoản</a></div>
+          <div><h3>Hỗ trợ</h3><Link href="/pricing#faq">FAQ</Link><Link href="/privacy">Chính sách</Link><Link href="/terms">Điều khoản</Link></div>
         </div>
         <div className={styles.copyright}><span>© 2026 ChineseDict. All rights reserved.</span><span>Made with care for Chinese learners.</span></div>
       </motion.footer>

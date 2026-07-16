@@ -2,6 +2,10 @@ import TelegramBot from 'node-telegram-bot-api'
 
 let bot: TelegramBot | null = null
 
+export function isTelegramConfigured() {
+  return Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim() && process.env.TELEGRAM_ADMIN_CHAT_ID?.trim())
+}
+
 export function getBot() {
   if (bot) return bot
 

@@ -30,7 +30,7 @@ type ProfileData = {
   dailyTarget: string
 }
 
-const profileMock: ProfileData = {
+const profileDefaults: ProfileData = {
   phone: "",
   dob: "",
   gender: "Nam",
@@ -58,11 +58,11 @@ export default function ProfilePage() {
   const data = dataDraft ?? {
     phone: authUser?.phone ?? "",
     dob: authUser?.dateOfBirth?.slice(0, 10) ?? "",
-    gender: authUser?.gender || profileMock.gender,
-    country: authUser?.country || profileMock.country,
-    level: authUser?.level || profileMock.level,
-    goal: authUser?.learningGoal || profileMock.goal,
-    dailyTarget: String(authUser?.dailyTarget || profileMock.dailyTarget),
+    gender: authUser?.gender || profileDefaults.gender,
+    country: authUser?.country || profileDefaults.country,
+    level: authUser?.level || profileDefaults.level,
+    goal: authUser?.learningGoal || profileDefaults.goal,
+    dailyTarget: String(authUser?.dailyTarget || profileDefaults.dailyTarget),
   }
 
   useEffect(() => {

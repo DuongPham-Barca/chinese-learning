@@ -18,6 +18,8 @@ export function VocabularyManager({
   onAdd,
   onUpdate,
   onDelete,
+  onSort,
+  onRefresh,
   onImport,
 }: {
   vocabularies: AdminVocabulary[]
@@ -26,6 +28,8 @@ export function VocabularyManager({
   onAdd: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
   onUpdate: (id: string, payload: Partial<VocabularyPayload>) => Promise<Record<string, string> | null>
   onDelete: (id: string) => void
+  onSort: () => Promise<void>
+  onRefresh: () => Promise<void>
   onImport: () => void
 }) {
   const [search, setSearch] = useState("")
@@ -44,6 +48,7 @@ export function VocabularyManager({
     try {
       const result = await fetchBulkVocabularyImages(lessonId)
       setBulkResult({ updated: result.updated, total: result.total })
+      await onRefresh()
     } catch {
       setBulkResult({ updated: 0, total: 0 })
     } finally {
@@ -51,15 +56,20 @@ export function VocabularyManager({
     }
   }
 
+  async function duplicate(vocab: AdminVocabulary) {
+    const nextOrder = Math.max(0, ...vocabularies.map((item) => item.order)) + 1
+    await onAdd({ chinese: vocab.chinese, pinyin: vocab.pinyin, vietnamese: vocab.vietnamese, example: vocab.example, examplePinyin: vocab.examplePinyin, exampleMeaning: vocab.exampleMeaning, audioUrl: vocab.audioUrl, imageUrl: vocab.imageUrl, order: nextOrder })
+  }
+
   return (
     <section className={styles.managerPanel}>
       <header className={styles.managerHeader}>
         <div><span>Tổng số từ vựng</span><strong>{vocabularies.length}</strong></div>
-        <label className={styles.searchBox}><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tim chu Han, pinyin, nghia..." /></label>
+        <label className={styles.searchBox}><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm chữ Hán, pinyin, nghĩa..." /></label>
         <AdminButton icon="plus" onClick={openCreate}>Thêm từ vựng</AdminButton>
         <AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton>
         <AdminButton secondary icon="image" onClick={handleBulkFetch} disabled={bulkFetching}>{bulkFetching ? "Đang tìm..." : "Tìm ảnh cho tất cả"}</AdminButton>
-        <AdminButton secondary icon="sort">Sắp xếp</AdminButton>
+        <AdminButton secondary icon="sort" onClick={() => void onSort()} disabled={saving}>Sắp xếp</AdminButton>
       </header>
       {bulkResult && (
         <div className={styles.stateBox}>
@@ -72,7 +82,7 @@ export function VocabularyManager({
         <div className={styles.emptyState}><h3>Bài học chưa có từ vựng</h3><p>Bạn có thể thêm từng từ hoặc import nhiều từ bằng Excel.</p><div><AdminButton icon="plus" onClick={openCreate}>Thêm từ vựng</AdminButton><AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton></div></div>
       ) : (
         <AdminTable className={styles.vocabularyTable}>
-          <thead><tr><th></th><th>Order</th><th>Anh</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa tiếng Việt</th><th>Ví dụ</th><th>Actions</th></tr></thead>
+          <thead><tr><th></th><th>Thứ tự</th><th>Ảnh</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa tiếng Việt</th><th>Ví dụ</th><th>Thao tác</th></tr></thead>
           <tbody>
             {filtered.map((vocab) => (
               <tr key={vocab.id}>
@@ -82,8 +92,8 @@ export function VocabularyManager({
                 <td><strong>{vocab.chinese}</strong></td>
                 <td>{vocab.pinyin}</td>
                 <td>{vocab.vietnamese}</td>
-                <td>{vocab.example || "Chua co"}</td>
-                <td><div className={styles.actions}><IconButton icon="edit" label="Sửa" onClick={() => openEdit(vocab)} /><IconButton icon="copy" label="Nhân bản" /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(vocab.id)} /></div></td>
+                <td>{vocab.example || "Chưa có"}</td>
+                <td><div className={styles.actions}><IconButton icon="edit" label="Sửa" onClick={() => openEdit(vocab)} /><IconButton icon="copy" label="Nhân bản" onClick={() => void duplicate(vocab)} /><IconButton icon="trash" label="Xóa" danger onClick={() => onDelete(vocab.id)} /></div></td>
               </tr>
             ))}
           </tbody>
@@ -94,7 +104,7 @@ export function VocabularyManager({
   )
 }
 
-function VocabularyFormModal({ vocab, saving, onClose, onSubmit }: { vocab: AdminVocabulary | null; saving: boolean; onClose: () => void; onSubmit: (payload: VocabularyPayload) => Promise<Record<string, string> | null> }) {
+export function VocabularyFormModal({ vocab, saving, onClose, onSubmit }: { vocab: AdminVocabulary | null; saving: boolean; onClose: () => void; onSubmit: (payload: VocabularyPayload) => Promise<Record<string, string> | null> }) {
   const [form, setForm] = useState<VocabularyPayload>(() => vocab ? { chinese: vocab.chinese, pinyin: vocab.pinyin, vietnamese: vocab.vietnamese, example: vocab.example || "", examplePinyin: vocab.examplePinyin || "", exampleMeaning: vocab.exampleMeaning || "", imageUrl: vocab.imageUrl || "", audioUrl: vocab.audioUrl || "", order: vocab.order } : { chinese: "", pinyin: "", vietnamese: "", example: "", examplePinyin: "", exampleMeaning: "", imageUrl: "", audioUrl: "", order: 1 })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
@@ -141,11 +151,10 @@ function VocabularyFormModal({ vocab, saving, onClose, onSubmit }: { vocab: Admi
           <Field label="Chữ Hán" error={errors.chinese}><input value={form.chinese} onChange={(event) => set("chinese", event.target.value)} /></Field>
           <Field label="Pinyin" error={errors.pinyin}><input value={form.pinyin} onChange={(event) => set("pinyin", event.target.value)} /></Field>
           <Field label="Nghĩa tiếng Việt" error={errors.vietnamese}><input value={form.vietnamese} onChange={(event) => set("vietnamese", event.target.value)} /></Field>
-          <Field label="Loai tu"><select><option>Danh từ</option><option>Động từ</option><option>Tính từ</option><option>Cụm từ</option></select></Field>
           <Field label="Ví dụ tiếng Trung" wide><textarea value={form.example || ""} onChange={(event) => set("example", event.target.value)} /></Field>
           <Field label="Pinyin câu ví dụ"><input value={form.examplePinyin || ""} onChange={(event) => set("examplePinyin", event.target.value)} /></Field>
           <Field label="Nghĩa câu ví dụ"><input value={form.exampleMeaning || ""} onChange={(event) => set("exampleMeaning", event.target.value)} /></Field>
-          <Field label="Thu tu"><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
+          <Field label="Thứ tự"><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
         </div>
         <aside className={styles.mediaColumn}>
           <UploadDropzone title="Ảnh từ vựng" helper="PNG, JPG, JPEG, WEBP. Ảnh nên vuông hoặc tỉ lệ 4:3 để hiển thị đẹp trên flashcard." previewUrl={form.imageUrl || undefined} onFile={handleFile} />

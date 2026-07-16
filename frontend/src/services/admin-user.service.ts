@@ -81,3 +81,8 @@ export async function deleteUser(id: string) {
   const response = await api.delete<AdminItemResponse<{ id: string }>>(`/admin/users/${id}`)
   return response.data
 }
+
+export async function changeAdminPassword(payload: { currentPassword: string; newPassword: string }) {
+  const response = await api.patch<AdminItemResponse<{ changed: true }>>("/admin/profile/password", payload)
+  return response.data
+}

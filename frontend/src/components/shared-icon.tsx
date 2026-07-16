@@ -2,9 +2,10 @@
 
 import type { CSSProperties, ReactNode } from "react"
 
-export type SharedIconName = "arrowLeft" | "arrowRight" | "bookOpen" | "check" | "circle" | "clock" | "close" | "crown" | "fire" | "headphones" | "keyboard" | "layers" | "lock" | "mic" | "moreHorizontal" | "pause" | "play" | "repeat" | "rotateCcw" | "sparkles" | "star" | "target" | "translate" | "volume2" | "wand" | "zap"
+export type SharedIconName = "alert" | "arrowLeft" | "arrowRight" | "bookOpen" | "check" | "circle" | "clock" | "close" | "crown" | "fire" | "headphones" | "keyboard" | "layers" | "lock" | "mic" | "moreHorizontal" | "pause" | "play" | "repeat" | "rotateCcw" | "sparkles" | "star" | "target" | "translate" | "user" | "volume2" | "wand" | "zap"
 
 const paths: Record<SharedIconName, ReactNode> = {
+  alert: <><path d="M10.3 3.7 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.7a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></>,
   arrowLeft: <><path d="m15 18-6-6 6-6" /><path d="M20 12H9" /></>,
   arrowRight: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
   bookOpen: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H11V5H6.5A2.5 2.5 0 0 0 4 7.5v12Z" /><path d="M20 19.5a2.5 2.5 0 0 0-2.5-2.5H13V5h4.5A2.5 2.5 0 0 1 20 7.5v12Z" /></>,
@@ -28,6 +29,7 @@ const paths: Record<SharedIconName, ReactNode> = {
   star: <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 3Z" />,
   target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
   translate: <><path d="M3 5h12M9 3v2M5 9c1.5 3 4 5 7 6M13 9c-1.5 3-4 5-7 6" /><path d="m14 21 4-9 4 9M15.5 18h5" /></>,
+  user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
   volume2: <><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="M15 9a4 4 0 0 1 0 6M17.8 6.2a8 8 0 0 1 0 11.6" /></>,
   wand: <><path d="M15 4V2M15 16v-2M8 9H6M20 9h-2M17.8 6.2 19.2 4.8M10.8 13.2 9.4 14.6M10.8 4.8 9.4 3.4" /><path d="m14 10-9 9-2-2 9-9 2 2Z" /></>,
   zap: <path d="M13 2 3 14h8l-1 8 11-13h-8l0-7Z" />,

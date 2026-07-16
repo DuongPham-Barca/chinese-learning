@@ -32,6 +32,7 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
 
   const transferContent = plan && user
     ? `[${user.email || user.username} - ${plan.id}]`
@@ -50,12 +51,13 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
   const handleConfirm = useCallback(async () => {
     if (!plan) return
     setSubmitting(true)
+    setSubmitError("")
     try {
       await api.post("/subscriptions", { planId: plan.id, transferContent })
       setSubmitted(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } }
-      alert(error.response?.data?.error || "Có lỗi xảy ra")
+      setSubmitError(error.response?.data?.error || "Không thể gửi yêu cầu thanh toán.")
     } finally {
       setSubmitting(false)
     }
@@ -63,6 +65,7 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
 
   const handleClose = useCallback(() => {
     setSubmitted(false)
+    setSubmitError("")
     onClose()
   }, [onClose])
 
@@ -175,6 +178,7 @@ export default function QrPaymentModal({ open, plan, onClose }: QrPaymentModalPr
                     </div>
 
                     <div className={styles.actions}>
+                      {submitError && <p className={styles.submitError} role="alert">{submitError}</p>}
                       <button type="button" className={styles.confirmBtn} onClick={handleConfirm} disabled={submitting}>
                         {submitting ? "Đang xử lý..." : "Xác nhận đã chuyển khoản"}
                       </button>

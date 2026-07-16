@@ -58,12 +58,12 @@ export function LessonTable({
   return (
     <AdminTable className={styles.lessonTable}>
       <thead>
-        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Nội dung</th><th>Trạng thái</th><th>Cập nhật</th><th>Actions</th></tr>
+        <tr><th>Thứ tự</th><th>Bài học</th><th>Cấp độ</th><th>Nội dung</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr>
       </thead>
       <tbody>
         {lessons.map((lesson) => (
           <tr key={lesson.id}>
-            <td><span className={styles.dragHandle}>::</span> Bai {String(lesson.order).padStart(2, "0")}</td>
+            <td><span className={styles.dragHandle}>::</span> Bài {String(lesson.order).padStart(2, "0")}</td>
             <td><strong>{lesson.title}</strong><small>{lesson.description || lesson.slug}</small></td>
             <td><HskBadge level={level} /></td>
             <td>{lesson.vocabularyCount} từ / {lesson.sentenceCount} câu</td>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
+import { getAdminSession } from "@/services/admin-user.service"
 import styles from "./admin-account-dropdown.module.css"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
@@ -80,8 +81,14 @@ export default function AdminAccountDropdown() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const [adminName, setAdminName] = useState("Admin")
+  const adminInitials = adminName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "A"
 
   const close = useCallback(() => setOpen(false), [])
+
+  useEffect(() => {
+    getAdminSession().then((session) => setAdminName(session.user.username)).catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -120,10 +127,10 @@ export default function AdminAccountDropdown() {
       <button type="button" ref={triggerRef} className={styles.trigger} onClick={() => setOpen((v) => !v)} aria-label="Menu tài khoản" aria-expanded={open}>
         <div className={styles.adminUser}>
           <span>
-            <strong>Admin User</strong>
+            <strong>{adminName}</strong>
             <small>Super Administrator</small>
           </span>
-          <i>AU</i>
+          <i>{adminInitials}</i>
         </div>
         <span className={`${styles.chevron} ${open ? styles.chevronUp : ""}`}><MenuIcon name="chevron" /></span>
       </button>
@@ -138,9 +145,9 @@ export default function AdminAccountDropdown() {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <div className={styles.header}>
-              <span className={styles.headerAvatar}>AU</span>
+              <span className={styles.headerAvatar}>{adminInitials}</span>
               <div>
-                <strong>Admin User</strong>
+                <strong>{adminName}</strong>
                 <span>Super Administrator</span>
                 <span className={styles.badge}>Administrator</span>
               </div>

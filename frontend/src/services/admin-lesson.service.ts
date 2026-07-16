@@ -57,7 +57,6 @@ export type LessonPayload = {
   description?: string | null
   imageUrl?: string | null
   order: number
-  isFree: boolean
   isPublished: boolean
   expReward: number
 }

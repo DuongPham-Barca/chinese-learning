@@ -4,6 +4,7 @@ import multer from 'multer'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
+import { FREE_LESSON_LIMIT } from '../../lib/lesson-access'
 import { prisma } from '../../lib/prisma'
 import { uploadImage } from '../../lib/cloudflare-r2'
 
@@ -39,7 +40,6 @@ const lessonSchema = z.object({
   description: z.string().trim().nullable().optional(),
   imageUrl: url,
   order: z.coerce.number().int().min(0),
-  isFree: z.boolean().optional().default(false),
   isPublished: z.boolean().optional().default(false),
   expReward: z.coerce.number().int().min(0),
 })
@@ -106,7 +106,7 @@ function page(req: import('express').Request) {
 
 function lessonOut(lesson: any, exampleCount = 0) {
   const { lessonOrder, _count, ...rest } = lesson
-  return { ...rest, order: lessonOrder, vocabularyCount: _count?.vocabulary ?? 0, sentenceCount: (_count?.sentences ?? 0) + exampleCount }
+  return { ...rest, order: lessonOrder, isFree: lessonOrder <= FREE_LESSON_LIMIT, vocabularyCount: _count?.vocabulary ?? 0, sentenceCount: (_count?.sentences ?? 0) + exampleCount }
 }
 
 function vocabOut(vocab: any) {
@@ -122,12 +122,321 @@ function cell(row: Record<string, unknown>, keys: string[]) {
   return ''
 }
 
+function normalizeColumn(value: string) {
+  return value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, '')
+}
+
+function cellFlex(row: Record<string, unknown>, keys: string[]) {
+  const direct = cell(row, keys)
+  if (direct) return direct
+
+  const normalized = new Map(Object.keys(row).map((key) => [normalizeColumn(key), key]))
+  for (const key of keys) {
+    const originalKey = normalized.get(normalizeColumn(key))
+    if (!originalKey) continue
+    const value = row[originalKey]
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim()
+  }
+  return ''
+}
+
 function readSheetRows(buffer: Buffer) {
   const workbook = XLSX.read(buffer, { type: 'buffer' })
   const sheetName = workbook.SheetNames[0]
   if (!sheetName) return []
   const sheet = workbook.Sheets[sheetName]
   return XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '', raw: false })
+}
+
+type ImportMode = 'global' | 'lesson'
+type ImportRowStatus = 'valid' | 'warning' | 'error' | 'duplicate'
+
+type ImportPreviewRow = {
+  row: number
+  status: ImportRowStatus
+  action: 'create' | 'update' | 'skip'
+  lessonTitle: string
+  lessonId: string | null
+  lessonAction: 'selected' | 'matched' | 'create' | 'missing'
+  chinese: string
+  pinyin: string
+  vietnamese: string
+  example: string
+  examplePinyin: string
+  exampleMeaning: string
+  order: number
+  issues: string[]
+}
+
+type ImportPreview = {
+  mode: ImportMode
+  totalRows: number
+  validRows: number
+  warningRows: number
+  errorRows: number
+  duplicateRows: number
+  detectedColumns: string[]
+  requiredColumns: string[]
+  summary: {
+    lessonsMatched: number
+    lessonsToCreate: number
+    vocabToCreate: number
+    vocabToUpdate: number
+  }
+  rows: ImportPreviewRow[]
+}
+
+const globalImportColumns = ['bài học', 'từ vựng', 'phiên âm từ vựng', 'nghĩa từ vựng', 'câu luyện tập', 'phiên âm', 'nghĩa câu']
+const lessonImportColumns = ['từ vựng', 'phiên âm từ vựng', 'giải thích từ vựng', 'câu luyện tập', 'phiên âm câu luyện tập', 'nghĩa câu luyện tập']
+
+const importAliases = {
+  lessonTitle: ['bai hoc', 'ten bai hoc', 'lesson', 'lessonName', 'lesson_name', 'title'],
+  chinese: ['tu vung', 'tu tieng trung', 'chinese', 'hanzi', 'word'],
+  pinyin: ['phien am tu vung', 'pinyin tu vung', 'vocab pinyin', 'vocabulary pinyin', 'pinyin'],
+  vietnamese: ['nghia tu vung', 'giai thich tu vung', 'meaning tu vung', 'vietnamese', 'meaningVi', 'meaning_vi', 'definition'],
+  example: ['cau luyen tap', 'cau vi du', 'example', 'exampleZh', 'sentenceZh', 'sentence_zh'],
+  examplePinyin: ['phien am cau luyen tap', 'phien am cau', 'example pinyin', 'examplePinyin', 'example_pinyin', 'sentencePinyin', 'phien am'],
+  exampleMeaning: ['nghia cau luyen tap', 'nghia cau', 'example meaning', 'exampleMeaning', 'example_meaning', 'exampleVi', 'sentenceVi', 'sentence_vi'],
+  order: ['thu tu', 'order', 'stt'],
+}
+
+function importMode(req: import('express').Request): ImportMode {
+  return req.body?.mode === 'global' ? 'global' : 'lesson'
+}
+
+function uniqueBy<T>(items: T[], key: (item: T) => string) {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const value = key(item)
+    if (seen.has(value)) return false
+    seen.add(value)
+    return true
+  })
+}
+
+function uniqueSlug(base: string, used: Set<string>) {
+  let slug = slugify(base) || `lesson-${Date.now().toString(36)}`
+  let candidate = slug
+  let index = 2
+  while (used.has(candidate)) {
+    candidate = `${slug}-${index}`
+    index += 1
+  }
+  used.add(candidate)
+  return candidate
+}
+
+async function buildImportPreview(buffer: Buffer, mode: ImportMode, options: { levelId?: string; lessonId?: string }): Promise<ImportPreview> {
+  const rows = readSheetRows(buffer)
+  const detectedColumns = rows[0] ? Object.keys(rows[0]) : []
+  const requiredColumns = mode === 'global' ? globalImportColumns : lessonImportColumns
+
+  let selectedLesson: { id: string; title: string; levelId: string } | null = null
+  let levelId = options.levelId || ''
+
+  if (mode === 'lesson') {
+    if (!options.lessonId) throw Object.assign(new Error('Chọn bài học trước khi xem trước'), { statusCode: 400 })
+    selectedLesson = await prisma.lesson.findUnique({ where: { id: options.lessonId }, select: { id: true, title: true, levelId: true } })
+    if (!selectedLesson) throw Object.assign(new Error('Không tìm thấy bài học'), { statusCode: 404 })
+    levelId = selectedLesson.levelId
+  } else {
+    if (!levelId) throw Object.assign(new Error('Chọn cấp độ HSK trước khi xem trước'), { statusCode: 400 })
+    const level = await prisma.level.findUnique({ where: { id: levelId }, select: { id: true } })
+    if (!level) throw Object.assign(new Error('Không tìm thấy cấp độ'), { statusCode: 404 })
+  }
+
+  const lessons = await prisma.lesson.findMany({
+    where: { levelId },
+    select: { id: true, title: true, slug: true },
+  })
+  const lessonByTitle = new Map(lessons.map((lesson) => [normalizeColumn(lesson.title), lesson]))
+  const lessonBySlug = new Map(lessons.map((lesson) => [normalizeColumn(lesson.slug), lesson]))
+  const existingVocabs = await prisma.vocabulary.findMany({
+    where: mode === 'lesson' && selectedLesson ? { lessonId: selectedLesson.id } : { lessonId: { in: lessons.map((lesson) => lesson.id) } },
+    select: { id: true, lessonId: true, hanzi: true },
+  })
+  const vocabByLessonAndHanzi = new Map(existingVocabs.map((item) => [`${item.lessonId}:${normalizeColumn(item.hanzi)}`, item]))
+  const fileKeys = new Set<string>()
+
+  const previewRows: ImportPreviewRow[] = rows.map((row, index) => {
+    const rowNum = index + 2
+    const lessonTitle = mode === 'global' ? cellFlex(row, importAliases.lessonTitle) : selectedLesson?.title || ''
+    const chinese = cellFlex(row, importAliases.chinese)
+    const pinyin = cellFlex(row, importAliases.pinyin)
+    const vietnamese = cellFlex(row, importAliases.vietnamese)
+    const example = cellFlex(row, importAliases.example)
+    const examplePinyin = cellFlex(row, importAliases.examplePinyin)
+    const exampleMeaning = cellFlex(row, importAliases.exampleMeaning)
+    const order = Number(cellFlex(row, importAliases.order)) || index + 1
+    const issues: string[] = []
+
+    if (mode === 'global' && !lessonTitle) issues.push('Thiếu cột bài học')
+    if (!chinese) issues.push('Thiếu từ vựng')
+    if (!pinyin) issues.push('Thiếu phiên âm từ vựng')
+    if (!vietnamese) issues.push('Thiếu nghĩa/giải thích từ vựng')
+    if (!example) issues.push('Thiếu câu luyện tập')
+    if (!examplePinyin) issues.push('Thiếu phiên âm câu luyện tập')
+    if (!exampleMeaning) issues.push('Thiếu nghĩa câu luyện tập')
+
+    const matchedLesson = mode === 'lesson'
+      ? selectedLesson
+      : lessonByTitle.get(normalizeColumn(lessonTitle)) || lessonBySlug.get(normalizeColumn(slugify(lessonTitle)))
+    const lessonKey = mode === 'lesson' && selectedLesson ? selectedLesson.id : normalizeColumn(lessonTitle)
+    const fileKey = `${lessonKey}:${normalizeColumn(chinese)}`
+    const duplicatedInFile = !!chinese && fileKeys.has(fileKey)
+    if (chinese) fileKeys.add(fileKey)
+    if (duplicatedInFile) issues.push('Trùng từ vựng trong file')
+
+    const hasFatal = issues.some((issue) => ['Thiếu cột bài học', 'Thiếu từ vựng', 'Thiếu phiên âm từ vựng', 'Thiếu nghĩa/giải thích từ vựng'].includes(issue))
+    const status: ImportRowStatus = duplicatedInFile ? 'duplicate' : hasFatal ? 'error' : issues.length ? 'warning' : 'valid'
+    const lessonId = matchedLesson?.id || null
+    const existingVocab = lessonId ? vocabByLessonAndHanzi.get(`${lessonId}:${normalizeColumn(chinese)}`) : null
+
+    return {
+      row: rowNum,
+      status,
+      action: status === 'error' || status === 'duplicate' ? 'skip' : existingVocab ? 'update' : 'create',
+      lessonTitle,
+      lessonId,
+      lessonAction: mode === 'lesson' ? 'selected' : matchedLesson ? 'matched' : lessonTitle ? 'create' : 'missing',
+      chinese,
+      pinyin,
+      vietnamese,
+      example,
+      examplePinyin,
+      exampleMeaning,
+      order,
+      issues,
+    }
+  })
+
+  const importable = previewRows.filter((row) => row.status === 'valid' || row.status === 'warning')
+  const lessonsToCreate = uniqueBy(importable.filter((row) => row.lessonAction === 'create'), (row) => normalizeColumn(row.lessonTitle)).length
+  const lessonsMatched = uniqueBy(importable.filter((row) => row.lessonId), (row) => row.lessonId || '').length
+
+  return {
+    mode,
+    totalRows: rows.length,
+    validRows: previewRows.filter((row) => row.status === 'valid').length,
+    warningRows: previewRows.filter((row) => row.status === 'warning').length,
+    errorRows: previewRows.filter((row) => row.status === 'error').length,
+    duplicateRows: previewRows.filter((row) => row.status === 'duplicate').length,
+    detectedColumns,
+    requiredColumns,
+    summary: {
+      lessonsMatched,
+      lessonsToCreate,
+      vocabToCreate: importable.filter((row) => row.action === 'create').length,
+      vocabToUpdate: importable.filter((row) => row.action === 'update').length,
+    },
+    rows: previewRows,
+  }
+}
+
+async function commitImportPreview(preview: ImportPreview, options: { levelId?: string; lessonId?: string }) {
+  if (preview.errorRows || preview.duplicateRows) {
+    throw Object.assign(new Error('File còn dòng lỗi hoặc trùng lặp. Hãy sửa file rồi xem trước lại trước khi import.'), { statusCode: 400 })
+  }
+
+  const importedVocabs: any[] = []
+  const skipped: Array<{ row: number; issue: string }> = []
+  const importable = preview.rows.filter((row) => row.status === 'valid' || row.status === 'warning')
+
+  await prisma.$transaction(async (tx) => {
+    let levelId = options.levelId || ''
+    if (preview.mode === 'lesson') {
+      const lesson = await tx.lesson.findUnique({ where: { id: options.lessonId || '' }, select: { id: true, levelId: true } })
+      if (!lesson) throw Object.assign(new Error('Không tìm thấy bài học'), { statusCode: 404 })
+      levelId = lesson.levelId
+    }
+
+    const lessons = await tx.lesson.findMany({ where: { levelId }, select: { id: true, title: true, slug: true, lessonOrder: true, levelType: true } })
+    const lessonByTitle = new Map(lessons.map((lesson) => [normalizeColumn(lesson.title), lesson]))
+    const lessonBySlug = new Map(lessons.map((lesson) => [normalizeColumn(lesson.slug), lesson]))
+    const usedSlugs = new Set(lessons.map((lesson) => lesson.slug))
+    const level = await tx.level.findUnique({ where: { id: levelId }, select: { type: true } })
+    let nextOrder = Math.max(0, ...lessons.map((lesson) => lesson.lessonOrder)) + 1
+
+    const lessonIdForRow = new Map<number, string>()
+    if (preview.mode === 'lesson' && options.lessonId) {
+      for (const row of importable) lessonIdForRow.set(row.row, options.lessonId)
+    } else {
+      const rowsNeedingLesson = uniqueBy(importable.filter((row) => row.lessonTitle), (row) => normalizeColumn(row.lessonTitle))
+      for (const row of rowsNeedingLesson) {
+        const existing = lessonByTitle.get(normalizeColumn(row.lessonTitle)) || lessonBySlug.get(normalizeColumn(slugify(row.lessonTitle)))
+        if (existing) {
+          lessonIdForRow.set(row.row, existing.id)
+          continue
+        }
+
+        const created = await tx.lesson.create({
+          data: {
+            levelId,
+            levelType: level?.type || LevelType.HSK6,
+            title: row.lessonTitle,
+            slug: uniqueSlug(row.lessonTitle, usedSlugs),
+            description: null,
+            imageUrl: null,
+            lessonOrder: nextOrder,
+            isFree: nextOrder <= FREE_LESSON_LIMIT,
+            isPublished: false,
+            expReward: 10,
+          },
+          select: { id: true, title: true, slug: true },
+        })
+        nextOrder += 1
+        lessonByTitle.set(normalizeColumn(created.title), created as any)
+        lessonBySlug.set(normalizeColumn(created.slug), created as any)
+        lessonIdForRow.set(row.row, created.id)
+      }
+
+      for (const row of importable) {
+        if (!lessonIdForRow.has(row.row)) {
+          const existing = lessonByTitle.get(normalizeColumn(row.lessonTitle)) || lessonBySlug.get(normalizeColumn(slugify(row.lessonTitle)))
+          if (existing) lessonIdForRow.set(row.row, existing.id)
+        }
+      }
+    }
+
+    for (const row of importable) {
+      const lessonId = lessonIdForRow.get(row.row)
+      if (!lessonId) {
+        skipped.push({ row: row.row, issue: 'Không tìm thấy bài học để import' })
+        continue
+      }
+
+      const existing = await tx.vocabulary.findFirst({ where: { lessonId, hanzi: row.chinese } })
+      const data = {
+        pinyin: row.pinyin,
+        meaningVi: row.vietnamese,
+        ...(row.example ? { example: blankToNull(row.example) } : {}),
+        ...(row.examplePinyin ? { examplePinyin: blankToNull(row.examplePinyin) } : {}),
+        ...(row.exampleMeaning ? { exampleMeaning: blankToNull(row.exampleMeaning) } : {}),
+        order: row.order,
+      }
+
+      if (existing) {
+        importedVocabs.push(await tx.vocabulary.update({ where: { id: existing.id }, data }))
+      } else {
+        importedVocabs.push(await tx.vocabulary.create({
+          data: {
+            lessonId,
+            hanzi: row.chinese,
+            ...data,
+          },
+        }))
+      }
+    }
+  })
+
+  return {
+    imported: importedVocabs.map(vocabOut),
+    sentences: [],
+    totalRows: preview.totalRows,
+    added: importedVocabs.length,
+    skipped,
+    preview,
+  }
 }
 
 router.get('/levels', asyncHandler(async (req, res) => {
@@ -211,8 +520,8 @@ router.get('/lessons', asyncHandler(async (req, res) => {
     ...(typeof req.query.levelId === 'string' && req.query.levelId ? { levelId: req.query.levelId } : {}),
     ...(req.query.status === 'published' ? { isPublished: true } : {}),
     ...(req.query.status === 'unpublished' ? { isPublished: false } : {}),
-    ...(req.query.access === 'free' ? { isFree: true } : {}),
-    ...(req.query.access === 'paid' ? { isFree: false } : {}),
+    ...(req.query.access === 'free' ? { lessonOrder: { lte: FREE_LESSON_LIMIT } } : {}),
+    ...(req.query.access === 'paid' ? { lessonOrder: { gt: FREE_LESSON_LIMIT } } : {}),
   }
   const orderBy: Prisma.LessonOrderByWithRelationInput = req.query.sort === 'title' ? { title: 'asc' } : req.query.sort === 'createdAt' ? { createdAt: 'desc' } : { lessonOrder: 'asc' }
   const [total, lessons] = await Promise.all([
@@ -243,7 +552,7 @@ router.post('/lessons', asyncHandler(async (req, res) => {
   if (!level) return error(res, 404, 'Không tìm thấy cấp độ')
   const slug = slugify(parsed.data.slug || parsed.data.title)
   try {
-    const lesson = await prisma.lesson.create({ data: { levelId: level.id, levelType: level.type || LevelType.HSK6, title: parsed.data.title, slug, description: blankToNull(parsed.data.description), imageUrl: parsed.data.imageUrl ?? null, lessonOrder: parsed.data.order, isFree: parsed.data.isFree, isPublished: parsed.data.isPublished, expReward: parsed.data.expReward }, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
+    const lesson = await prisma.lesson.create({ data: { levelId: level.id, levelType: level.type || LevelType.HSK6, title: parsed.data.title, slug, description: blankToNull(parsed.data.description), imageUrl: parsed.data.imageUrl ?? null, lessonOrder: parsed.data.order, isFree: parsed.data.order <= FREE_LESSON_LIMIT, isPublished: parsed.data.isPublished, expReward: parsed.data.expReward }, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
     return success(res, lessonOut(lesson), 'Tạo bài học thành công', 201)
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return error(res, 409, 'Slug bài học đã tồn tại trong cấp độ này', { slug: 'Slug đã tồn tại' })
@@ -265,8 +574,10 @@ router.put('/lessons/:id', asyncHandler(async (req, res) => {
   if (parsed.data.slug !== undefined) data.slug = slugify(parsed.data.slug)
   if (parsed.data.description !== undefined) data.description = blankToNull(parsed.data.description)
   if (parsed.data.imageUrl !== undefined) data.imageUrl = parsed.data.imageUrl
-  if (parsed.data.order !== undefined) data.lessonOrder = parsed.data.order
-  if (parsed.data.isFree !== undefined) data.isFree = parsed.data.isFree
+  if (parsed.data.order !== undefined) {
+    data.lessonOrder = parsed.data.order
+    data.isFree = parsed.data.order <= FREE_LESSON_LIMIT
+  }
   if (parsed.data.isPublished !== undefined) data.isPublished = parsed.data.isPublished
   if (parsed.data.expReward !== undefined) data.expReward = parsed.data.expReward
   const lesson = await prisma.lesson.update({ where: { id: req.params.id }, data, include: { level: { select: { id: true, name: true } }, _count: { select: { vocabulary: true, sentences: true } } } })
@@ -291,7 +602,7 @@ router.patch('/lessons/:id/status', asyncHandler(async (req, res) => {
 router.patch('/lessons/reorder', asyncHandler(async (req, res) => {
   const parsed = reorderSchema.required({ levelId: true }).safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
-  await prisma.$transaction(parsed.data.items.map((i) => prisma.lesson.update({ where: { id: i.id }, data: { lessonOrder: i.order } })))
+  await prisma.$transaction(parsed.data.items.map((i) => prisma.lesson.update({ where: { id: i.id }, data: { lessonOrder: i.order, isFree: i.order <= FREE_LESSON_LIMIT } })))
   return success(res, { count: parsed.data.items.length }, 'Sắp xếp bài học thành công')
 }))
 
@@ -415,105 +726,50 @@ router.post('/lessons/:lessonId/vocabularies/import-examples', importUpload.sing
   return success(res, { imported: imported.map(vocabOut), totalRows: candidates.length, added: imported.length, skipped }, 'Import câu luyện tập vào example thành công', 201)
 }))
 
+router.post('/lessons/import/preview', importUpload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) return error(res, 400, 'Chọn file Excel hoặc CSV để xem trước', { file: 'Vui lòng chọn file' })
+  try {
+    const preview = await buildImportPreview(req.file.buffer, importMode(req), {
+      levelId: typeof req.body?.levelId === 'string' ? req.body.levelId : undefined,
+      lessonId: typeof req.body?.lessonId === 'string' ? req.body.lessonId : undefined,
+    })
+    return success(res, preview, 'Xem trước dữ liệu import thành công')
+  } catch (e) {
+    const status = typeof (e as any)?.statusCode === 'number' ? (e as any).statusCode : 400
+    return error(res, status, e instanceof Error ? e.message : 'Không thể xem trước file')
+  }
+}))
+
+router.post('/lessons/import/commit', importUpload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) return error(res, 400, 'Chọn file Excel hoặc CSV để import', { file: 'Vui lòng chọn file' })
+  try {
+    const mode = importMode(req)
+    const options = {
+      levelId: typeof req.body?.levelId === 'string' ? req.body.levelId : undefined,
+      lessonId: typeof req.body?.lessonId === 'string' ? req.body.lessonId : undefined,
+    }
+    const preview = await buildImportPreview(req.file.buffer, mode, options)
+    const result = await commitImportPreview(preview, options)
+    return success(res, result, 'Import thành công', 201)
+  } catch (e) {
+    const status = typeof (e as any)?.statusCode === 'number' ? (e as any).statusCode : 400
+    return error(res, status, e instanceof Error ? e.message : 'Không thể import file')
+  }
+}))
+
 router.post('/lessons/:lessonId/import', importUpload.single('file'), asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({ where: { id: req.params.lessonId }, select: { id: true } })
   if (!lesson) return error(res, 404, 'Không tìm thấy bài học')
   if (!req.file) return error(res, 400, 'Chọn file Excel hoặc CSV để import', { file: 'File is required' })
-
-  const rows = readSheetRows(req.file.buffer)
-  const skipped: Array<{ row: number; issue: string }> = []
-  const importedVocabs: any[] = []
-  const importedSentences: any[] = []
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i]
-    const rowNum = i + 2
-
-    const chinese = cell(row, ['chinese', 'hanzi', 'Chinese', 'Hanzi'])
-    const pinyin = cell(row, ['pinyin', 'Pinyin'])
-    const vietnamese = cell(row, ['vietnamese', 'meaningVi', 'meaning_vi', 'Vietnamese'])
-    const sentenceVi = cell(row, ['sentenceVi', 'sentence_vi', 'SentenceVi'])
-    const sentenceZh = cell(row, ['sentenceZh', 'sentence_zh', 'SentenceZh'])
-    const hasVocab = !!(chinese && pinyin && vietnamese)
-
-    if (!hasVocab && !sentenceVi && !sentenceZh) {
-      skipped.push({ row: rowNum, issue: 'Dòng không có dữ liệu từ vựng hoặc câu' })
-      continue
-    }
-
-    if (hasVocab) {
-      const example = cell(row, ['example', 'exampleZh', 'sentenceZh', 'Example'])
-      const examplePinyin = cell(row, ['example_pinyin', 'examplePinyin', 'sentencePinyin', 'ExamplePinyin'])
-      const exampleMeaning = cell(row, ['example_meaning', 'exampleMeaning', 'exampleVi', 'sentenceVi', 'ExampleMeaning'])
-      const audioUrl = cell(row, ['audioUrl', 'audio', 'Audio']) || null
-      const imageUrl = cell(row, ['imageUrl', 'image', 'Image']) || null
-      const order = Number(cell(row, ['order', 'Order'])) || i + 1
-
-      try {
-        const existing = await prisma.vocabulary.findFirst({
-          where: { lessonId: lesson.id, hanzi: chinese },
-        })
-        if (existing) {
-          const updated = await prisma.vocabulary.update({
-            where: { id: existing.id },
-            data: {
-              pinyin,
-              meaningVi: vietnamese,
-              ...(example ? { example: blankToNull(example) } : {}),
-              ...(examplePinyin ? { examplePinyin: blankToNull(examplePinyin) } : {}),
-              ...(exampleMeaning ? { exampleMeaning: blankToNull(exampleMeaning) } : {}),
-              ...(audioUrl ? { audioUrl } : {}),
-              ...(imageUrl ? { imageUrl } : {}),
-              order,
-            },
-          })
-          importedVocabs.push(updated)
-        } else {
-          const created = await prisma.vocabulary.create({
-            data: {
-              lessonId: lesson.id,
-              hanzi: chinese,
-              pinyin,
-              meaningVi: vietnamese,
-              example: blankToNull(example),
-              examplePinyin: blankToNull(examplePinyin),
-              exampleMeaning: blankToNull(exampleMeaning),
-              audioUrl,
-              imageUrl,
-              order,
-            },
-          })
-          importedVocabs.push(created)
-        }
-      } catch {
-        skipped.push({ row: rowNum, issue: `Lỗi từ vựng: ${chinese}` })
-      }
-    }
-
-    if (sentenceVi && sentenceZh) {
-      try {
-        const created = await prisma.sentence.create({
-          data: {
-            lessonId: lesson.id,
-            sentenceVi,
-            sentenceZh,
-            audioUrl: cell(row, ['audioUrl', 'audio', 'Audio']) || null,
-          },
-        })
-        importedSentences.push(created)
-      } catch {
-        skipped.push({ row: rowNum, issue: `Lỗi câu: ${sentenceZh}` })
-      }
-    }
+  try {
+    const options = { lessonId: lesson.id }
+    const preview = await buildImportPreview(req.file.buffer, 'lesson', options)
+    const result = await commitImportPreview(preview, options)
+    return success(res, result, 'Import thành công', 201)
+  } catch (e) {
+    const status = typeof (e as any)?.statusCode === 'number' ? (e as any).statusCode : 400
+    return error(res, status, e instanceof Error ? e.message : 'Không thể import file')
   }
-
-  return success(res, {
-    imported: importedVocabs.map(vocabOut),
-    sentences: importedSentences,
-    totalRows: rows.length,
-    added: importedVocabs.length + importedSentences.length,
-    skipped,
-  }, 'Import thành công', 201)
 }))
 
 router.post('/upload', imageUpload.single('image'), asyncHandler(async (req, res) => {

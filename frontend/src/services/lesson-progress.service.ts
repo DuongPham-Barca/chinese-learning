@@ -1,3 +1,6 @@
+import { useSyncExternalStore } from "react"
+import api from "@/lib/api"
+
 export type LessonModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "speaking" | "quiz"
 
 export type LessonModuleProgress = {
@@ -12,6 +15,22 @@ export const lessonModuleOrder: LessonModuleId[] = ["flashcard", "dictation", "w
 
 function progressKey(lessonId: string) {
   return `lesson-progress-v2:${lessonId}`
+}
+
+const progressPrefix = "lesson-progress-v2:"
+const syncing = new Set<string>()
+
+async function syncModuleCompletion(lessonId: string, moduleId: LessonModuleId) {
+  const key = `${lessonId}:${moduleId}`
+  if (syncing.has(key)) return
+  syncing.add(key)
+  try {
+    await api.post("/progress", { lessonId, moduleId })
+  } catch {
+    // Local progress remains available offline and will be retried from /progress.
+  } finally {
+    syncing.delete(key)
+  }
 }
 
 let cachedKey = ""
@@ -99,6 +118,9 @@ export function updateLessonModuleProgress(
   })
 
   writeLessonProgress(lessonId, { ...current, [moduleId]: next })
+  if (next.total > 0 && next.completed >= next.total && (previous?.completed ?? 0) < next.total) {
+    void syncModuleCompletion(lessonId, moduleId)
+  }
 }
 
 export function completeLessonModule(lessonId: string, moduleId: LessonModuleId, total: number) {
@@ -122,4 +144,39 @@ export function getLessonPercent(progress: LessonProgressState, totals: Record<L
 
   return aggregate.total ? Math.round((aggregate.completed / aggregate.total) * 100) : 0
 }
-import { useSyncExternalStore } from "react"
+
+export async function syncLocalLessonProgress() {
+  if (typeof window === "undefined") return
+  const tasks: Promise<void>[] = []
+
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index)
+    if (!key?.startsWith(progressPrefix)) continue
+    const lessonId = key.slice(progressPrefix.length)
+    const state = readLessonProgress(lessonId)
+    for (const moduleId of lessonModuleOrder) {
+      const progress = state[moduleId]
+      if (progress?.total && progress.completed >= progress.total) {
+        tasks.push(syncModuleCompletion(lessonId, moduleId))
+      }
+    }
+  }
+
+  await Promise.all(tasks)
+}
+
+export function clearLocalLessonProgress() {
+  if (typeof window === "undefined") return
+  const keys: string[] = []
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index)
+    if (key?.startsWith(progressPrefix) || key?.startsWith("lesson-stage-progress:") || key?.startsWith("lesson-practice-progress:")) {
+      keys.push(key)
+    }
+  }
+  keys.forEach((key) => window.localStorage.removeItem(key))
+  cachedKey = ""
+  cachedRaw = ""
+  cachedState = {}
+  window.dispatchEvent(new CustomEvent("lesson-progress:update"))
+}

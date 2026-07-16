@@ -16,8 +16,7 @@ export async function hasActivePremium(req: Request): Promise<boolean> {
 
   if (!user) return false
   if (user.role === Role.ADMIN) return true
-  if (!user.isPremium) return false
-  return user.subscriptionUntil === null || user.subscriptionUntil > new Date()
+  return Boolean(user.isPremium && user.subscriptionUntil && user.subscriptionUntil > new Date())
 }
 
 export async function canAccessLesson(req: Request, lessonOrder: number): Promise<boolean> {

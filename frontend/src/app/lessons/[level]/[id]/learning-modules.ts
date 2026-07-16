@@ -17,7 +17,9 @@ export type LearningModule = {
   totalItems: number
 }
 
-function minutes(_value: number) { return "" }
+function minutes(value: number) {
+  return value > 0 ? `${Math.max(1, Math.ceil(value))} phút` : ""
+}
 
 export function getLearningModules(lesson: LessonDetail, level: string): LearningModule[] {
   const wordCount = lesson.vocabulary.length

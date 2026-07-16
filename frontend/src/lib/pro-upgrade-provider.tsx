@@ -4,7 +4,7 @@ import { createContext, type ReactNode, useContext, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-provider"
 
-export type MockUpgradeUser = {
+export type UpgradeUser = {
   id: string
   name: string
   email: string
@@ -13,7 +13,7 @@ export type MockUpgradeUser = {
 }
 
 type ProUpgradeContextValue = {
-  user: MockUpgradeUser
+  user: UpgradeUser
   openUpgrade: (unlockedHref?: string) => void
 }
 
@@ -24,9 +24,10 @@ export function ProUpgradeProvider({ children }: { children: ReactNode }) {
   const { user: authUser } = useAuth()
   const isPro = Boolean(
     authUser?.isPremium
-    && (!authUser.subscriptionUntil || new Date(authUser.subscriptionUntil) > new Date()),
+    && authUser.subscriptionUntil
+    && new Date(authUser.subscriptionUntil) > new Date(),
   )
-  const user = useMemo<MockUpgradeUser>(() => ({
+  const user = useMemo<UpgradeUser>(() => ({
     id: authUser?.id ?? "",
     name: authUser?.username ?? "",
     email: authUser?.email ?? "",

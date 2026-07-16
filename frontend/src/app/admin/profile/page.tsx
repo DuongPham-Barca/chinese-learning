@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { PageHeader, AdminButton } from "@/components/admin/admin-ui"
-import { getAdminSession, getUserById, updateUser, type AdminUser } from "@/services/admin-user.service"
+import { changeAdminPassword, getAdminSession, getUserById, updateUser, type AdminUser } from "@/services/admin-user.service"
 import styles from "./profile.module.css"
 
 const variants = {
@@ -81,6 +81,10 @@ export default function AdminProfilePage() {
 
   async function handleSave() {
     if (!profile) return
+    if (!form.username.trim()) {
+      setToast({ type: "error", message: "Họ và tên không được để trống" })
+      return
+    }
     setSaving(true)
     try {
       const result = await updateUser(profile.id, {
@@ -101,6 +105,10 @@ export default function AdminProfilePage() {
 
   async function handleChangePassword() {
     if (!profile) return
+    if (!passwordForm.current) {
+      setToast({ type: "error", message: "Vui lòng nhập mật khẩu hiện tại" })
+      return
+    }
     if (!passwordForm.newPass) {
       setToast({ type: "error", message: "Vui lòng nhập mật khẩu mới" })
       return
@@ -115,11 +123,14 @@ export default function AdminProfilePage() {
     }
     setSaving(true)
     try {
-      await updateUser(profile.id, { password: passwordForm.newPass })
+      await changeAdminPassword({ currentPassword: passwordForm.current, newPassword: passwordForm.newPass })
       setPasswordForm({ current: "", newPass: "", confirm: "" })
       setToast({ type: "success", message: "Đã đổi mật khẩu thành công" })
-    } catch {
-      setToast({ type: "error", message: "Không thể đổi mật khẩu" })
+    } catch (error) {
+      const message = typeof error === "object" && error && "response" in error
+        ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Không thể đổi mật khẩu")
+        : "Không thể đổi mật khẩu"
+      setToast({ type: "error", message })
     } finally {
       setSaving(false)
     }
@@ -173,7 +184,10 @@ export default function AdminProfilePage() {
         <motion.div variants={itemVariants} className={styles.card}>
           <div className={styles.avatarSection}>
             {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt={profile.username} className={styles.avatar} />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={profile.avatarUrl} alt={profile.username} className={styles.avatar} />
+              </>
             ) : (
               <span className={styles.avatarInitials} style={{ background: avatarColor(profile.id) }}>
                 {initials(profile.username)}

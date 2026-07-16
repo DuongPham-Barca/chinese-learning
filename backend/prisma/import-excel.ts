@@ -154,7 +154,7 @@ async function importSheet(sheetName: string, rawData: string[][]) {
         lessonOrder: lessonIdx + 1,
         title,
         slug,
-        isFree: true,
+        isFree: lessonIdx + 1 <= 3,
         isPublished: true,
         expReward: 10,
       },

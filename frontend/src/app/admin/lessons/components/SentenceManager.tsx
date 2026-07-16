@@ -6,6 +6,7 @@ import { AdminButton, AdminTable } from "@/components/admin/admin-ui"
 import type { AdminVocabulary } from "@/services/admin-lesson.service"
 import type { VocabularyPayload } from "@/services/admin-vocabulary.service"
 import { Field, IconButton, LessonModal } from "./LessonShared"
+import { VocabularyFormModal } from "./VocabularyManager"
 import type { PracticeMode } from "./types"
 import styles from "../lessons.module.css"
 
@@ -82,18 +83,21 @@ export function SentenceManager({
   vocabularies,
   saving,
   onAdd,
+  onUpdate,
   onDelete,
   onImport,
 }: {
   vocabularies: AdminVocabulary[]
   saving: boolean
   onAdd: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
+  onUpdate: (id: string, payload: Partial<VocabularyPayload>) => Promise<Record<string, string> | null>
   onDelete: (id: string) => void
   onImport: () => void
 }) {
   const [search, setSearch] = useState("")
   const [mode, setMode] = useState("")
   const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<AdminVocabulary | null>(null)
   const examples = useMemo(() => vocabularies.filter((item) => item.example), [vocabularies])
   const filtered = useMemo(() => examples.filter((item) => {
     const matchesSearch = `${item.example || ""} ${item.examplePinyin || ""} ${item.exampleMeaning || ""} ${item.chinese}`.toLowerCase().includes(search.toLowerCase())
@@ -110,11 +114,11 @@ export function SentenceManager({
           <option value="">Tất cả chế độ</option>
           {allModes.map((item) => <option key={item} value={item}>{modeLabels[item]}</option>)}
         </select>
-        <AdminButton icon="plus" onClick={() => setFormOpen(true)} disabled={saving}>Thêm example</AdminButton>
+        <AdminButton icon="plus" onClick={() => setFormOpen(true)} disabled={saving}>Thêm câu luyện tập</AdminButton>
         <AdminButton secondary icon="download" onClick={onImport}>Import Excel</AdminButton>
       </header>
       <AdminTable className={styles.sentenceTable}>
-        <thead><tr><th>Order</th><th>Từ khóa</th><th>example</th><th>example_pinyin</th><th>example_meaning</th><th>Client nhận ở</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Thứ tự</th><th>Từ khóa</th><th>Câu luyện tập</th><th>Câu pinyin</th><th>Nghĩa câu</th><th>Client nhận ở</th><th>Thao tác</th></tr></thead>
         <tbody>
           {filtered.map((item) => (
             <tr key={item.id}>
@@ -124,7 +128,7 @@ export function SentenceManager({
               <td>{item.examplePinyin || "Chưa có"}</td>
               <td>{item.exampleMeaning || "Chưa có"}</td>
               <td><div className={styles.badgeRow}>{allModes.map((modeItem) => <span key={modeItem} className={styles.practiceBadge}>{modeLabels[modeItem]}</span>)}</div></td>
-              <td><div className={styles.actions}><IconButton icon="edit" label="Sửa trong từ vựng" /><IconButton icon="trash" label="Xóa từ vựng" danger onClick={() => onDelete(item.id)} /></div></td>
+              <td><div className={styles.actions}><IconButton icon="edit" label="Sửa example" onClick={() => setEditing(item)} /><IconButton icon="trash" label="Xóa từ vựng" danger onClick={() => onDelete(item.id)} /></div></td>
             </tr>
           ))}
           {!filtered.length && (
@@ -135,6 +139,7 @@ export function SentenceManager({
         </tbody>
       </AdminTable>
       {formOpen && <ExampleFormModal saving={saving} onClose={() => setFormOpen(false)} onSubmit={onAdd} />}
+      {editing && <VocabularyFormModal vocab={editing} saving={saving} onClose={() => setEditing(null)} onSubmit={async (payload) => { const result = await onUpdate(editing.id, payload); if (!result) setEditing(null); return result }} />}
     </section>
   )
 }

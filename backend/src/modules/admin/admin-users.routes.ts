@@ -75,7 +75,7 @@ const userInclude = {
 } satisfies Prisma.UserInclude
 
 function premiumActive(user: { isPremium: boolean; subscriptionUntil: Date | null }) {
-  return user.isPremium && (!user.subscriptionUntil || user.subscriptionUntil > new Date())
+  return Boolean(user.isPremium && user.subscriptionUntil && user.subscriptionUntil > new Date())
 }
 
 function out(user: Prisma.UserGetPayload<{ include: typeof userInclude }>) {
@@ -112,7 +112,7 @@ router.get('/users/stats', asyncHandler(async (_req, res) => {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const [total, premium, newThisMonth, active] = await Promise.all([
     prisma.user.count({ where: { role: Role.USER } }),
-    prisma.user.count({ where: { role: Role.USER, isPremium: true, OR: [{ subscriptionUntil: null }, { subscriptionUntil: { gt: now } }] } }),
+    prisma.user.count({ where: { role: Role.USER, isPremium: true, subscriptionUntil: { gt: now } } }),
     prisma.user.count({ where: { role: Role.USER, createdAt: { gte: monthStart } } }),
     prisma.session.findMany({ where: { expires: { gt: now }, user: { role: Role.USER } }, distinct: ['userId'], select: { userId: true } }),
   ])
@@ -128,8 +128,8 @@ router.get('/users', asyncHandler(async (req, res) => {
     role: Role.USER,
     ...(search ? { OR: [{ username: { contains: search, mode: 'insensitive' } }, { email: { contains: search, mode: 'insensitive' } }, { id: { contains: search, mode: 'insensitive' } }] } : {}),
     ...(level && levelSchema.safeParse(level).success ? { level: level as any } : {}),
-    ...(req.query.account === 'premium' ? { isPremium: true, OR: [{ subscriptionUntil: null }, { subscriptionUntil: { gt: now } }] } : {}),
-    ...(req.query.account === 'free' ? { OR: [{ isPremium: false }, { subscriptionUntil: { lte: now } }] } : {}),
+    ...(req.query.account === 'premium' ? { isPremium: true, subscriptionUntil: { gt: now } } : {}),
+    ...(req.query.account === 'free' ? { OR: [{ isPremium: false }, { subscriptionUntil: null }, { subscriptionUntil: { lte: now } }] } : {}),
     ...(req.query.status === 'active' ? { sessions: { some: { expires: { gt: now } } } } : {}),
     ...(req.query.status === 'inactive' ? { sessions: { none: { expires: { gt: now } } } } : {}),
   }
@@ -150,6 +150,10 @@ router.get('/users/:id', asyncHandler(async (req, res) => {
 router.post('/users', asyncHandler(async (req, res) => {
   const parsed = userSchema.safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
+  const subscriptionUntil = parsed.data.subscriptionUntil ? new Date(parsed.data.subscriptionUntil) : null
+  if (parsed.data.isPremium && (!subscriptionUntil || subscriptionUntil <= new Date())) {
+    return error(res, 400, 'Tài khoản Premium phải có ngày hết hạn trong tương lai', { subscriptionUntil: 'Chọn ngày hết hạn hợp lệ' })
+  }
   try {
     const user = await prisma.user.create({
       data: {
@@ -160,7 +164,7 @@ router.post('/users', asyncHandler(async (req, res) => {
         level: parsed.data.level,
         role: parsed.data.role,
         isPremium: parsed.data.isPremium ?? false,
-        subscriptionUntil: parsed.data.subscriptionUntil ? new Date(parsed.data.subscriptionUntil) : null,
+        subscriptionUntil,
       },
       include: userInclude,
     })
@@ -174,6 +178,15 @@ router.post('/users', asyncHandler(async (req, res) => {
 router.put('/users/:id', asyncHandler(async (req, res) => {
   const parsed = userSchema.partial().safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
+  if (parsed.data.isPremium === true) {
+    const current = await prisma.user.findUnique({ where: { id: req.params.id }, select: { subscriptionUntil: true } })
+    const subscriptionUntil = parsed.data.subscriptionUntil === undefined
+      ? current?.subscriptionUntil
+      : parsed.data.subscriptionUntil ? new Date(parsed.data.subscriptionUntil) : null
+    if (!subscriptionUntil || subscriptionUntil <= new Date()) {
+      return error(res, 400, 'Tài khoản Premium phải có ngày hết hạn trong tương lai', { subscriptionUntil: 'Gia hạn bằng chức năng mở khóa Premium' })
+    }
+  }
   const data: Prisma.UserUpdateInput = {}
   if (parsed.data.username !== undefined) data.username = parsed.data.username
   if (parsed.data.email !== undefined) data.email = parsed.data.email || null
@@ -199,16 +212,38 @@ router.patch('/users/:id/premium', asyncHandler(async (req, res) => {
   const admin = res.locals.admin as { id: string }
   const planId = planToEnum(parsed.data.planId)
   const startedAt = new Date()
-  const expiresAt = new Date(startedAt)
-  expiresAt.setMonth(expiresAt.getMonth() + planMonths(planId))
   const user = await prisma.$transaction(async (tx) => {
     const target = await tx.user.findUnique({ where: { id: req.params.id } })
     if (!target) return null
+    const extensionBase = target.subscriptionUntil && target.subscriptionUntil > startedAt
+      ? target.subscriptionUntil
+      : startedAt
+    const expiresAt = new Date(extensionBase)
+    expiresAt.setMonth(expiresAt.getMonth() + planMonths(planId))
     await tx.subscription.create({ data: { userId: target.id, planId, amount: planAmount(planId), status: SubStatus.CONFIRMED, transferContent: `ADMIN_UNLOCK_${target.id}`, startedAt, expiresAt, confirmedAt: startedAt, confirmedBy: admin.id } })
     return tx.user.update({ where: { id: target.id }, data: { isPremium: true, subscriptionUntil: expiresAt }, include: userInclude })
   })
   if (!user) return error(res, 404, 'Không tìm thấy người dùng')
   return success(res, out(user), 'Mở khóa premium thành công')
+}))
+
+router.patch('/profile/password', asyncHandler(async (req, res) => {
+  const parsed = z.object({
+    currentPassword: z.string().min(1, 'Nhập mật khẩu hiện tại'),
+    newPassword: z.string().min(6, 'Mật khẩu mới tối thiểu 6 ký tự'),
+  }).safeParse(req.body)
+  if (!parsed.success) return invalid(res, parsed)
+
+  const admin = res.locals.admin as { id: string; passwordHash: string | null }
+  if (!admin.passwordHash || !(await bcrypt.compare(parsed.data.currentPassword, admin.passwordHash))) {
+    return error(res, 400, 'Mật khẩu hiện tại không đúng', { currentPassword: 'Mật khẩu hiện tại không đúng' })
+  }
+
+  await prisma.user.update({
+    where: { id: admin.id },
+    data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 12) },
+  })
+  return success(res, { changed: true }, 'Đổi mật khẩu thành công')
 }))
 
 router.delete('/users/:id', asyncHandler(async (req, res) => {

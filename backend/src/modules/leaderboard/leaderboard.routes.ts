@@ -1,12 +1,15 @@
 import { Role } from '@prisma/client'
 import { Router } from 'express'
+import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
 import { prisma } from '../../lib/prisma'
 
 const router = Router()
 
 router.get('/', asyncHandler(async (req, res) => {
-  const { period } = req.query
+  const parsed = z.object({ period: z.enum(['all', 'week', 'month']).optional() }).safeParse(req.query)
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid leaderboard period' })
+  const { period } = parsed.data
 
   let dateFilter: Date | undefined
   const now = new Date()

@@ -20,10 +20,12 @@ export interface WeeklyNewUser {
 }
 
 export interface Activity {
+  id: string
   type: string
   title: string
   text: string
   time: string
+  timestamp: string
 }
 
 export interface DashboardData {
@@ -33,7 +35,16 @@ export interface DashboardData {
   recentActivities: Activity[]
 }
 
-export async function getDashboard() {
-  const response = await api.get<{ success: true; data: DashboardData }>("/admin/dashboard")
+export async function getDashboard(days = 30) {
+  const response = await api.get<{ success: true; data: DashboardData }>("/admin/dashboard", { params: { days } })
+  return response.data
+}
+
+export async function getActivities(params: Record<string, unknown> = {}) {
+  const response = await api.get<{
+    success: true
+    data: Activity[]
+    pagination: { page: number; limit: number; total: number; totalPages: number }
+  }>("/admin/activity", { params })
   return response.data
 }

@@ -46,12 +46,76 @@ export type ImportAllResult = {
   totalRows: number
   added: number
   skipped: Array<{ row: number; issue: string }>
+  preview?: ImportPreviewResult
+}
+
+export type ImportMode = "global" | "lesson"
+
+export type ImportPreviewRow = {
+  row: number
+  status: "valid" | "warning" | "error" | "duplicate"
+  action: "create" | "update" | "skip"
+  lessonTitle: string
+  lessonId: string | null
+  lessonAction: "selected" | "matched" | "create" | "missing"
+  chinese: string
+  pinyin: string
+  vietnamese: string
+  example: string
+  examplePinyin: string
+  exampleMeaning: string
+  order: number
+  issues: string[]
+}
+
+export type ImportPreviewResult = {
+  mode: ImportMode
+  totalRows: number
+  validRows: number
+  warningRows: number
+  errorRows: number
+  duplicateRows: number
+  detectedColumns: string[]
+  requiredColumns: string[]
+  summary: {
+    lessonsMatched: number
+    lessonsToCreate: number
+    vocabToCreate: number
+    vocabToUpdate: number
+  }
+  rows: ImportPreviewRow[]
+}
+
+export type ImportFilePayload = {
+  mode: ImportMode
+  levelId?: string
+  lessonId?: string
+  file: File
 }
 
 export async function importAll(lessonId: string, file: File) {
   const formData = new FormData()
   formData.append("file", file)
   const response = await api.post<AdminItemResponse<ImportAllResult>>(`/admin/lessons/${lessonId}/import`, formData)
+  return response.data
+}
+
+function importFormData(payload: ImportFilePayload) {
+  const formData = new FormData()
+  formData.append("file", payload.file)
+  formData.append("mode", payload.mode)
+  if (payload.levelId) formData.append("levelId", payload.levelId)
+  if (payload.lessonId) formData.append("lessonId", payload.lessonId)
+  return formData
+}
+
+export async function previewImport(payload: ImportFilePayload) {
+  const response = await api.post<AdminItemResponse<ImportPreviewResult>>("/admin/lessons/import/preview", importFormData(payload))
+  return response.data
+}
+
+export async function commitImport(payload: ImportFilePayload) {
+  const response = await api.post<AdminItemResponse<ImportAllResult>>("/admin/lessons/import/commit", importFormData(payload))
   return response.data
 }
 

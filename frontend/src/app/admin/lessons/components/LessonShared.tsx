@@ -14,10 +14,10 @@ export function HskBadge({ level }: { level: AdminLevel | { name: string; slug?:
 }
 
 export function StatusBadge({ published, label }: { published: boolean; label?: string }) {
-  return <span className={`${styles.statusBadge} ${published ? styles.publishedBadge : styles.draftBadge}`}>{label || (published ? "Published" : "Draft")}</span>
+  return <span className={`${styles.statusBadge} ${published ? styles.publishedBadge : styles.draftBadge}`}>{label || (published ? "Đã xuất bản" : "Bản nháp")}</span>
 }
 
-export function IconButton({ icon, label, onClick, danger = false }: { icon: AdminIconName; label: string; onClick?: () => void; danger?: boolean }) {
+export function IconButton({ icon, label, onClick, danger = false }: { icon: AdminIconName; label: string; onClick: () => void; danger?: boolean }) {
   return <button type="button" className={`${styles.iconButton} ${danger ? styles.dangerIcon : ""}`} title={label} aria-label={label} onClick={onClick}><AdminIcon name={icon} /></button>
 }
 
@@ -50,9 +50,9 @@ export function UploadDropzone({ title, helper, previewUrl, compact = false, onF
         <strong>{title}</strong>
         <span>{helper}</span>
         <div className={styles.uploadActions}>
-          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Chon file</button>
-          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Thay anh</button>
-          {previewUrl && <button type="button" onClick={(e) => { e.stopPropagation(); onFile?.(null) }}>Xoa</button>}
+          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Chọn file</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>Thay ảnh</button>
+          {previewUrl && <button type="button" onClick={(e) => { e.stopPropagation(); onFile?.(null) }}>Xóa</button>}
         </div>
       </div>
     </div>

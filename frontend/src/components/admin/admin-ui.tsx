@@ -18,10 +18,6 @@ export function AdminTable({ children, className = "" }: { children: ReactNode; 
   return <div className={`${styles.tableScroll} ${className}`}><table>{children}</table></div>
 }
 
-export function Pagination() {
-  return <div className={styles.pagination}><button type="button">‹</button><button type="button" className={styles.activePage}>1</button><button type="button">2</button><button type="button">3</button><span>…</span><button type="button">5</button><button type="button">›</button></div>
-}
-
 export function PaymentStatusBadge({ status }: { status: "Pending" | "Approved" | "Rejected" }) {
   return <span className={`${styles.statusBadge} ${styles[status.toLowerCase()]}`}>{status}</span>
 }

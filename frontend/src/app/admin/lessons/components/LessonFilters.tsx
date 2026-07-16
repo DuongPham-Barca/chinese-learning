@@ -36,8 +36,8 @@ export function LessonFilters({
       <div className={styles.filterControls}>
         <select value={status} onChange={(event) => onStatus(event.target.value)}>
           <option value="">Tất cả trạng thái</option>
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
+            <option value="published">Đã xuất bản</option>
+            <option value="draft">Bản nháp</option>
         </select>
         <select value={sort} onChange={(event) => onSort(event.target.value)}>
           <option value="order">Theo thứ tự</option>

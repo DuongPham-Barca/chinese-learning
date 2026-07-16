@@ -25,15 +25,15 @@ export function LessonCard({
   onDelete: () => void
 }) {
   return (
-    <article className={`${styles.lessonCard} ${syncStyles.clientCard} ${syncStyles.clientLesson}`} draggable>
+    <article className={`${styles.lessonCard} ${syncStyles.clientCard} ${syncStyles.clientLesson}`}>
       <div className={`${styles.lessonThumb} ${syncStyles.clientThumb}`}>
         {lesson.imageUrl ? <img src={lesson.imageUrl} alt="" /> : <AdminIcon name="book" />}
-        <span>Bai {String(lesson.order).padStart(2, "0")}</span>
+        <span>Bài {String(lesson.order).padStart(2, "0")}</span>
       </div>
       <div className={styles.lessonBody}>
         <div className={styles.lessonHeaderLine}>
           <h4>{lesson.title}</h4>
-          <button type="button" className={styles.mobileMenu} title="Actions" aria-label="Actions"><AdminIcon name="menu" /></button>
+          <button type="button" className={styles.mobileMenu} title="Sửa bài học" aria-label="Sửa bài học" onClick={onEdit}><AdminIcon name="menu" /></button>
         </div>
         <div className={styles.badgeRow}><HskBadge level={level} /><StatusBadge published={lesson.isPublished} /></div>
         <p>{lesson.description || lesson.slug || "Chưa có mô tả ngắn cho bài học."}</p>

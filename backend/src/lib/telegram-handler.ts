@@ -1,5 +1,5 @@
 import { confirmSubscription, rejectSubscription } from '../modules/subscriptions/subscription.service'
-import { getAdminChatId, getBot } from './telegram-bot'
+import { getAdminChatId, getBot, isTelegramConfigured } from './telegram-bot'
 
 type NewSubscriptionNotification = {
   id: string
@@ -110,6 +110,7 @@ async function sendSubscriptionResultMessage(
 
 export function setupTelegramHandlers() {
   if (handlersReady) return
+  if (!isTelegramConfigured()) return
 
   const bot = getBot()
   const adminChatId = getAdminChatId()

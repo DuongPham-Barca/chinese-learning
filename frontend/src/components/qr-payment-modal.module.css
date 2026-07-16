@@ -227,6 +227,17 @@
   gap: 8px;
 }
 
+.submitError {
+  margin: 0 0 4px;
+  border-left: 3px solid #dc3545;
+  border-radius: 4px;
+  background: #fff1f2;
+  padding: 9px 11px;
+  color: #a51f2c;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .confirmBtn {
   width: 100%;
   height: 44px;

@@ -80,19 +80,31 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
 
   const plan = getPlanConfig(enumToPlanId(sub.planId))
   const startedAt = new Date()
-  const expiresAt = addMonths(startedAt, plan.months)
 
   const confirmed = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    const confirmed = await tx.subscription.update({
-      where: { id },
+    const claimed = await tx.subscription.updateMany({
+      where: { id, status: SubStatus.PENDING },
       data: {
         status: SubStatus.CONFIRMED,
         startedAt,
-        expiresAt,
         confirmedAt: startedAt,
         confirmedBy,
       },
     })
+    if (claimed.count === 0) throw new Error('Subscription is not pending')
+
+    const user = await tx.user.findUnique({
+      where: { id: sub.userId },
+      select: { subscriptionUntil: true },
+    })
+    if (!user) throw new Error('Subscription user not found')
+
+    const extensionBase = user.subscriptionUntil && user.subscriptionUntil > startedAt
+      ? user.subscriptionUntil
+      : startedAt
+    const expiresAt = addMonths(extensionBase, plan.months)
+
+    const confirmed = await tx.subscription.update({ where: { id }, data: { expiresAt } })
 
     await tx.user.update({
       where: { id: sub.userId },
@@ -107,7 +119,7 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
     'Pro upgrade confirmed',
     `<p>Hello ${sub.user.username},</p>
      <p>Your Pro upgrade request has been confirmed.</p>
-     <p>Expires at: ${expiresAt.toLocaleDateString('vi-VN')}</p>
+     <p>Expires at: ${confirmed.expiresAt?.toLocaleDateString('vi-VN')}</p>
      <p>Thank you for using ChineseDict.</p>`,
     'subscription confirmation',
   )
@@ -125,14 +137,17 @@ export async function rejectSubscription(id: string, confirmedBy: string) {
   if (!sub) throw new Error('Subscription not found')
   if (sub.status !== SubStatus.PENDING) throw new Error('Subscription is not pending')
 
-  const rejected = await prisma.subscription.update({
-    where: { id },
+  const rejectedCount = await prisma.subscription.updateMany({
+    where: { id, status: SubStatus.PENDING },
     data: {
       status: SubStatus.REJECTED,
       confirmedAt: new Date(),
       confirmedBy,
     },
   })
+  if (rejectedCount.count === 0) throw new Error('Subscription is not pending')
+  const rejected = await prisma.subscription.findUnique({ where: { id } })
+  if (!rejected) throw new Error('Subscription not found')
 
   sendEmailInBackground(
     sub.user.email,

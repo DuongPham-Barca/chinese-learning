@@ -11,7 +11,7 @@ import type { LessonPayload } from "@/services/admin-lesson.service"
 import type { VocabularyPayload } from "@/services/admin-vocabulary.service"
 import { SentenceManager } from "./SentenceManager"
 import { VocabularyManager } from "./VocabularyManager"
-import { Field, HskBadge, LessonModal, StatusBadge, UploadDropzone } from "./LessonShared"
+import { Field, HskBadge, LessonModal, StatusBadge } from "./LessonShared"
 import { getHskMeta, slugify } from "./lesson-model"
 import type { EditorTab } from "./types"
 import styles from "../lessons.module.css"
@@ -34,6 +34,8 @@ export function LessonEditor({
   onAddVocabulary,
   onUpdateVocabulary,
   onDeleteVocabulary,
+  onSortVocabularies,
+  onRefreshDetail,
   onImport,
 }: {
   levels: AdminLevel[]
@@ -46,6 +48,8 @@ export function LessonEditor({
   onAddVocabulary: (payload: VocabularyPayload) => Promise<Record<string, string> | null>
   onUpdateVocabulary: (id: string, payload: Partial<VocabularyPayload>) => Promise<Record<string, string> | null>
   onDeleteVocabulary: (id: string) => void
+  onSortVocabularies: () => Promise<void>
+  onRefreshDetail: () => Promise<void>
   onImport: () => void
 }) {
   const [activeTab, setActiveTab] = useState<EditorTab>("basic")
@@ -56,10 +60,9 @@ export function LessonEditor({
     description: lesson.description || "",
     imageUrl: lesson.imageUrl || "",
     order: lesson.order,
-    isFree: lesson.isFree,
     isPublished: lesson.isPublished,
     expReward: lesson.expReward,
-  } : { levelId: defaultLevelId, title: "", slug: "", description: "", imageUrl: "", order: 1, isFree: false, isPublished: false, expReward: 10 })
+  } : { levelId: defaultLevelId, title: "", slug: "", description: "", imageUrl: "", order: 1, isPublished: false, expReward: 10 })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const selectedLevel = levels.find((level) => level.id === form.levelId) || levels[0]
 
@@ -72,7 +75,7 @@ export function LessonEditor({
     const nextErrors: Record<string, string> = {}
     if (!form.levelId) nextErrors.levelId = "Chọn HSK level"
     if (!form.title.trim()) nextErrors.title = "Nhập tên bài học"
-    if (form.order < 0) nextErrors.order = "Thu tu khong duoc am"
+    if (form.order < 0) nextErrors.order = "Thứ tự không được âm"
     if (Object.keys(nextErrors).length) return setErrors(nextErrors)
     const result = await onSaveLesson({ ...form, slug: form.slug?.trim() || slugify(form.title) })
     if (result) setErrors(result)
@@ -90,14 +93,13 @@ export function LessonEditor({
                 <Field label="HSK level" error={errors.levelId}><select value={form.levelId} onChange={(event) => { set("levelId", event.target.value) }}>{levels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></Field>
                 <Field label="Lesson Order" error={errors.order}><input type="number" min={0} value={form.order} onChange={(event) => set("order", Number(event.target.value))} /></Field>
                 <Field label="Mô tả" wide><textarea value={form.description || ""} onChange={(event) => set("description", event.target.value)} /></Field>
-                <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Draft</option><option value="published">Published</option></select></Field>
+                <Field label="Trạng thái"><select value={form.isPublished ? "published" : "draft"} onChange={(event) => set("isPublished", event.target.value === "published")}><option value="draft">Bản nháp</option><option value="published">Đã xuất bản</option></select></Field>
                 <Field label="EXP Reward"><input type="number" min={0} value={form.expReward} onChange={(event) => set("expReward", Number(event.target.value))} /></Field>
-                <label className={styles.checkField}><input type="checkbox" checked={form.isFree} onChange={(event) => set("isFree", event.target.checked)} /> Bài học miễn phí</label>
               </div>
             </div>
           )}
-          {activeTab === "vocabulary" && <VocabularyManager vocabularies={detail?.vocabulary || []} lessonId={detail?.id || ""} saving={saving} onAdd={onAddVocabulary} onUpdate={onUpdateVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
-          {activeTab === "sentences" && <SentenceManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
+          {activeTab === "vocabulary" && <VocabularyManager vocabularies={detail?.vocabulary || []} lessonId={detail?.id || ""} saving={saving} onAdd={onAddVocabulary} onUpdate={onUpdateVocabulary} onDelete={onDeleteVocabulary} onSort={onSortVocabularies} onRefresh={onRefreshDetail} onImport={onImport} />}
+          {activeTab === "sentences" && <SentenceManager vocabularies={detail?.vocabulary || []} saving={saving} onAdd={onAddVocabulary} onUpdate={onUpdateVocabulary} onDelete={onDeleteVocabulary} onImport={onImport} />}
           {activeTab === "preview" && selectedLevel && <div className={styles.previewPanel} style={{ "--accent": getHskMeta(selectedLevel).accent, "--soft": getHskMeta(selectedLevel).soft } as CSSProperties}><div className={styles.previewHero}>{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <AdminIcon name="book" />}</div><div><div className={styles.badgeRow}><HskBadge level={selectedLevel} /><StatusBadge published={form.isPublished} /></div><h3>{form.title || "Tên bài học"}</h3><p>{form.description || "Mô tả ngắn của bài học sẽ hiển thị tại đây."}</p><span>{detail?.vocabulary.length || 0} từ vựng</span><span>{detail?.sentences.length || detail?.sentenceCount || 0} câu luyện tập</span></div></div>}
         </section>
       </div>

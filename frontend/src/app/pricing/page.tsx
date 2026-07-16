@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import SiteNavbar from "@/components/site-navbar"
 import LoadingSpinner from "@/components/loading-spinner"
@@ -95,11 +96,13 @@ const faq: [string, string][] = [
   ["Khi nào tài khoản được kích hoạt?", "Tài khoản sẽ được kích hoạt trong vòng 24 giờ sau khi nhận được thanh toán. Bạn sẽ nhận được email xác nhận."],
   ["Có thể gia hạn không?", "Có. Sau khi hết hạn, bạn có thể mua gói mới để tiếp tục sử dụng ChineseDict Pro."],
   ["Có hoàn tiền không?", "Chúng tôi có chính sách hoàn tiền trong vòng 7 ngày nếu bạn không hài lòng với dịch vụ."],
-  ["Thanh toán bằng hình thức nào?", "Chúng tôi chấp nhận thanh toán qua chuyển khoản ngân hàng nội địa (Vietcombank, VietQR)."],
+  ["Thanh toán bằng hình thức nào?", "ChineseDict nhận thanh toán qua chuyển khoản VietinBank bằng thông tin hoặc mã VietQR hiển thị trong ứng dụng."],
 ]
 
-function calcExpiry(months: number): string {
-  const d = new Date()
+function calcExpiry(months: number, currentExpiry?: string | null): string {
+  const now = new Date()
+  const existingExpiry = currentExpiry ? new Date(currentExpiry) : null
+  const d = existingExpiry && existingExpiry > now ? existingExpiry : now
   d.setMonth(d.getMonth() + months)
   return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
@@ -115,20 +118,43 @@ const itemVariants = {
 }
 
 export default function PricingPage() {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const { user, loading } = useAuth()
+  const [now, setNow] = useState(() => Date.now())
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const selectedForModal = (() => {
     const s = plans.find((p) => p.id === selectedPlan)
-    return s ? { id: s.id, title: s.title, price: s.price, durationMonths: s.durationMonths, expiry: calcExpiry(s.durationMonths) } : null
+    return s ? { id: s.id, title: s.title, price: s.price, durationMonths: s.durationMonths, expiry: calcExpiry(s.durationMonths, user?.subscriptionUntil) } : null
   })()
+  const subscriptionExpiry = user?.subscriptionUntil ? Date.parse(user.subscriptionUntil) : Number.NaN
+  const hasActiveSubscription = Boolean(
+    user?.isPremium
+    && Number.isFinite(subscriptionExpiry)
+    && subscriptionExpiry > now,
+  )
+  const activePlanId = hasActiveSubscription ? user?.plan : null
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 400)
-    return () => clearTimeout(timer)
-  }, [])
+    if (!Number.isFinite(subscriptionExpiry) || subscriptionExpiry <= now) return
+    const maxTimerDelay = 2_147_000_000
+    const timer = window.setTimeout(
+      () => setNow(Date.now()),
+      Math.min(subscriptionExpiry - now + 50, maxTimerDelay),
+    )
+    return () => window.clearTimeout(timer)
+  }, [now, subscriptionExpiry])
+
+  function choosePlan(planId: PlanId) {
+    if (activePlanId === planId) return
+    if (!user) {
+      router.push("/login?next=/pricing")
+      return
+    }
+    setSelectedPlan(planId)
+    setPaymentModalOpen(true)
+  }
 
   if (loading) {
     return <main className={styles.page}><SiteNavbar /><LoadingSpinner /></main>
@@ -150,7 +176,7 @@ export default function PricingPage() {
             <path d="M6 22h12" />
           </svg>
         </motion.div>
-        <motion.h1 variants={itemVariants}>Gia hạn gói Pro</motion.h1>
+        <motion.h1 variants={itemVariants}>Đăng ký gói Pro</motion.h1>
         <motion.p variants={itemVariants}>
           Chọn thời hạn sử dụng phù hợp. Tất cả các gói đều mở khóa đầy đủ tính năng Pro.
         </motion.p>
@@ -163,8 +189,9 @@ export default function PricingPage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
-        {plans.map((plan) => (
-          <motion.div
+        {plans.map((plan) => {
+          const isRegisteredPlan = activePlanId === plan.id
+          return <motion.div
             key={plan.id}
             variants={itemVariants}
             className={`${styles.planCard} ${plan.popular ? styles.popularCard : ""}`}
@@ -196,14 +223,14 @@ export default function PricingPage() {
             </ul>
             <button
               type="button"
-              className={`${styles.ctaButton} ${plan.popular ? styles.ctaPrimary : ""} ${user?.plan === plan.id ? styles.ctaDisabled : ""}`}
-              disabled={user?.plan === plan.id}
-              onClick={() => { setSelectedPlan(plan.id); setPaymentModalOpen(true) }}
+              className={`${styles.ctaButton} ${plan.popular ? styles.ctaPrimary : ""} ${isRegisteredPlan ? styles.ctaDisabled : ""}`}
+              onClick={() => choosePlan(plan.id)}
+              disabled={isRegisteredPlan}
             >
-              {user?.plan === plan.id ? "Đang sử dụng" : plan.buttonLabel}
+              {isRegisteredPlan ? "Đã đăng ký gói" : plan.buttonLabel}
             </button>
           </motion.div>
-        ))}
+        })}
       </motion.div>
 
 
@@ -238,6 +265,26 @@ export default function PricingPage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
+        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>Cách kích hoạt Pro</motion.h2>
+        <motion.div variants={itemVariants} className={styles.steps}>
+          {steps.map(([title, description], index) => (
+            <div className={styles.step} key={title}>
+              <span className={styles.stepNumber}>{index + 1}</span>
+              <div><h3>{title}</h3><p>{description}</p></div>
+              {index < steps.length - 1 && <span className={styles.stepArrow}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></span>}
+            </div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      <motion.section
+        id="faq"
+        className={styles.section}
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         <motion.h2 variants={itemVariants} className={styles.sectionTitle}>Câu hỏi thường gặp</motion.h2>
         <motion.div variants={itemVariants} className={styles.faqList}>
           {faq.map(([question, answer], i) => (
@@ -255,7 +302,7 @@ export default function PricingPage() {
           ))}
         </motion.div>
         <motion.p variants={itemVariants} className={styles.faqFooter}>
-          Vẫn còn thắc mắc? <Link href="#contact">Liên hệ chúng tôi</Link>
+          Vẫn còn thắc mắc? <Link href="/#footer">Liên hệ chúng tôi</Link>
         </motion.p>
       </motion.section>
 

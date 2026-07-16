@@ -2,17 +2,30 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import AdminIcon, { type AdminIconName } from "./admin-icons"
 import AdminAccountDropdown from "./admin-account-dropdown"
+import { getDashboard, type Activity } from "@/services/admin-dashboard.service"
 import styles from "./admin-layout.module.css"
+import topbarStyles from "./admin-topbar.module.css"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
 const ADMIN_ROUTE_SESSION_KEY = "admin-route-session"
+const ADMIN_PREFERENCES_KEY = "admin-preferences"
 
 const mainMenu: Array<[string, string, AdminIconName]> = [
   ["/admin", "Tổng quan", "grid"], ["/admin/lessons", "Bài học", "book"], ["/admin/users", "Người dùng", "users"], ["/leaderboard", "Bảng xếp hạng", "chart"],
+]
+
+const quickLinks = [
+  { href: "/admin", label: "Tổng quan", hint: "dashboard thống kê" },
+  { href: "/admin/lessons", label: "Bài học", hint: "từ vựng câu luyện tập import" },
+  { href: "/admin/users", label: "Người dùng", hint: "tài khoản premium" },
+  { href: "/leaderboard", label: "Bảng xếp hạng", hint: "thành tích exp" },
+  { href: "/admin/profile", label: "Hồ sơ cá nhân", hint: "thông tin mật khẩu" },
+  { href: "/admin/settings", label: "Cài đặt", hint: "giao diện thông báo" },
+  { href: "/admin/activity", label: "Nhật ký hoạt động", hint: "lịch sử hệ thống" },
 ]
 
 function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -21,7 +34,62 @@ function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 function AdminTopbar({ onMenu }: { onMenu: () => void }) {
-  return <motion.header className={styles.topbar} initial={{ y: -12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: "easeOut", delay: 0.08 }}><button type="button" className={styles.menuButton} onClick={onMenu} aria-label="Mở menu"><AdminIcon name="menu" /></button><strong>ChineseDict Admin</strong><label className={styles.search}><AdminIcon name="search" /><input placeholder="Tìm kiếm nhanh..." /></label><button type="button" className={styles.toolButton} aria-label="Thông báo"><AdminIcon name="bell" /><i /></button><button type="button" className={styles.toolButton} aria-label="Giao diện tối"><AdminIcon name="moon" /></button><span className={styles.dropdownWrap}><AdminAccountDropdown /></span></motion.header>
+  const router = useRouter()
+  const [query, setQuery] = useState("")
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [darkMode, setDarkMode] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const notificationsRef = useRef<HTMLDivElement>(null)
+  const matches = useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return []
+    return quickLinks.filter((item) => `${item.label} ${item.hint}`.toLowerCase().includes(normalized)).slice(0, 6)
+  }, [query])
+
+  useEffect(() => {
+    getDashboard().then((response) => setActivities(response.data.recentActivities)).catch(() => setActivities([]))
+    const stored = localStorage.getItem(ADMIN_PREFERENCES_KEY)
+    if (stored) {
+      try {
+        const preferences = JSON.parse(stored) as { darkMode?: boolean; compactMode?: boolean; notifications?: boolean }
+        queueMicrotask(() => {
+          setDarkMode(Boolean(preferences.darkMode))
+          setNotificationsEnabled(preferences.notifications !== false)
+        })
+        document.documentElement.dataset.adminTheme = preferences.darkMode ? "dark" : "light"
+        document.documentElement.dataset.adminDensity = preferences.compactMode ? "compact" : "comfortable"
+      } catch { localStorage.removeItem(ADMIN_PREFERENCES_KEY) }
+    }
+    const handlePreferences = (event: Event) => {
+      const preferences = (event as CustomEvent<{ darkMode: boolean; notifications: boolean }>).detail
+      setDarkMode(preferences.darkMode)
+      setNotificationsEnabled(preferences.notifications)
+    }
+    window.addEventListener("admin-preferences-change", handlePreferences)
+    return () => window.removeEventListener("admin-preferences-change", handlePreferences)
+  }, [])
+
+  useEffect(() => {
+    if (!notificationsOpen) return
+    const close = (event: MouseEvent) => { if (!notificationsRef.current?.contains(event.target as Node)) setNotificationsOpen(false) }
+    document.addEventListener("mousedown", close)
+    return () => document.removeEventListener("mousedown", close)
+  }, [notificationsOpen])
+
+  function toggleTheme() {
+    const next = !darkMode
+    setDarkMode(next)
+    document.documentElement.dataset.adminTheme = next ? "dark" : "light"
+    const stored = localStorage.getItem(ADMIN_PREFERENCES_KEY)
+    let preferences: Record<string, unknown> = {}
+    try { preferences = stored ? JSON.parse(stored) as Record<string, unknown> : {} } catch { preferences = {} }
+    localStorage.setItem(ADMIN_PREFERENCES_KEY, JSON.stringify({ compactMode: false, notifications: true, ...preferences, darkMode: next }))
+  }
+
+  function navigate(href: string) { setQuery(""); router.push(href) }
+
+  return <motion.header className={styles.topbar} initial={{ y: -12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: "easeOut", delay: 0.08 }}><button type="button" className={styles.menuButton} onClick={onMenu} aria-label="Mở menu"><AdminIcon name="menu" /></button><strong>ChineseDict Admin</strong><div className={topbarStyles.searchWrap}><label className={styles.search}><AdminIcon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && matches[0]) navigate(matches[0].href); if (event.key === "Escape") setQuery("") }} placeholder="Tìm nhanh trang quản trị..." /></label>{query && <div className={topbarStyles.searchResults}>{matches.length ? matches.map((item) => <button type="button" key={item.href} onClick={() => navigate(item.href)}><strong>{item.label}</strong><span>{item.hint}</span></button>) : <p>Không tìm thấy mục phù hợp</p>}</div>}</div><div className={topbarStyles.notificationWrap} ref={notificationsRef}><button type="button" className={styles.toolButton} aria-label="Thông báo" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((current) => !current)}><AdminIcon name="bell" />{notificationsEnabled && activities.length > 0 && <i />}</button>{notificationsOpen && <div className={topbarStyles.notifications}><header><strong>Hoạt động mới</strong><Link href="/admin/activity" onClick={() => setNotificationsOpen(false)}>Xem tất cả</Link></header>{!notificationsEnabled ? <p>Thông báo đang tắt trong Cài đặt.</p> : activities.length ? activities.slice(0, 4).map((item) => <Link href="/admin/activity" key={item.id} onClick={() => setNotificationsOpen(false)}><strong>{item.title}</strong><span>{item.text}</span><small>{item.time}</small></Link>) : <p>Chưa có hoạt động mới.</p>}</div>}</div><button type="button" className={`${styles.toolButton} ${darkMode ? topbarStyles.activeTool : ""}`} aria-label={darkMode ? "Giao diện sáng" : "Giao diện tối"} aria-pressed={darkMode} onClick={toggleTheme}><AdminIcon name="moon" /></button><span className={styles.dropdownWrap}><AdminAccountDropdown /></span></motion.header>
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -123,5 +191,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     )
   }
 
-  return <div className={styles.adminPage}><div className={styles.adminShell}><AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /><section className={styles.workspace}><AdminTopbar onMenu={() => setSidebarOpen(true)} /><div className={styles.content}>{children}</div></section></div></div>
+  return <div className={`${styles.adminPage} ${topbarStyles.themeRoot}`}><div className={styles.adminShell}><AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /><section className={styles.workspace}><AdminTopbar onMenu={() => setSidebarOpen(true)} /><div className={`${styles.content} ${topbarStyles.contentRoot}`}>{children}</div></section></div></div>
 }

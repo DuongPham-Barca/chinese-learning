@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { AdminButton, PageHeader } from "@/components/admin/admin-ui"
 import { getLevels, type AdminLevel } from "@/services/admin-level.service"
 import { createLesson, deleteLesson, getLessonById, getLessons, updateLesson, type AdminLesson, type AdminLessonDetail, type LessonPayload } from "@/services/admin-lesson.service"
-import { createVocabulary, deleteVocabulary, importAll, updateVocabulary, type VocabularyPayload } from "@/services/admin-vocabulary.service"
+import { commitImport, createVocabulary, deleteVocabulary, previewImport, reorderVocabularies, updateVocabulary, type ImportFilePayload, type VocabularyPayload } from "@/services/admin-vocabulary.service"
 import { HskLevelTabs } from "./components/HskLevelTabs"
 import { LessonFilters } from "./components/LessonFilters"
 import { LessonEditor } from "./components/LessonEditor"
@@ -104,9 +104,32 @@ export default function AdminLessonsPage() {
   async function openEditor(lesson: AdminLesson | "create") {
     setEditorLesson(lesson)
     setDetail(null)
-    if (lesson !== "create") {
+    if (lesson !== "create" && lesson.id) {
       try { setDetail((await getLessonById(lesson.id)).data) }
       catch (e) { setToast({ variant: "error", message: apiMessage(e, "Không thể tải chi tiết bài học") }) }
+    }
+  }
+
+  async function duplicateLesson(lesson: AdminLesson) {
+    setSaving(true)
+    try {
+      const suffix = Date.now().toString(36)
+      await createLesson({
+        levelId: lesson.levelId,
+        title: `${lesson.title} (bản sao)`,
+        slug: `${lesson.slug}-copy-${suffix}`,
+        description: lesson.description,
+        imageUrl: lesson.imageUrl,
+        order: Math.max(...lessons.filter((item) => item.levelId === lesson.levelId).map((item) => item.order), 0) + 1,
+        isPublished: false,
+        expReward: lesson.expReward,
+      })
+      await loadLessons()
+      setToast({ variant: "success", message: "Đã nhân bản bài học ở trạng thái nháp" })
+    } catch (error) {
+      setToast({ variant: "error", message: apiMessage(error, "Không thể nhân bản bài học") })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -177,10 +200,39 @@ export default function AdminLessonsPage() {
     }
   }
 
-  async function importFile(lessonId: string, file: File) {
-    const response = await importAll(lessonId, file)
-    if (detail?.id === lessonId) {
-      setDetail((await getLessonById(lessonId)).data)
+  async function sortVocabularies() {
+    if (!detail) return
+    const items = detail.vocabulary
+      .slice()
+      .sort((a, b) => a.order - b.order || a.chinese.localeCompare(b.chinese, "zh"))
+      .map((item, index) => ({ id: item.id, order: index + 1 }))
+    setSaving(true)
+    try {
+      await reorderVocabularies({ lessonId: detail.id, items })
+      setDetail((await getLessonById(detail.id)).data)
+      setToast({ variant: "success", message: "Đã chuẩn hóa thứ tự từ vựng" })
+    } catch (error) {
+      setToast({ variant: "error", message: apiMessage(error, "Không thể sắp xếp từ vựng") })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function refreshDetail() {
+    if (!detail) return
+    setDetail((await getLessonById(detail.id)).data)
+    await loadLessons()
+  }
+
+  async function previewImportFile(payload: ImportFilePayload) {
+    const response = await previewImport(payload)
+    return response.data
+  }
+
+  async function importFile(payload: ImportFilePayload) {
+    const response = await commitImport(payload)
+    if (detail?.id && payload.mode === "lesson" && detail.id === payload.lessonId) {
+      setDetail((await getLessonById(detail.id)).data)
     }
     await loadLessons()
     setToast({ variant: "success", message: `Đã import ${response.data.added} bản ghi` })
@@ -225,7 +277,7 @@ export default function AdminLessonsPage() {
 
       <motion.div variants={itemVariants} className={styles.breadcrumb}>
         <button type="button" onClick={() => { setSelectedLevelId(defaultLevelId); setEditorLesson(null) }}>Quản lý bài học</button>
-        {selectedLevel && <><span>/</span><button type="button">{selectedLevel.name}</button></>}
+        {selectedLevel && <><span>/</span><span>{selectedLevel.name}</span></>}
       </motion.div>
 
       <motion.div variants={itemVariants} className={styles.managementShell}>
@@ -237,9 +289,9 @@ export default function AdminLessonsPage() {
           {!loading && error && <ErrorState message={error} onRetry={() => void loadLessons()} />}
           {!loading && !error && selectedLevel && (filteredLessons.length ? (
             view === "grid" ? (
-              <LessonGrid lessons={filteredLessons} level={selectedLevel} onView={(lesson) => void openEditor(lesson)} onEdit={(lesson) => void openEditor(lesson)} onDuplicate={(lesson) => void openEditor({ ...lesson, id: "", title: `${lesson.title} (copy)`, slug: `${lesson.slug}-copy`, isPublished: false })} onDelete={setDeleteTarget} />
+              <LessonGrid lessons={filteredLessons} level={selectedLevel} onView={(lesson) => void openEditor(lesson)} onEdit={(lesson) => void openEditor(lesson)} onDuplicate={(lesson) => void duplicateLesson(lesson)} onDelete={setDeleteTarget} />
             ) : (
-              <LessonTable lessons={filteredLessons} level={selectedLevel} onView={(lesson) => void openEditor(lesson)} onEdit={(lesson) => void openEditor(lesson)} onDuplicate={(lesson) => void openEditor({ ...lesson, id: "", title: `${lesson.title} (copy)`, slug: `${lesson.slug}-copy`, isPublished: false })} onDelete={setDeleteTarget} />
+              <LessonTable lessons={filteredLessons} level={selectedLevel} onView={(lesson) => void openEditor(lesson)} onEdit={(lesson) => void openEditor(lesson)} onDuplicate={(lesson) => void duplicateLesson(lesson)} onDelete={setDeleteTarget} />
             )
           ) : (
             <NoLessons onCreate={() => void openEditor("create")} onImport={() => setImportOpen(true)} />
@@ -247,8 +299,8 @@ export default function AdminLessonsPage() {
         </main>
       </motion.div>
 
-      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onUpdateVocabulary={editVocabulary} onDeleteVocabulary={(id) => setVocabularyDeleteTarget(detail?.vocabulary.find((vocab) => vocab.id === id) || null)} onImport={() => setImportOpen(true)} />}
-      {importOpen && <ExcelImportWizard levels={levels} lessons={lessons} defaultLevelId={defaultLevelId} defaultLessonId={detail?.id} onImport={importFile} onClose={() => setImportOpen(false)} />}
+      {editorLesson && <LessonEditor levels={levels} lesson={editorLesson === "create" || editorLesson.id === "" ? null : editorLesson} detail={detail} defaultLevelId={defaultLevelId} saving={saving} onClose={() => setEditorLesson(null)} onSaveLesson={saveLesson} onAddVocabulary={addVocabulary} onUpdateVocabulary={editVocabulary} onDeleteVocabulary={(id) => setVocabularyDeleteTarget(detail?.vocabulary.find((vocab) => vocab.id === id) || null)} onSortVocabularies={sortVocabularies} onRefreshDetail={refreshDetail} onImport={() => setImportOpen(true)} />}
+      {importOpen && <ExcelImportWizard levels={levels} lessons={lessons} defaultLevelId={defaultLevelId} defaultLessonId={detail?.id} onPreview={previewImportFile} onImport={importFile} onClose={() => setImportOpen(false)} />}
       {deleteTarget && <DeleteConfirmModal title="Xóa bài học" description={`Bạn sắp xóa bài học "${deleteTarget.title}".`} facts={[{ label: "Số từ vựng", value: deleteTarget.vocabularyCount }, { label: "Số câu luyện tập", value: deleteTarget.sentenceCount }]} saving={saving} onClose={() => setDeleteTarget(null)} onConfirm={() => void confirmDelete()} />}
       {vocabularyDeleteTarget && <DeleteConfirmModal title="Xóa từ vựng" description={`Bạn sắp xóa từ "${vocabularyDeleteTarget.chinese}" khỏi bài học này.`} facts={[{ label: "Pinyin", value: vocabularyDeleteTarget.pinyin }, { label: "Nghĩa", value: vocabularyDeleteTarget.vietnamese }, { label: "Thứ tự", value: vocabularyDeleteTarget.order }]} saving={saving} onClose={() => setVocabularyDeleteTarget(null)} onConfirm={() => void removeVocabulary(vocabularyDeleteTarget.id)} />}
       {toast && <div className={`${styles.toast} ${toast.variant === "success" ? styles.toastSuccess : styles.toastError}`}><span>{toast.message}</span><button type="button" onClick={() => setToast(null)}>x</button></div>}
