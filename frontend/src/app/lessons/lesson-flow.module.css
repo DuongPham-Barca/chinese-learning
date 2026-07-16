@@ -5,7 +5,114 @@
 .moduleArt>*{grid-area:1/1}.moduleArt img{opacity:.34}.primaryButton:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}.lessonCardLocked{opacity:.72;cursor:not-allowed}.lessonCardLocked:hover{transform:none;border-color:var(--border);box-shadow:0 12px 28px rgba(51,65,85,.05)}.lockedStartButton{border:0;opacity:.8;cursor:not-allowed;box-shadow:none}.lockedStartButton:disabled{color:#64748b;background:#e2e8f0}
 .answerReview{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#f8fbff}.answerReview p{margin:10px 0 0;color:var(--body);font-size:13px;line-height:1.6}.answerReview .audioBtn{margin-top:12px}.inlineScore{display:grid;gap:4px;justify-items:center;margin-top:16px;padding:16px;border:1px solid #bfdbfe;border-radius:18px;background:#eff6ff;color:var(--blue)}.inlineScore strong{font-size:42px;line-height:1}.inlineScore span{color:var(--body);font-size:13px;font-weight:750}.sentenceBuilder{display:grid;gap:16px;margin-top:18px;padding:20px;border:1px solid var(--border);border-radius:18px;background:#fff;box-shadow:0 14px 34px rgba(51,65,85,.06)}.dropSentence{display:flex;min-height:128px;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:18px;border:2px dashed #cbd5e1;border-radius:16px;background:#f8fafc;transition:border-color .2s,background .2s}.dropSentence p{margin:0;color:var(--muted);font-size:13px}.tokenBank{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.tokenChip,.tokenChipSelected{min-width:48px;min-height:44px;padding:0 14px;border-radius:14px;font-size:22px;font-weight:800;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s,background .18s}.tokenChip{border:1px solid var(--border);color:var(--text);background:#fff;box-shadow:0 8px 18px rgba(37,99,235,.08)}.tokenChip:hover,.tokenChipSelected:hover{transform:translateY(-1px)}.tokenChipSelected{border:1px solid #bfdbfe;color:var(--blue);background:#eff6ff}.dragOver{border-color:#93c5fd;background:#eff6ff}.quizCard{padding:26px;border:1px solid var(--border);border-radius:20px;background:#fff;box-shadow:0 18px 45px rgba(37,99,235,.09)}.quizCard h1{margin:12px 0 18px;font-size:28px;line-height:1.25}.wordEyebrow{display:inline-flex;width:max-content;align-items:center;border-radius:999px;padding:6px 10px;color:var(--blue);background:#dbeafe;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.quizSupport{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0;padding:22px;border-radius:18px;background:#f8fbff}.quizSupport strong{font-size:34px;color:#142b6f}.choiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.quizChoice{min-height:56px;padding:12px;border:1px solid var(--border);border-radius:16px;color:var(--text);background:#fff;font-weight:750;cursor:pointer}.quizChoiceSelected{border-color:var(--blue);color:var(--blue);background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.completionMark{display:grid;width:70px;height:70px;place-items:center;margin:0 auto 18px;border-radius:22px;color:#fff;background:linear-gradient(135deg,var(--blue),#60a5fa);box-shadow:0 12px 26px rgba(37,99,235,.25)}.quizScore{display:grid;justify-items:center;margin:12px 0 18px}.quizScore strong{color:var(--blue);font-size:46px}.quizScore span{color:var(--body);font-weight:750}
 .moduleProgress{display:grid;gap:8px;margin-top:16px}.moduleProgress span{color:var(--muted);font-size:12px;font-weight:700}.moduleProgress b{color:var(--blue)}.moduleProgress i{display:block;height:7px;overflow:hidden;border-radius:999px;background:var(--blue-line)}.moduleProgress em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),#60a5fa);transition:width .25s ease}.timelineStep span{min-width:0}.timelineStep b{margin-left:auto;color:var(--blue);font-size:12px}.timelineStepDone{border-color:#bbf7d0;background:#f0fdf4;color:#166534}.timelineStepDone i{color:#15803d;background:#dcfce7}.timelineStepActive{border-color:#bfdbfe;background:#f8fbff;color:#1d4ed8}
+
+/* Study pages own their full-width sticky header, so they must not inherit the
+   regular lesson detail spacing as well. */
+.lessonShell:has(> .studyWrap){width:100%;padding:0 0 48px}
+.lessonShell:has(> .studyWrap)>.studyWrap{padding-top:0}
+
+.moduleCard{display:grid;min-height:388px;grid-template-rows:108px auto auto minmax(72px,1fr) auto auto;padding:18px;border-radius:8px}
+.moduleArt{height:108px;border-radius:8px}
+.moduleArt img{width:auto;height:100%;object-fit:contain}
+.moduleIcon{width:54px;height:54px;border-radius:8px}
+.moduleHeading{margin-top:14px}
+.moduleCard p{margin-top:9px}
+.checklist{margin-top:12px}
+.moduleProgress{margin-top:14px}
+.moduleFooter{margin-top:0;padding-top:14px}
+.moduleAction,.disabledAction{min-height:40px}
+
+@media(max-width:760px){
+  .lessonShell:has(> .studyWrap){padding-bottom:36px}
+  .moduleCard{min-height:0;grid-template-rows:96px auto auto auto auto auto;padding:16px}
+  .moduleArt{height:96px}
+}
 @media(max-width:760px){.choiceGrid{grid-template-columns:1fr}.quizCard h1{font-size:24px}.tokenChip,.tokenChipSelected{min-width:44px;min-height:40px;font-size:20px}}.learningStageCard{display:grid;gap:22px;padding:26px;border:1px solid var(--border);border-radius:20px;background:#fff;box-shadow:0 18px 45px rgba(37,99,235,.09)}.vocabLearnCard{text-align:center}.wordPronCard{text-align:center}.learnFlipScene{display:block;width:100%;perspective:1000px;border:0;background:transparent;cursor:pointer;text-align:center;padding:16px 0}.learnFlipCard{position:relative;display:block;width:100%;min-height:200px;transition:transform .4s;transform-style:preserve-3d}.flipped .learnFlipCard{transform:rotateX(180deg)}.learnFace{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:20px;background:#fff;box-shadow:0 14px 34px rgba(51,65,85,.06);backface-visibility:hidden;padding:24px}.learnFaceFront{z-index:2}.learnFaceBack{transform:rotateX(180deg)}.learnFaceBack small{color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.learnFaceBack strong{margin-top:10px;font-size:28px;color:#142b6f}.learnFaceBack span{display:block;margin-top:8px;color:var(--body);font-size:16px}.learnHanzi{font-size:52px;line-height:1.15;color:#142b6f;letter-spacing:-1.2px}.learnPinyin{display:block;margin-top:9px;color:var(--blue);font-size:20px;font-weight:750}.learnFlipScene small{display:block;margin-top:20px;color:var(--muted);font-size:12px}.examplePanel{margin-top:10px;padding:16px;border-radius:16px;background:#f8fbff;text-align:left}.examplePanel span{color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.examplePanel p{margin:8px 0 4px;font-size:20px;font-weight:750;color:var(--text)}.examplePanel small{color:var(--body);font-size:14px;line-height:1.6}
 .cardFace>*{position:relative;z-index:1}.cardFrontWithImage{justify-content:flex-start;padding:26px 32px 24px}.flashImageWrap{width:min(360px,82%);height:190px;margin-bottom:20px;overflow:hidden;border:1px solid var(--border);border-radius:20px;background:#f8fafc;box-shadow:0 14px 30px rgba(15,23,42,.08)}.flashImage{display:block;width:100%;height:100%;object-fit:cover}.cardFrontWithImage strong{font-size:72px;letter-spacing:-2px}.cardFrontWithImage small{margin-top:8px;font-size:22px}.cardFrontWithImage .audioButton{margin-top:18px}.flashBackImage{width:150px;height:112px;margin-bottom:16px;object-fit:cover;border:1px solid var(--border);border-radius:18px;background:#f8fafc;box-shadow:0 10px 24px rgba(15,23,42,.08)}.learnFaceWithImage{justify-content:flex-start}.learnImageWrap{display:block;width:min(260px,76%);height:130px;margin-bottom:14px;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:#f8fafc;box-shadow:0 10px 24px rgba(15,23,42,.08)}.learnImage{display:block;width:100%;height:100%;object-fit:cover}.learnFaceWithImage .learnHanzi{font-size:42px}.learnFaceWithImage .learnPinyin{font-size:18px}.learnFaceWithImage small{margin-top:12px}
 @media(max-width:760px){.cardFrontWithImage{padding:22px}.flashImageWrap{height:165px}.cardFrontWithImage strong{font-size:58px}.cardFrontWithImage small{font-size:19px}.flashBackImage{width:132px;height:96px}.learnImageWrap{height:112px}}
+
+/* Compact learning surfaces: keep the information hierarchy clear without
+   making desktop users scan oversized panels. */
+.lessonShell{width:min(1120px,calc(100% - 40px));padding:24px 0 40px}
+.levelHero{grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:24px;padding:24px;border-radius:12px}
+.levelHero h1{margin:14px 0 10px;font-size:40px;line-height:1.1;letter-spacing:0}
+.levelHero p{font-size:15px;line-height:1.6}
+.levelBadge{height:28px;padding:0 11px;font-size:11px}
+.heroStats{gap:8px;margin-top:18px}
+.heroStats span{padding:7px 10px;font-size:11px}
+.progressPanel{padding:18px;border-radius:10px}
+.progressPanel small{display:block;margin-bottom:7px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase}
+.progressPanel strong{font-size:28px}
+.progressPanel span{margin-top:5px}
+.progressTrack{height:7px;margin-top:14px}
+
+.lessonGrid{gap:16px;margin-top:20px}
+.lessonCard{min-height:208px;padding:18px;border-radius:8px}
+.lessonNumber{width:40px;height:40px;border-radius:8px}
+.freeBadge,.proBadge,.newBadge,.soonBadge,.doneBadge{height:24px;padding:0 9px;font-size:11px}
+.lessonCard h2{margin:18px 0 8px;font-size:18px;letter-spacing:0}
+.lessonMeta{gap:8px;font-size:11px}
+.lessonCard footer{padding-top:16px}
+.statusBadge{height:26px;font-size:11px}
+.startButton{min-height:40px;padding:0 16px;font-size:13px}
+
+.detailHeader{margin:-24px calc((100vw - min(1120px,calc(100vw - 40px)))/-2) 20px}
+.detailHeaderInner{width:min(1120px,calc(100% - 40px));min-height:64px}
+.backButton{width:38px;height:38px;border-radius:8px}
+.detailTitle strong{font-size:15px}
+.detailTitle span{margin-top:3px;font-size:11px}
+.detailStack{gap:16px}
+.progressCard{padding:20px;border-radius:8px}
+.progressHead h1{margin:0;font-size:21px}
+.progressHead p{margin-top:5px;font-size:13px}
+.percentPill{width:64px;height:64px}
+.percentPill:before{width:50px;height:50px}
+.percentPill span{font-size:15px}
+.largeTrack{height:8px;margin:16px 0}
+.timeline{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.timelineStep{gap:7px;padding:9px;border-radius:8px;font-size:11px}
+.timelineStep i{width:22px;height:22px}
+.infoCard{grid-template-columns:56px 1fr;gap:14px;padding:16px;border-radius:8px}
+.infoIllustration{width:52px;height:52px;border-radius:8px}
+.infoCard h2{font-size:16px}
+.infoCard p{margin:0;font-size:14px;line-height:1.55}
+
+.moduleGrid{gap:16px}
+.moduleCard{min-height:350px;grid-template-rows:84px auto auto minmax(56px,1fr) auto auto;padding:14px}
+.moduleArt{height:84px}
+.moduleIcon{width:46px;height:46px}
+.moduleHeading{margin-top:12px}
+.moduleHeading h2{font-size:18px}
+.moduleCard p{font-size:12px;line-height:1.55}
+.checklist{gap:6px;margin-top:10px;font-size:11px}
+.moduleProgress{gap:6px;margin-top:11px}
+.moduleFooter{padding-top:11px}
+.moduleAction,.disabledAction{min-height:38px;padding:0 15px;font-size:13px}
+
+@media(max-width:1000px){
+  .levelHero{grid-template-columns:1fr}
+  .timeline{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(max-width:760px){
+  .lessonShell{width:calc(100% - 32px);padding:18px 0 32px}
+  .levelHero{padding:18px}
+  .levelHero h1{font-size:32px}
+  .detailHeader{margin-top:-18px}
+  .detailHeaderInner{width:calc(100% - 32px)}
+  .progressCard{padding:16px}
+  .timeline{grid-template-columns:1fr 1fr}
+  .infoCard{grid-template-columns:44px 1fr;padding:14px}
+  .infoIllustration{width:42px;height:42px}
+  .moduleCard{min-height:0;grid-template-rows:76px auto auto auto auto auto}
+  .moduleArt{height:76px}
+}
+
+@media(max-width:440px){
+  .timeline{grid-template-columns:1fr}
+}
 @media(max-width:440px){.cardFrontWithImage{padding:18px}.flashImageWrap{width:88%;height:138px;margin-bottom:16px}.cardFrontWithImage strong{font-size:46px}.cardFrontWithImage small{font-size:17px}.cardFrontWithImage .audioButton{width:54px;height:54px;margin-top:14px}.flashBackImage{width:112px;height:82px}.learnImageWrap{width:84%;height:96px}.learnFaceWithImage .learnHanzi{font-size:34px}}
+
+.completionCard .primaryButton,.completionCard .secondaryButton{width:auto;min-width:168px;padding:0 20px}
+.completionCard .primaryButton{cursor:pointer}
+@media(max-width:560px){.completionCard .actionRow{flex-direction:column}.completionCard .primaryButton,.completionCard .secondaryButton{width:100%}}

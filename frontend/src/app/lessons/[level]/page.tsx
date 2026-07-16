@@ -34,7 +34,7 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
   const totalVocabulary = lessons.reduce((sum, lesson) => sum + lesson._count.vocabulary, 0)
   const totalSentences = lessons.reduce((sum, lesson) => sum + lesson._count.sentences, 0)
   const unlockedLessons = lessons.filter((lesson) => !lesson.isLocked).length
-  const progress = lessons.length ? Math.round((unlockedLessons / lessons.length) * 100) : 0
+  const accessPercent = lessons.length ? Math.round((unlockedLessons / lessons.length) * 100) : 0
 
   return (
     <LessonLayout>
@@ -50,9 +50,10 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
           </div>
         </motion.div>
         <motion.aside className={styles.progressPanel} variants={cardVariants}>
-          <strong>{progress}%</strong>
+          <small>Quyền truy cập</small>
+          <strong>{accessPercent}%</strong>
           <span>{unlockedLessons} / {lessons.length || 0} bài học có thể học</span>
-          <div className={styles.progressTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+          <div className={styles.progressTrack} style={{ "--progress": `${accessPercent}%` } as CSSProperties}><i /></div>
         </motion.aside>
       </motion.section>
 
@@ -69,7 +70,6 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
                   <span className={styles.lessonNumber}>{lesson.lessonOrder}</span>
                   <span className={styles.badgeRow}>
                     {lesson.isFree ? <span className={styles.freeBadge}>Miễn phí</span> : <span className={styles.proBadge}><SharedIcon name="crown" size={12} />Pro</span>}
-                    <span className={styles.statusBadge}>{lesson.isLocked ? "Đã khóa" : "Sẵn sàng"}</span>
                   </span>
                 </div>
                 <h2>{lesson.title}</h2>

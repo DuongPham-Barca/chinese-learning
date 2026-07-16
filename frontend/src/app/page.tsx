@@ -260,12 +260,12 @@ export default function HomePage() {
         viewport={sectionViewport}
       >
         <div className={styles.footerGrid}>
-          <div className={styles.footerBrand}><Brand /><p>Nền tảng học tiếng Trung hiện đại — Flashcard, Dictation, và giáo trình HSK đầy đủ.</p><div className={styles.socials}><span>f</span><span>◎</span><span>▶</span><span>◯</span></div></div>
+          <div className={styles.footerBrand}><Brand /><p>Nền tảng học tiếng Trung hiện đại — Flashcard, Dictation và giáo trình HSK đầy đủ.</p></div>
           <div><h3>ChineseDict</h3><a href="#home">Giới thiệu</a><a href="#footer">Liên hệ</a><Link href="/leaderboard">Bảng xếp hạng</Link></div>
           <div><h3>Sản phẩm</h3><a href="#features">Flashcard</a><a href="#features">Dictation</a><a href="#roadmap">HSK</a></div>
           <div><h3>Hỗ trợ</h3><Link href="/pricing#faq">FAQ</Link><Link href="/privacy">Chính sách</Link><Link href="/terms">Điều khoản</Link></div>
         </div>
-        <div className={styles.copyright}><span>© 2026 ChineseDict. All rights reserved.</span><span>Made with care for Chinese learners.</span></div>
+        <div className={styles.copyright}><span>© 2026 ChineseDict. Đã đăng ký bản quyền.</span><span>Đồng hành cùng người học tiếng Trung.</span></div>
       </motion.footer>
     </main>
   )

@@ -57,6 +57,7 @@ model User {
   sessions      Session[]
   progress      Progress[]
   subscriptions Subscription[]
+  savedVocabulary SavedVocabulary[]
 }
 
 model Level {
@@ -177,6 +178,7 @@ model Vocabulary {
 
   lesson   Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   progress Progress[]
+  savedBy  SavedVocabulary[]
 
   @@index([lessonId])
 }
@@ -208,4 +210,18 @@ model Progress {
   sentence Sentence?   @relation(fields: [sentenceId], references: [id])
 
   @@map("progress")
+}
+
+model SavedVocabulary {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  vocabularyId String   @map("vocabulary_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabulary Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vocabularyId])
+  @@index([userId, createdAt])
+  @@map("saved_vocabulary")
 }

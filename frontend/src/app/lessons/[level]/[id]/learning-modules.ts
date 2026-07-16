@@ -67,7 +67,7 @@ export function getLearningModules(lesson: LessonDetail, level: string): Learnin
       description: "Sắp xếp các từ thành câu tiếng Trung hoàn chỉnh.",
       checklist: [
         "Kéo thả hoặc bấm chọn từ",
-        "Kiểm tra trật tự câu",
+        "Kiểm tra thứ tự câu",
         "Hiển thị đáp án và giải thích",
       ],
       duration: minutes(exampleCount),
