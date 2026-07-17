@@ -116,3 +116,38 @@
 .completionCard .primaryButton,.completionCard .secondaryButton{width:auto;min-width:168px;padding:0 20px}
 .completionCard .primaryButton{cursor:pointer}
 @media(max-width:560px){.completionCard .actionRow{flex-direction:column}.completionCard .primaryButton,.completionCard .secondaryButton{width:100%}}
+
+.enhancedStudyWrap{width:100%;max-width:none;padding:0 0 32px}
+.enhancedStudyWrap .studyHeader{margin:0 0 16px}
+.enhancedStudyWrap .studyHeaderInner{width:min(1280px,calc(100% - 32px))}
+.enhancedStudyWrap .practiceCard,.enhancedStudyWrap .sentenceBuilder,.enhancedStudyWrap .sentenceCard,.enhancedStudyWrap .recordingArea,.enhancedStudyWrap .resultCard,.enhancedStudyWrap .quizCard{border-radius:8px;box-shadow:0 12px 30px rgba(30,64,175,.07)}
+.enhancedStudyWrap .hintCard{padding:17px 18px;background:#f4f8ff}
+.enhancedStudyWrap .hintCard i{border-radius:7px}
+.enhancedStudyWrap .sentenceBuilder{gap:12px;margin-top:12px;padding:16px}
+.enhancedStudyWrap .dropSentence{min-height:105px;padding:14px;border-radius:7px}
+.enhancedStudyWrap .primaryButton,.enhancedStudyWrap .secondaryButton{width:auto;min-width:140px;padding:0 18px;font-size:14px}
+.enhancedStudyWrap .primaryButton:disabled{color:#64748b;background:#e2e8f0;opacity:1;box-shadow:none}
+.enhancedStudyWrap .quizCard{padding:22px}
+.enhancedStudyWrap .quizSupport{margin:14px 0;padding:18px;border-radius:7px}
+.enhancedStudyWrap .choiceGrid{gap:10px}
+.enhancedStudyWrap .quizChoice{min-height:52px;border-radius:7px}
+.enhancedStudyWrap .dictationGrid{grid-template-columns:240px minmax(0,1fr);gap:12px;align-items:stretch}
+.enhancedStudyWrap .audioCard{min-height:0;padding:18px}
+.enhancedStudyWrap .inputCard{padding:18px}
+.enhancedStudyWrap .inputCard textarea{min-height:150px;font-size:25px}
+.speakingGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+.speakingGrid .sentenceCard,.speakingGrid .recordingArea{margin:0}
+.speakingGrid .sentenceCard{padding:20px}
+.speakingGrid .recordingArea{display:flex;min-height:100%;flex-direction:column;align-items:center;justify-content:center;padding:22px 18px}
+.speakingGrid .resultCard{grid-column:1/-1}
+.speakingGridDone{grid-template-columns:1fr}
+.speakingGridDone .sentenceCard{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:18px;padding:16px 18px}
+.speakingGridDone .sentenceCard .sentenceLabel,.speakingGridDone .sentenceCard .chineseText,.speakingGridDone .sentenceCard .pinyinText,.speakingGridDone .sentenceCard .meaningText{grid-column:1}
+.speakingGridDone .sentenceCard .audioActions{grid-column:2;grid-row:1/5;align-self:center;flex-direction:column;margin:0}
+.speakingGridDone .resultCard{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;margin:0;padding:18px;text-align:left}
+.speakingGridDone .inlineScore{grid-row:1/4;align-content:center;margin:0;border-radius:7px}
+.speakingGridDone .answerReview,.speakingGridDone .charFeedback{margin:0;border-radius:7px}
+.speakingGridDone .charFeedback{justify-content:flex-start}
+.speakingGridDone .resultCard>.actionRow{grid-column:1/-1;margin-top:2px}
+@media(max-width:900px){.enhancedStudyWrap .dictationGrid,.speakingGrid{grid-template-columns:1fr}.speakingGrid .recordingArea{min-height:240px}}
+@media(max-width:760px){.enhancedStudyWrap .studyHeaderInner{width:calc(100% - 20px)}.enhancedStudyWrap .primaryButton,.enhancedStudyWrap .secondaryButton{width:100%}.speakingGridDone .sentenceCard,.speakingGridDone .resultCard{grid-template-columns:1fr}.speakingGridDone .sentenceCard .audioActions,.speakingGridDone .resultCard>.actionRow{grid-column:1;grid-row:auto}.speakingGridDone .inlineScore{grid-row:auto}.speakingGridDone .sentenceCard .audioActions{margin-top:14px}}

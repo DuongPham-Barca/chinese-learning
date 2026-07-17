@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
+import StudyCompletion from "@/components/study-completion"
+import StudySessionWorkspace from "@/components/study-session-workspace"
 import api from "@/lib/api"
 import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
@@ -56,6 +58,7 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
   const [correct, setCorrect] = useState(0)
   const [attempts, setAttempts] = useState(0)
   const [dragging, setDragging] = useState(false)
+  const [showAnswer, setShowAnswer] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -75,7 +78,7 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
   const questions = useMemo(() => buildQuestions(items), [items])
   const question = questions[current]
   const totalItems = questions.length
-  const progress = totalItems ? Math.round(((current + (status === "success" ? 1 : 0)) / totalItems) * 100) : 0
+  const progress = totalItems ? Math.round(((current + (status === "success" || showAnswer ? 1 : 0)) / totalItems) * 100) : 0
   const available = useMemo(() => {
     const selectedIds = new Set(selected.map((token) => token.id))
     return question ? question.tokens.filter((token) => !selectedIds.has(token.id)) : []
@@ -84,16 +87,19 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
   const addToken = useCallback((token: Token) => {
     setSelected((items) => items.some((item) => item.id === token.id) ? items : [...items, token])
     setStatus("idle")
+    setShowAnswer(false)
   }, [])
 
   const removeToken = useCallback((tokenId: string) => {
     setSelected((items) => items.filter((item) => item.id !== tokenId))
     setStatus("idle")
+    setShowAnswer(false)
   }, [])
 
   const checkAnswer = useCallback(() => {
     if (!question || selected.length === 0 || status === "success") return
     const isCorrect = selected.map((token) => token.text).join("") === question.answerText
+    setShowAnswer(false)
     setStatus(isCorrect ? "success" : "error")
     setAttempts((value) => value + 1)
     if (isCorrect) {
@@ -102,11 +108,27 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
     }
   }, [current, id, question, selected, status, totalItems])
 
+  const revealAnswer = useCallback(() => {
+    setShowAnswer(true)
+    updateLessonModuleProgress(id, "word-arrangement", current + 1, totalItems)
+  }, [current, id, totalItems])
+
   const nextSentence = useCallback(() => {
     setSelected([])
     setStatus("idle")
     setDragging(false)
+    setShowAnswer(false)
     setCurrent((value) => value + 1)
+  }, [])
+
+  const restartSession = useCallback(() => {
+    setCurrent(0)
+    setSelected([])
+    setStatus("idle")
+    setCorrect(0)
+    setAttempts(0)
+    setDragging(false)
+    setShowAnswer(false)
   }, [])
 
   const handleDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
@@ -127,33 +149,28 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
       }
       if (event.key === "Enter") {
         event.preventDefault()
-        if (status === "success") nextSentence()
+        if (status === "success" || showAnswer) nextSentence()
         else checkAnswer()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [checkAnswer, nextSentence, question, status])
+  }, [checkAnswer, nextSentence, question, showAnswer, status])
 
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải bài sắp xếp câu...</p></div></div></LessonLayout>
   if (loadError || totalItems === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{loadError || "Bài học chưa có câu để sắp xếp."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>
   if (current >= totalItems) return (
     <LessonLayout>
-      <div className={styles.studyWrap}>
-        <div className={styles.completionCard}>
-          <h2 className={styles.completionTitle}>Hoàn thành Sắp xếp câu</h2>
-          <div className={styles.completionStats}>
-            <div className={styles.statRow}><span className={styles.statLabel}>Câu đúng</span><span className={styles.statValue}>{correct}/{attempts || totalItems}</span></div>
-          </div>
-          <div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Quay lại bài học</Link></div>
-        </div>
-      </div>
+      <StudyCompletion title="Sắp xếp câu" description="Bạn đã hoàn thành toàn bộ câu sắp xếp trong bài học." stats={[{ label: "Câu đã học", value: totalItems }, { label: "Câu đúng", value: correct }, { label: "Lượt kiểm tra", value: attempts }]}>
+        <button className={styles.primaryButton} type="button" onClick={restartSession}><SharedIcon name="rotateCcw" size={17} />Học lại</button>
+        <Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link>
+      </StudyCompletion>
     </LessonLayout>
   )
 
   return (
     <LessonLayout>
-      <section className={styles.studyWrap}>
+      <section className={`${styles.studyWrap} ${styles.enhancedStudyWrap}`}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng sắp xếp câu"><SharedIcon name="close" size={18} /></Link>
@@ -163,7 +180,19 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+        <StudySessionWorkspace
+          current={current + 1}
+          total={totalItems}
+          progress={progress}
+          stateLabel={status === "success" ? "Sắp xếp đúng" : showAnswer ? "Đã xem đáp án" : status === "error" ? "Chưa đúng" : "Đang sắp xếp"}
+          stateTone={status === "success" ? "good" : status === "error" ? "warn" : "neutral"}
+          metrics={[
+            { label: "Câu đúng", value: correct, tone: correct > 0 ? "good" : "neutral" },
+            { label: "Lượt kiểm tra", value: attempts },
+            { label: "Đã chọn", value: `${selected.length}/${question.answer.length}` },
+          ]}
+        >
+          <motion.div variants={containerVariants} initial="hidden" animate="visible">
           <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}>
             <i><SharedIcon name="sparkles" size={22} /></i>
             <div>
@@ -201,27 +230,26 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
               ))}
             </div>
             {status === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
-            {status === "error" && (
+            {status === "error" && !showAnswer && (
               <div className={styles.answerReview}>
                 <strong className={styles.feedbackError}>Chưa đúng.</strong>
-                <p>Đáp án chuẩn: <strong>{question.answerText}</strong></p>
-                <p>Giải thích: đối chiếu lại thứ tự chữ Hán với nghĩa tiếng Việt phía trên.</p>
+                <p>Bạn có thể đổi thứ tự các chữ và kiểm tra lại.</p>
               </div>
             )}
+            {showAnswer && <div className={styles.answerReview}><p>Đáp án chuẩn: <strong>{question.answerText}</strong></p></div>}
             <div className={styles.actionRow}>
-              {status === "success" ? (
+              {status === "success" || showAnswer ? (
                 <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button>
               ) : (
-                <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={selected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
+                <>
+                  {status === "error" && <button className={styles.secondaryButton} type="button" onClick={revealAnswer}>Xem đáp án</button>}
+                  <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={selected.length === 0}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>
+                </>
               )}
             </div>
           </motion.section>
-        </motion.div>
-
-        <div className={styles.practiceStatus}>
-          <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && status === "success") ? styles.dotDone : ""} />)}</div>
-          <div className={styles.accuracyRow}><span><b>{correct}/{attempts}</b> đúng</span></div>
-        </div>
+          </motion.div>
+        </StudySessionWorkspace>
       </section>
     </LessonLayout>
   )

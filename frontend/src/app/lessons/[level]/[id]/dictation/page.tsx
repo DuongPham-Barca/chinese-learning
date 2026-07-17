@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
+import StudyCompletion from "@/components/study-completion"
+import StudySessionWorkspace from "@/components/study-session-workspace"
 import api from "@/lib/api"
 import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
@@ -36,6 +38,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
   const [speed, setSpeed] = useState(1)
   const [errors, setErrors] = useState(0)
   const [accuracy, setAccuracy] = useState(100)
+  const [showAnswer, setShowAnswer] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
 
@@ -77,6 +80,7 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
 
   const checkAnswer = useCallback(() => {
     if (!item || !answer.trim()) return
+    setShowAnswer(false)
     const normalized = answer.trim().replace(/[\s.，。！？、；：""''（）《》]/g, "")
     const expected = item.example!.replace(/[\s.，。！？、；：""''（）《》]/g, "")
     if (normalized === expected) {
@@ -89,13 +93,31 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
     }
   }, [answer, current, id, item, totalItems])
 
+  const revealAnswer = useCallback(() => {
+    setShowAnswer(true)
+    updateLessonModuleProgress(id, "dictation", current + 1, totalItems)
+  }, [current, id, totalItems])
+
   const nextExercise = useCallback(() => {
     setCurrent((value) => value + 1)
     setAnswer("")
     setStatus("idle")
     setPlaying(false)
     setTime(0)
+    setShowAnswer(false)
     window.speechSynthesis?.cancel()
+  }, [])
+
+  const restartSession = useCallback(() => {
+    window.speechSynthesis?.cancel()
+    setCurrent(0)
+    setAnswer("")
+    setStatus("idle")
+    setPlaying(false)
+    setTime(0)
+    setErrors(0)
+    setAccuracy(100)
+    setShowAnswer(false)
   }, [])
 
   useEffect(() => {
@@ -109,25 +131,29 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter" && event.ctrlKey) { event.preventDefault(); togglePlay(); return }
-      if (event.key === "Enter" && status !== "success") { event.preventDefault(); checkAnswer() }
+      if (event.key === "Enter") {
+        event.preventDefault()
+        if (status === "success" || showAnswer) nextExercise()
+        else checkAnswer()
+      }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [checkAnswer, status, togglePlay])
+  }, [checkAnswer, nextExercise, showAnswer, status, togglePlay])
 
   useEffect(() => () => window.speechSynthesis?.cancel(), [])
 
   const returnHref = `/lessons/${level}/${id}`
-  const progress = totalItems ? ((current + (status === "success" ? 1 : 0)) / totalItems) * 100 : 0
-  const comparison = item && status !== "idle" ? compareCharacters(answer, item.example!) : []
+  const progress = totalItems ? ((current + (status === "success" || showAnswer ? 1 : 0)) / totalItems) * 100 : 0
+  const comparison = item && showAnswer ? compareCharacters(answer, item.example!) : []
 
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải bài nghe chép...</p></div></div></LessonLayout>
   if (loadError || totalItems === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{loadError || "Bài học chưa có câu luyện tập."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>
-  if (current >= totalItems) return <LessonLayout><div className={styles.studyWrap}><div className={styles.completionCard}><h2 className={styles.completionTitle}>Hoàn thành nghe chép</h2><p>{errors} lỗi - độ chính xác {accuracy}%</p><div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Quay lại bài học</Link></div></div></div></LessonLayout>
+  if (current >= totalItems) return <LessonLayout><StudyCompletion title="Nghe chép" description="Bạn đã hoàn thành toàn bộ câu nghe chép trong bài học." stats={[{ label: "Câu đã học", value: totalItems }, { label: "Độ chính xác", value: `${accuracy}%` }, { label: "Số lỗi", value: errors }]}><button className={styles.primaryButton} type="button" onClick={restartSession}><SharedIcon name="rotateCcw" size={17} />Học lại</button><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></StudyCompletion></LessonLayout>
 
   return (
     <LessonLayout>
-      <section className={styles.studyWrap}>
+      <section className={`${styles.studyWrap} ${styles.enhancedStudyWrap}`}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng bài nghe chép"><SharedIcon name="close" size={18} /></Link>
@@ -137,7 +163,19 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <motion.div className={styles.dictationGrid} variants={containerVariants} initial="hidden" animate="visible">
+        <StudySessionWorkspace
+          current={current + 1}
+          total={totalItems}
+          progress={progress}
+          stateLabel={status === "success" ? "Chính xác" : showAnswer ? "Đã xem đáp án" : status === "error" ? "Cần kiểm tra lại" : "Đang nghe"}
+          stateTone={status === "success" ? "good" : status === "error" ? "warn" : "neutral"}
+          metrics={[
+            { label: "Độ chính xác", value: `${accuracy}%`, tone: accuracy >= 80 ? "good" : "warn" },
+            { label: "Số lỗi", value: errors, tone: errors === 0 ? "good" : "warn" },
+            { label: "Tốc độ nghe", value: `${speed}x` },
+          ]}
+        >
+          <motion.div className={styles.dictationGrid} variants={containerVariants} initial="hidden" animate="visible">
           <motion.section className={`${styles.practiceCard} ${styles.audioCard}`} variants={cardVariants}>
             <div className={`${styles.waveform} ${playing ? styles.wavePlaying : ""}`}>{[14,24,38,51,35,58,43,30,18].map((height, index) => <i style={{ height }} key={index} />)}</div>
             <button type="button" className={styles.playButton} onClick={togglePlay} aria-label={playing ? "Tạm dừng" : "Phát"}><SharedIcon name={playing ? "pause" : "play"} size={28} /></button>
@@ -148,11 +186,11 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
 
           <motion.section className={`${styles.practiceCard} ${styles.inputCard} ${status === "success" ? styles.inputSuccess : status === "error" ? styles.inputError : ""}`} variants={cardVariants}>
           <label htmlFor="hanzi-answer">NHẬP CHỮ HÁN</label>
-          <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle") }} placeholder="Gõ chữ Hán tại đây..." autoFocus />
+          <textarea id="hanzi-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setStatus("idle"); setShowAnswer(false) }} placeholder="Gõ chữ Hán tại đây..." autoFocus />
           <p className={styles.inputHelp}><SharedIcon name="translate" size={14} />Nhập câu tiếng Trung bạn vừa nghe</p>
           {status === "success" && <strong className={styles.feedbackSuccess}>Chính xác.</strong>}
-          {status === "error" && <strong className={styles.feedbackError}>Đáp án đúng: {item.example}</strong>}
-          {status !== "idle" && (
+          {status === "error" && !showAnswer && <strong className={styles.feedbackError}>Chưa chính xác. Bạn có thể nghe và thử lại.</strong>}
+          {showAnswer && (
             <div className={styles.answerReview}>
               <div className={styles.sentenceLabel}>So sánh ký tự</div>
               <div className={styles.charFeedback}>
@@ -167,15 +205,11 @@ export default function DictationPage({ params }: { params: Promise<{ level: str
             </div>
           )}
           <div className={styles.actionRow}>
-            {status === "success" ? <button className={styles.primaryButton} type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button>}
+            {status === "success" || showAnswer ? <button className={styles.primaryButton} type="button" onClick={nextExercise}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button> : <>{status === "error" && <button className={styles.secondaryButton} type="button" onClick={revealAnswer}>Xem đáp án</button>}<button className={styles.primaryButton} type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra <SharedIcon name="arrowRight" size={15} /></button></>}
           </div>
         </motion.section>
-        </motion.div>
-
-        <div className={styles.practiceStatus}>
-          <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && status === "success") ? styles.dotDone : ""} />)}</div>
-          <div className={styles.accuracyRow}><span><b>{errors}</b> lỗi</span><span><strong>{accuracy}%</strong> chính xác</span></div>
-        </div>
+          </motion.div>
+        </StudySessionWorkspace>
       </section>
     </LessonLayout>
   )

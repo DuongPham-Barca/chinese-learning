@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion"
 import { cardVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
+import StudyCompletion from "@/components/study-completion"
+import StudySessionWorkspace from "@/components/study-session-workspace"
 import api from "@/lib/api"
 import { completeLessonModule, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
@@ -105,6 +107,7 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
   const score = questions.length ? answers.reduce((sum, answer, index) => sum + (answer === questions[index].answer ? 1 : 0), 0) : 0
   const percent = questions.length ? Math.round((score / questions.length) * 100) : 0
   const progress = questions.length ? Math.round(((current + (selected ? 1 : 0)) / questions.length) * 100) : 0
+  const answerAccuracy = answers.length ? Math.round((score / answers.length) * 100) : 100
 
   const speak = useCallback((text: string) => {
     if (!("speechSynthesis" in window)) return
@@ -143,24 +146,16 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
 
   if (complete) return (
     <LessonLayout>
-      <div className={styles.studyWrap}>
-        <div className={styles.completionCard}>
-          <div className={styles.completionMark}><SharedIcon name={percent >= 70 ? "check" : "rotateCcw"} size={34} /></div>
-          <h2 className={styles.completionTitle}>Hoàn thành Trắc nghiệm</h2>
-          <div className={styles.quizScore}><strong>{percent}%</strong><span>{score}/{questions.length} câu đúng</span></div>
-          <p>{percent >= 70 ? "Bạn đã nắm được phần lớn nội dung bài học." : "Hãy luyện lại một vòng để củng cố từ vựng và câu."}</p>
-          <div className={styles.actionRow}>
-            <button className={styles.secondaryButton} type="button" onClick={retry}>Làm lại</button>
-            <Link className={styles.primaryButton} href={returnHref}>Về tổng quan</Link>
-          </div>
-        </div>
-      </div>
+      <StudyCompletion title="Trắc nghiệm" description={percent >= 70 ? "Bạn đã nắm được phần lớn nội dung bài học." : "Hãy luyện lại một vòng để củng cố từ vựng và câu."} stats={[{ label: "Điểm số", value: `${percent}%` }, { label: "Câu đúng", value: `${score}/${questions.length}` }, { label: "Câu đã làm", value: questions.length }]}>
+        <button className={styles.primaryButton} type="button" onClick={retry}><SharedIcon name="rotateCcw" size={17} />Làm lại</button>
+        <Link className={styles.secondaryButton} href={returnHref}>Về tổng quan</Link>
+      </StudyCompletion>
     </LessonLayout>
   )
 
   return (
     <LessonLayout>
-      <section className={styles.studyWrap}>
+      <section className={`${styles.studyWrap} ${styles.enhancedStudyWrap}`}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng kiểm tra"><SharedIcon name="close" size={18} /></Link>
@@ -170,8 +165,20 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <AnimatePresence mode="wait">
-          <motion.section key={current} className={styles.quizCard} variants={cardVariants} initial="hidden" animate="visible" exit={{ opacity: 0, y: -18 }}>
+        <StudySessionWorkspace
+          current={current + 1}
+          total={questions.length}
+          progress={progress}
+          stateLabel={selected ? "Đã chọn đáp án" : "Chờ lựa chọn"}
+          stateTone={selected ? "good" : "neutral"}
+          metrics={[
+            { label: "Độ chính xác", value: `${answerAccuracy}%`, tone: answerAccuracy >= 70 ? "good" : "warn" },
+            { label: "Câu đúng", value: score, tone: score > 0 ? "good" : "neutral" },
+            { label: "Đã trả lời", value: `${answers.length}/${questions.length}` },
+          ]}
+        >
+          <AnimatePresence mode="wait">
+            <motion.section key={current} className={styles.quizCard} variants={cardVariants} initial="hidden" animate="visible" exit={{ opacity: 0, y: -18 }}>
             <span className={styles.wordEyebrow}>Trắc nghiệm</span>
             <h1>{question.prompt}</h1>
             <div className={styles.quizSupport}>
@@ -184,8 +191,9 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
             <div className={styles.actionRow}>
               <button className={styles.primaryButton} type="button" onClick={submit} disabled={!selected}>{current + 1 >= questions.length ? "Nộp bài" : "Câu tiếp theo"} <SharedIcon name="arrowRight" size={15} /></button>
             </div>
-          </motion.section>
-        </AnimatePresence>
+            </motion.section>
+          </AnimatePresence>
+        </StudySessionWorkspace>
       </section>
     </LessonLayout>
   )

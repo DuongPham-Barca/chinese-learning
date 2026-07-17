@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
+import StudyCompletion from "@/components/study-completion"
+import StudySessionWorkspace from "@/components/study-session-workspace"
 import api from "@/lib/api"
 import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
@@ -91,6 +93,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
   const [transcript, setTranscript] = useState("")
   const [comparison, setComparison] = useState<CharResult[]>([])
   const [accuracy, setAccuracy] = useState(0)
+  const [showAnswer, setShowAnswer] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const manualStopRef = useRef(false)
   const transcriptRef = useRef("")
@@ -146,6 +149,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
     setTranscript("")
     setComparison([])
     setAccuracy(0)
+    setShowAnswer(false)
     setRecordState("processing")
     setTranscript("")
     transcriptRef.current = ""
@@ -211,6 +215,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
     setAccuracy(0)
     setRecordState("idle")
     setMicError(null)
+    setShowAnswer(false)
     setCurrent((value) => value + 1)
     window.speechSynthesis?.cancel()
   }, [])
@@ -221,6 +226,19 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
     setAccuracy(0)
     setRecordState("idle")
     setMicError(null)
+    setShowAnswer(false)
+  }, [])
+
+  const restartSession = useCallback(() => {
+    recognitionRef.current?.abort()
+    window.speechSynthesis?.cancel()
+    setCurrent(0)
+    setTranscript("")
+    setComparison([])
+    setAccuracy(0)
+    setRecordState("idle")
+    setMicError(null)
+    setShowAnswer(false)
   }, [])
 
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải luyện nói...</p></div></div></LessonLayout>
@@ -228,22 +246,17 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
   if (current >= totalItems) {
     return (
       <LessonLayout>
-        <div className={styles.studyWrap}>
-          <div className={styles.completionCard}>
-            <h2 className={styles.completionTitle}>Hoàn thành Luyện nói</h2>
-            <div className={styles.completionStats}>
-              <div className={styles.statRow}><span className={styles.statLabel}>Câu đã luyện</span><span className={styles.statValue}>{totalItems}</span></div>
-            </div>
-            <div className={styles.actionRow}><Link className={styles.primaryButton} href={returnHref}>Quay lại bài học</Link></div>
-          </div>
-        </div>
+        <StudyCompletion title="Luyện nói" description="Bạn đã hoàn thành toàn bộ câu luyện phát âm trong bài học." stats={[{ label: "Câu đã luyện", value: totalItems }, { label: "Tiến độ", value: "100%" }]}>
+          <button className={styles.primaryButton} type="button" onClick={restartSession}><SharedIcon name="rotateCcw" size={17} />Học lại</button>
+          <Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link>
+        </StudyCompletion>
       </LessonLayout>
     )
   }
 
   return (
     <LessonLayout>
-      <section className={styles.studyWrap}>
+      <section className={`${styles.studyWrap} ${styles.enhancedStudyWrap}`}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng luyện nói"><SharedIcon name="close" size={18} /></Link>
@@ -253,7 +266,19 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+        <StudySessionWorkspace
+          current={current + 1}
+          total={totalItems}
+          progress={progress}
+          stateLabel={recordState === "listening" ? "Đang nghe" : recordState === "processing" ? "Đang xử lý" : recordState === "done" ? "Đã chấm điểm" : micError ? "Cần thử lại" : "Sẵn sàng"}
+          stateTone={recordState === "done" ? "good" : micError ? "warn" : "neutral"}
+          metrics={[
+            { label: "Độ chính xác", value: recordState === "done" ? `${accuracy}%` : "--", tone: recordState === "done" ? accuracy >= 80 ? "good" : "warn" : "neutral" },
+            { label: "Câu đã luyện", value: current + (recordState === "done" ? 1 : 0) },
+            { label: "Ký tự nhận diện", value: comparison.length },
+          ]}
+        >
+          <motion.div className={`${styles.speakingGrid} ${recordState === "done" ? styles.speakingGridDone : ""}`} variants={containerVariants} initial="hidden" animate="visible">
           <motion.section className={styles.sentenceCard} variants={cardVariants}>
             <div className={styles.sentenceLabel}>LUYỆN NÓI CÂU</div>
             <div className={styles.chineseText}>{item.example}</div>
@@ -265,11 +290,11 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
             </div>
           </motion.section>
 
-          <motion.section className={styles.recordingArea} variants={cardVariants}>
+          {recordState !== "done" && <motion.section className={styles.recordingArea} variants={cardVariants}>
             <div className={styles.micOuter}>
               {recordState === "listening" && <div className={styles.pulseRing} />}
-              <button className={`${styles.micButton} ${recordState === "listening" ? styles.micRecording : recordState === "done" ? styles.micRecorded : ""}`} type="button" onClick={recordState === "listening" ? stopListening : startListening} disabled={recordState === "processing"} aria-label="Ghi âm câu tiếng Trung">
-                <SharedIcon name={recordState === "listening" ? "pause" : recordState === "done" ? "check" : "mic"} size={36} />
+              <button className={`${styles.micButton} ${recordState === "listening" ? styles.micRecording : ""}`} type="button" onClick={recordState === "listening" ? stopListening : startListening} disabled={recordState === "processing"} aria-label="Ghi âm câu tiếng Trung">
+                <SharedIcon name={recordState === "listening" ? "pause" : "mic"} size={36} />
               </button>
             </div>
             {recordState === "idle" && <div className={styles.recordingStatus}>Bấm để nói câu tiếng Trung</div>}
@@ -287,7 +312,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
             {micError === "unsupported" && <strong className={styles.feedbackError}>Trình duyệt chưa hỗ trợ nhận diện giọng nói. Dùng Chrome hoặc Edge mới nhất.</strong>}
             {micError === "permission" && <strong className={styles.feedbackError}>Cần quyền truy cập micro.</strong>}
             {micError === "no-speech" && <strong className={styles.feedbackError}>Không nghe thấy giọng nói. Hãy thử lại.</strong>}
-          </motion.section>
+          </motion.section>}
 
           {recordState === "done" && (
             <motion.section className={styles.resultCard} variants={cardVariants}>
@@ -307,16 +332,18 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
                   ))}
                 </div>
               )}
-              <div className={styles.answerReview}>
+              {showAnswer && <div className={styles.answerReview}>
                 <p>Đáp án chuẩn: <strong>{item.example}</strong></p>
-              </div>
+              </div>}
               <div className={styles.actionRow}>
+                {!showAnswer && <button className={styles.secondaryButton} type="button" onClick={() => setShowAnswer(true)}><SharedIcon name="bookOpen" size={16} />Xem câu chuẩn</button>}
                 <button className={styles.secondaryButton} type="button" onClick={retry}>Nói lại</button>
                 <button className={styles.primaryButton} type="button" onClick={nextSentence}>{current + 1 < totalItems ? "Câu tiếp theo" : "Hoàn thành"} <SharedIcon name="arrowRight" size={15} /></button>
               </div>
             </motion.section>
           )}
-        </motion.div>
+          </motion.div>
+        </StudySessionWorkspace>
       </section>
     </LessonLayout>
   )

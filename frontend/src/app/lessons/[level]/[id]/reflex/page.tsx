@@ -7,6 +7,8 @@ import { motion } from "framer-motion"
 import { cardVariants, containerVariants } from "@/app/animations"
 import LessonLayout from "@/components/lesson-layout"
 import SharedIcon from "@/components/shared-icon"
+import StudyCompletion from "@/components/study-completion"
+import StudySessionWorkspace from "@/components/study-session-workspace"
 import api from "@/lib/api"
 import { readLessonProgress, updateLessonModuleProgress } from "@/services/lesson-progress.service"
 import type { Vocabulary } from "@/types/api"
@@ -65,6 +67,7 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
   const item = items[current]
   const totalItems = items.length
   const progress = totalItems ? Math.round(((current + (translationStatus === "correct" || translationStatus === "near" ? 1 : 0)) / totalItems) * 100) : 0
+  const sessionAccuracy = attempts ? Math.round((correct / attempts) * 100) : 100
 
   const checkTranslation = useCallback(() => {
     if (!item) return
@@ -87,6 +90,14 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
     setCurrent((value) => value + 1)
   }, [])
 
+  const restartSession = useCallback(() => {
+    setCurrent(0)
+    setAnswer("")
+    setTranslationStatus("idle")
+    setCorrect(0)
+    setAttempts(0)
+  }, [])
+
   const handleFinish = useCallback(() => {
     router.push(`/lessons/${level}/${id}/speaking`)
   }, [level, id, router])
@@ -94,29 +105,20 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
   if (loading) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>Đang tải phản xạ...</p></div></div></LessonLayout>
   if (loadError || totalItems === 0) return <LessonLayout><div className={styles.studyWrap}><div className={styles.stateCard}><p>{loadError || "Bài học chưa có câu luyện phản xạ."}</p><Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link></div></div></LessonLayout>
   if (current >= totalItems) {
-    const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0
     return (
       <LessonLayout>
-        <div className={styles.studyWrap}>
-          <div className={styles.completionCard}>
-            <h2 className={styles.completionTitle}>Hoàn thành Phản xạ</h2>
-            <div className={styles.completionStats}>
-              <div className={styles.statRow}><span className={styles.statLabel}>Câu đã dịch</span><span className={styles.statValue}>{totalItems}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Độ chính xác</span><span className={styles.statValue}>{accuracy}%</span></div>
-            </div>
-            <div className={styles.actionRow}>
-              <Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link>
-              <button className={styles.primaryButton} type="button" onClick={handleFinish}>Luyện nói <SharedIcon name="arrowRight" size={16} /></button>
-            </div>
-          </div>
-        </div>
+        <StudyCompletion title="Phản xạ" description="Bạn đã hoàn thành toàn bộ câu dịch phản xạ trong bài học." stats={[{ label: "Câu đã dịch", value: totalItems }, { label: "Độ chính xác", value: `${sessionAccuracy}%` }, { label: "Câu đúng", value: correct }]}>
+          <button className={styles.secondaryButton} type="button" onClick={restartSession}><SharedIcon name="rotateCcw" size={17} />Học lại</button>
+          <Link className={styles.secondaryButton} href={returnHref}>Quay lại bài học</Link>
+          <button className={styles.primaryButton} type="button" onClick={handleFinish}>Luyện nói <SharedIcon name="arrowRight" size={16} /></button>
+        </StudyCompletion>
       </LessonLayout>
     )
   }
 
   return (
     <LessonLayout>
-      <section className={styles.studyWrap}>
+      <section className={`${styles.studyWrap} ${styles.enhancedStudyWrap}`}>
         <header className={styles.studyHeader}>
           <div className={styles.studyHeaderInner}>
             <Link className={styles.iconButton} href={returnHref} aria-label="Đóng phản xạ"><SharedIcon name="close" size={18} /></Link>
@@ -126,7 +128,19 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
           <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
         </header>
 
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+        <StudySessionWorkspace
+          current={current + 1}
+          total={totalItems}
+          progress={progress}
+          stateLabel={translationStatus === "correct" ? "Chính xác" : translationStatus === "near" ? "Gần đúng" : translationStatus === "wrong" ? "Chưa đúng" : translationStatus === "revealed" ? "Đã xem đáp án" : "Đang trả lời"}
+          stateTone={translationStatus === "correct" ? "good" : translationStatus === "idle" ? "neutral" : "warn"}
+          metrics={[
+            { label: "Độ chính xác", value: `${sessionAccuracy}%`, tone: sessionAccuracy >= 80 ? "good" : "warn" },
+            { label: "Câu đúng", value: correct, tone: correct > 0 ? "good" : "neutral" },
+            { label: "Lượt kiểm tra", value: attempts },
+          ]}
+        >
+          <motion.div variants={containerVariants} initial="hidden" animate="visible">
           <motion.section className={`${styles.practiceCard} ${styles.hintCard}`} variants={cardVariants}>
             <i><SharedIcon name="translate" size={22} /></i>
             <div>
@@ -141,7 +155,6 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
             <textarea id="reflex-answer" value={answer} onChange={(event) => { setAnswer(event.target.value); setTranslationStatus("idle") }} placeholder="Gõ câu tiếng Trung tại đây..." autoFocus />
             {translationStatus !== "idle" && translationStatus !== "revealed" && <strong className={translationStatus === "wrong" ? styles.feedbackError : styles.feedbackSuccess}>{statusLabel(translationStatus)}</strong>}
             {translationStatus === "revealed" && <div className={styles.answerReview}><p>Đáp án: <strong>{item.example}</strong></p></div>}
-            {translationStatus !== "idle" && translationStatus !== "revealed" && <div className={styles.answerReview}><p>Đáp án: <strong>{item.example}</strong></p></div>}
             <div className={styles.actionRow}>
               <button className={styles.secondaryButton} type="button" onClick={revealAnswer}>Xem đáp án</button>
               {(translationStatus === "correct" || translationStatus === "revealed") ? (
@@ -151,12 +164,8 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
               )}
             </div>
           </motion.section>
-        </motion.div>
-
-        <div className={styles.practiceStatus}>
-          <div className={styles.dots}>{Array.from({ length: totalItems }, (_, index) => <i key={index} className={index < current || (index === current && (translationStatus === "correct" || translationStatus === "revealed")) ? styles.dotDone : ""} />)}</div>
-          <div className={styles.accuracyRow}><span><b>{correct}/{attempts || totalItems}</b> đúng</span></div>
-        </div>
+          </motion.div>
+        </StudySessionWorkspace>
       </section>
     </LessonLayout>
   )
