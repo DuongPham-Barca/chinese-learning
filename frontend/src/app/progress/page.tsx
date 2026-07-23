@@ -87,10 +87,10 @@ export default function ProgressPage() {
   return (
     <main className={styles.page}>
       <SiteNavbar />
-      <div className={styles.container}>
+      <div className={styles.container} data-motion-page>
         <header className={styles.heading}>
           <div><span>HỒ SƠ HỌC TẬP</span><h1>Tiến độ của bạn</h1><p>Theo dõi các phần đã hoàn thành và EXP đã nhận.</p></div>
-          <Link className={styles.primaryAction} href="/#roadmap"><SharedIcon name="bookOpen" size={18} />Tiếp tục học</Link>
+          <Link className={styles.primaryAction} href={`/lessons/${user?.level.toLowerCase() || "hsk1"}`}><SharedIcon name="bookOpen" size={18} />Tiếp tục học</Link>
         </header>
 
         <section className={styles.stats} aria-label="Tổng quan tiến độ">
@@ -105,7 +105,7 @@ export default function ProgressPage() {
 
           {loading && <div className={styles.state}><span className={styles.spinner} />Đang đồng bộ tiến độ...</div>}
           {!loading && error && <div className={styles.state}><strong>{error}</strong><button type="button" onClick={() => void loadProgress()}>Thử lại</button></div>}
-          {!loading && !error && entries.length === 0 && <div className={styles.empty}><i><SharedIcon name="bookOpen" size={30} /></i><h3>Chưa có hoạt động học tập</h3><p>Hoàn thành một phần trong bài học để bắt đầu ghi nhận tiến độ.</p><Link href="/#roadmap">Chọn bài học</Link></div>}
+          {!loading && !error && entries.length === 0 && <div className={styles.empty}><i><SharedIcon name="bookOpen" size={30} /></i><h3>Chưa có hoạt động học tập</h3><p>Hoàn thành một phần trong bài học để bắt đầu ghi nhận tiến độ.</p><Link href={`/lessons/${user?.level.toLowerCase() || "hsk1"}`}>Chọn bài học</Link></div>}
           {!loading && !error && entries.length > 0 && (
             <div className={styles.timeline}>
               {entries.map((entry) => (

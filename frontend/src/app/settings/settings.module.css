@@ -1,49 +1,87 @@
-.page { min-height: 100vh; background: #f7f9fc; color: #172033; }
-.container { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 44px 0 72px; }
-.heading { margin-bottom: 28px; }
-.heading > span { color: #2563eb; font-size: 12px; font-weight: 800; }
-.heading h1 { margin: 6px 0 8px; font-size: 40px; line-height: 1.1; }
-.heading p, .sectionTitle p, .dangerRow p { margin: 0; color: #667085; font-size: 13px; }
-.layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 26px; align-items: start; }
-.sideNav { position: sticky; top: 84px; display: flex; flex-direction: column; border-left: 2px solid #e1e6ee; }
-.sideNav a { display: flex; align-items: center; gap: 9px; padding: 11px 14px; color: #5c6678; font-size: 13px; font-weight: 700; text-decoration: none; }
-.sideNav a:hover { border-left: 2px solid #2563eb; margin-left: -2px; color: #2563eb; background: #edf3ff; }
-.content { display: flex; flex-direction: column; gap: 22px; }
-.section { scroll-margin-top: 90px; border: 1px solid #e2e7ef; border-radius: 7px; background: #fff; box-shadow: 0 5px 20px rgba(31, 42, 68, .05); }
-.sectionTitle { display: flex; gap: 13px; padding: 22px 24px; border-bottom: 1px solid #e8ecf2; }
-.sectionTitle > i { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 6px; background: #eaf1ff; color: #2563eb; font-style: normal; }
-.sectionTitle h2 { margin: 0 0 4px; font-size: 18px; }
-.formGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 24px; }
-.formGrid label { display: flex; flex-direction: column; gap: 7px; }
-.formGrid label span { color: #344054; font-size: 12px; font-weight: 750; }
-.formGrid select, .dialog input { width: 100%; height: 42px; border: 1px solid #d7deea; border-radius: 6px; background: #fff; padding: 0 12px; color: #172033; font: inherit; font-size: 13px; }
-.formGrid select:focus, .dialog input:focus { border-color: #2563eb; outline: 3px solid #dce8ff; }
-.sectionActions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 24px 22px; }
-.primaryButton, .secondaryButton, .dangerRow button, .dialog button { min-height: 40px; border-radius: 6px; padding: 0 15px; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
-.primaryButton { border: 1px solid #2563eb; background: #2563eb; color: #fff; }
-.secondaryButton, .dialog button { border: 1px solid #d4dbe7; background: #fff; color: #344054; }
-button:disabled { opacity: .55; cursor: not-allowed; }
-.accountInfo { margin: 0; padding: 8px 24px 14px; }
-.accountInfo div { display: grid; grid-template-columns: 160px 1fr; gap: 20px; padding: 13px 0; border-bottom: 1px solid #edf0f5; }
-.accountInfo div:last-child { border-bottom: 0; }
-.accountInfo dt { color: #667085; font-size: 13px; }
-.accountInfo dd { margin: 0; font-size: 13px; font-weight: 750; }
-.dangerSection { border-top: 3px solid #dc3545; }
-.dangerSection .sectionTitle > i { background: #fff0f1; color: #c92636; }
-.dangerRow { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 24px; border-bottom: 1px solid #edf0f5; }
-.dangerRow:last-child { border-bottom: 0; }
-.dangerRow strong { display: block; margin-bottom: 4px; font-size: 14px; }
-.dangerRow button { flex: 0 0 auto; border: 1px solid #e3a9af; background: #fff; color: #b42331; }
-.overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .55); }
-.dialog { width: min(430px, 100%); border-radius: 7px; background: #fff; padding: 28px; box-shadow: 0 24px 70px rgba(15, 23, 42, .28); text-align: center; }
-.dialog > i { display: grid; width: 54px; height: 54px; margin: 0 auto; place-items: center; border-radius: 50%; background: #fff0f1; color: #c92636; font-style: normal; }
-.dialog h2 { margin: 16px 0 8px; font-size: 21px; }
-.dialog p { margin: 0 0 18px; color: #667085; font-size: 13px; line-height: 1.6; }
-.dialog input { margin-bottom: 18px; text-align: center; font-weight: 800; letter-spacing: 0; }
-.dialog > div { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.dialog .dangerButton { border-color: #c92636; background: #c92636; color: #fff; }
-.toast { position: fixed; right: 22px; bottom: 22px; z-index: 220; max-width: min(360px, calc(100% - 44px)); border-left: 4px solid #198754; border-radius: 5px; background: #fff; padding: 13px 17px; color: #185c37; box-shadow: 0 12px 35px rgba(15, 23, 42, .2); font-size: 13px; font-weight: 700; }
-.toastError { border-left-color: #dc3545; color: #a51f2c; }
-.loading { display: grid; min-height: calc(100vh - 70px); place-items: center; color: #667085; }
-@media (max-width: 760px) { .container { width: min(100% - 24px, 1080px); padding-top: 28px; } .heading h1 { font-size: 32px; } .layout { grid-template-columns: 1fr; } .sideNav { position: static; flex-direction: row; overflow-x: auto; border: 0; } .sideNav a { flex: 0 0 auto; border-bottom: 2px solid #e1e6ee; } .formGrid { grid-template-columns: 1fr; } .accountInfo div { grid-template-columns: 1fr; gap: 5px; } }
-@media (max-width: 520px) { .sectionTitle, .formGrid, .dangerRow { padding-left: 17px; padding-right: 17px; } .dangerRow { align-items: stretch; flex-direction: column; } .dangerRow button { width: 100%; } .sectionActions { padding: 0 17px 18px; flex-direction: column; } .sectionActions button { width: 100%; } }
+/* Hallmark · genre: modern-minimal · macrostructure: Settings workbench · design-system: design.md · designed-as-app */
+.page { min-height: 100dvh; color: var(--color-ink); background: var(--color-paper-2); font-family: var(--font-body); }
+.page * { box-sizing: border-box; }
+.page a { text-decoration: none; }
+.page button,
+.page input,
+.page select { font: inherit; }
+.container { width: min(100% - 1.5rem, 70rem); margin-inline: auto; padding-block: var(--space-lg) var(--space-2xl); }
+.loading { display: grid; min-height: 24rem; place-items: center; color: var(--color-muted); }
+.heading { margin-block-end: var(--space-lg); }
+.heading > span { display: none; }
+.heading h1 { margin: 0; overflow-wrap: anywhere; font-family: var(--font-display); font-size: clamp(1.8rem, 5vw, 2.5rem); line-height: 1.1; letter-spacing: -0.025em; }
+.heading p { max-width: 65ch; margin: var(--space-2xs) 0 0; color: var(--color-muted); font-size: var(--text-sm); line-height: 1.6; }
+.layout { display: grid; gap: var(--space-sm); }
+.sideNav { display: flex; gap: var(--space-3xs); padding: var(--space-2xs); overflow-x: auto; border: var(--rule-thin) solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); scrollbar-width: none; }
+.sideNav::-webkit-scrollbar { display: none; }
+.sideNav a { display: inline-flex; min-width: max-content; min-height: 2.75rem; flex: 1 0 auto; align-items: center; justify-content: center; gap: var(--space-2xs); padding-inline: var(--space-sm); border-radius: var(--radius-input); color: var(--color-ink-2); white-space: nowrap; font-size: var(--text-sm); font-weight: 750; }
+.content { display: grid; min-width: 0; gap: var(--space-sm); }
+.section { scroll-margin-top: calc(var(--app-navbar-height) + var(--space-sm)); overflow: hidden; border: var(--rule-thin) solid var(--color-rule); border-radius: var(--radius-panel); background: var(--color-paper); }
+.sectionTitle { display: flex; align-items: flex-start; gap: var(--space-xs); padding: var(--space-sm); border-block-end: var(--rule-thin) solid var(--color-rule); }
+.sectionTitle > i { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; border-radius: var(--radius-input); color: var(--color-accent); background: var(--color-accent-soft); font-style: normal; }
+.sectionTitle h2,
+.sectionTitle p { margin: 0; }
+.sectionTitle h2 { font-family: var(--font-display); font-size: var(--text-lg); }
+.sectionTitle p { margin-block-start: var(--space-3xs); color: var(--color-muted); font-size: var(--text-xs); line-height: 1.5; }
+.formGrid { display: grid; gap: var(--space-sm); padding: var(--space-sm); }
+.formGrid label { display: grid; gap: var(--space-2xs); color: var(--color-ink-2); font-size: var(--text-sm); font-weight: 700; }
+.formGrid select,
+.dialog input { width: 100%; min-height: 2.75rem; padding-inline: var(--space-xs); border: var(--rule-thin) solid var(--color-rule-strong); outline: 2px solid transparent; outline-offset: 1px; border-radius: var(--radius-input); color: var(--color-ink); background: var(--color-paper); }
+.accountInfo { margin: 0; padding: var(--space-sm); }
+.accountInfo > div { display: grid; gap: var(--space-3xs); padding-block: var(--space-xs); border-block-end: var(--rule-thin) solid var(--color-rule); }
+.accountInfo > div:last-child { border-block-end: 0; }
+.accountInfo dt { color: var(--color-muted); font-size: var(--text-xs); }
+.accountInfo dd { margin: 0; overflow-wrap: anywhere; font-size: var(--text-sm); font-weight: 750; }
+.sectionActions { display: flex; flex-wrap: wrap; gap: var(--space-2xs); justify-content: flex-end; padding: 0 var(--space-sm) var(--space-sm); }
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.dangerRow button,
+.dialog > div button { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; padding-inline: var(--space-sm); border-radius: var(--radius-control); white-space: nowrap; font-weight: 800; cursor: pointer; }
+.primaryButton { border: var(--rule-thin) solid var(--color-accent); color: var(--color-accent-ink); background: var(--color-accent); }
+.secondaryButton,
+.dialog > div button { border: var(--rule-thin) solid var(--color-rule-strong); color: var(--color-ink); background: var(--color-paper); }
+.dangerSection .sectionTitle > i { color: var(--color-error); background: var(--color-error-soft); }
+.dangerRow { display: grid; gap: var(--space-xs); padding: var(--space-sm); border-block-end: var(--rule-thin) solid var(--color-rule); }
+.dangerRow:last-child { border-block-end: 0; }
+.dangerRow strong,
+.dangerRow p { margin: 0; }
+.dangerRow p { margin-block-start: var(--space-3xs); color: var(--color-muted); font-size: var(--text-xs); line-height: 1.5; }
+.dangerRow button,
+.dangerButton { width: max-content; border: var(--rule-thin) solid var(--color-error); color: var(--color-error); background: var(--color-paper); }
+.overlay { position: fixed; z-index: var(--z-modal); inset: 0; display: grid; place-items: center; padding: var(--space-sm); background: var(--color-overlay); }
+.dialog { width: min(100%, 28rem); padding: var(--space-lg); border: var(--rule-thin) solid var(--color-rule); border-radius: var(--radius-panel); color: var(--color-ink); background: var(--color-paper); box-shadow: var(--shadow-lift); }
+.dialog > i { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: var(--radius-card); color: var(--color-error); background: var(--color-error-soft); font-style: normal; }
+.dialog h2 { margin: var(--space-sm) 0 var(--space-2xs); font-family: var(--font-display); }
+.dialog p { margin: 0 0 var(--space-sm); color: var(--color-ink-2); font-size: var(--text-sm); line-height: 1.6; }
+.dialog > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2xs); margin-block-start: var(--space-sm); }
+.dialog .dangerButton { color: var(--color-accent-ink); background: var(--color-error); }
+.toast { position: fixed; z-index: var(--z-toast); right: var(--space-sm); bottom: var(--space-sm); max-width: min(24rem, calc(100% - 2rem)); padding: var(--space-xs) var(--space-sm); border: var(--rule-thin) solid var(--color-success); border-radius: var(--radius-control); color: var(--color-ink); background: var(--color-success-soft); box-shadow: var(--shadow-card); font-size: var(--text-sm); }
+.toastError { border-color: var(--color-error); background: var(--color-error-soft); }
+.sideNav a:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.dangerRow button:focus-visible,
+.dialog input:focus-visible,
+.formGrid select:focus-visible,
+.dialog button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.primaryButton:active,
+.secondaryButton:active,
+.dangerRow button:active,
+.dialog button:active { transform: translateY(1px); }
+.page button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .sideNav a:hover { color: var(--color-accent); background: var(--color-accent-soft); }
+  .secondaryButton:hover,
+  .dialog > div button:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+@media (min-width: 48rem) {
+  .container { width: min(100% - 2.5rem, 70rem); padding-block-start: var(--space-xl); }
+  .layout { grid-template-columns: 12rem minmax(0, 1fr); align-items: start; }
+  .sideNav { position: sticky; top: calc(var(--app-navbar-height) + var(--space-sm)); flex-direction: column; }
+  .sideNav a { flex: 0 0 auto; justify-content: flex-start; }
+  .formGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .accountInfo > div { grid-template-columns: 11rem minmax(0, 1fr); align-items: baseline; }
+  .dangerRow { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) { .page * { transition-duration: 1ms !important; } }

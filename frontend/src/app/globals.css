@@ -2,11 +2,76 @@
 
 html {
   font-size: 125%;
+  overflow-x: clip;
 }
 
 body {
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow-x: clip;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
+/* Hallmark · genre: modern-minimal · macrostructure: Unified client workbench · theme: ChineseDict learning blue · enrichment: none */
+[data-motion-page] {
+  opacity: 0;
+  transform: translateY(var(--space-2xs));
+  animation: client-page-enter var(--dur-long) var(--ease-out) forwards;
+}
+
+[data-motion-page] :where(a, button, summary):not(:disabled, [aria-disabled="true"]) {
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+[data-motion-page] :where(a, button, summary):not(:disabled, [aria-disabled="true"]):active {
+  transform: translateY(1px);
+}
+
+[data-motion-progress] {
+  width: 100% !important;
+  transform: scaleX(var(--motion-progress, 1));
+  transform-origin: left center;
+  transition: transform var(--dur-medium) var(--ease-out) !important;
+  animation: client-progress-enter var(--dur-long) var(--ease-out) !important;
+}
+
+@keyframes client-page-enter {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes client-progress-enter {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(var(--motion-progress, 1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-motion-page] {
+    transform: none;
+    animation: client-page-enter-reduced 120ms linear forwards;
+  }
+
+  [data-motion-page] :where(a, button, summary),
+  [data-motion-progress] {
+    transition-duration: 1ms !important;
+  }
+
+  [data-motion-progress] {
+    transform: scaleX(var(--motion-progress, 1));
+    animation: none !important;
+  }
+}
+
+@keyframes client-page-enter-reduced {
+  to {
+    opacity: 1;
+  }
 }

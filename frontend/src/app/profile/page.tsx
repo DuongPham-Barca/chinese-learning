@@ -193,7 +193,7 @@ export default function ProfilePage() {
   return (
     <main className={styles.page}>
       <SiteNavbar />
-      <div className={styles.container}>
+      <div className={styles.container} data-motion-page>
         <div className={styles.heading}>
           <h1>Hồ sơ cá nhân</h1>
           <p>Cập nhật thông tin cá nhân</p>

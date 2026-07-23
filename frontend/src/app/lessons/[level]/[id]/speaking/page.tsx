@@ -263,7 +263,7 @@ export default function SpeakingPage({ params }: { params: Promise<{ level: stri
             <div className={styles.studyHeaderTitle}><strong>Luyện nói {current + 1} / {totalItems}</strong><span>Hoàn thành {progress}%</span></div>
             <button className={styles.iconButton} type="button" onClick={() => speak()} aria-label="Nghe mẫu"><SharedIcon name="volume2" size={18} /></button>
           </div>
-          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+        <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
         </header>
 
         <StudySessionWorkspace

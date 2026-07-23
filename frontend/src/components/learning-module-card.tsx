@@ -9,7 +9,7 @@ import SharedIcon from "@/components/shared-icon"
 import type { LessonModuleProgress } from "@/services/lesson-progress.service"
 import styles from "@/app/lessons/lesson-flow.module.css"
 
-export default function LearningModuleCard({ module, progress }: { module: LearningModule; progress?: LessonModuleProgress }) {
+export default function LearningModuleCard({ module, progress, recommended = false }: { module: LearningModule; progress?: LessonModuleProgress; recommended?: boolean }) {
   const disabled = module.status === "coming_soon" || module.totalItems === 0
   const completedItems = Math.min(progress?.completed ?? 0, module.totalItems)
   const percent = module.totalItems ? Math.round((completedItems / module.totalItems) * 100) : 0
@@ -18,17 +18,18 @@ export default function LearningModuleCard({ module, progress }: { module: Learn
   const actionLabel = completed ? "Học lại" : started ? "Tiếp tục" : "Bắt đầu"
 
   return (
-    <motion.article className={styles.moduleCard} variants={cardVariants}>
+    <motion.article className={`${styles.moduleCard} ${recommended ? styles.moduleCardRecommended : ""}`} variants={cardVariants}>
       <div className={styles.moduleArt}>
         <Image src={module.image} width={180} height={118} alt="" />
         <span className={styles.moduleIcon}><SharedIcon name={module.icon} size={28} /></span>
       </div>
       <div className={styles.moduleHeading}>
         <h2>{module.title}</h2>
+        {recommended && !disabled && <span className={styles.recommendedBadge}>Học tiếp</span>}
         {module.totalItems === 0 && <span className={styles.soonBadge}>Chưa có dữ liệu</span>}
         {module.totalItems > 0 && module.status === "coming_soon" && <span className={styles.soonBadge}>Sắp ra mắt</span>}
         {!disabled && completed && <span className={styles.doneBadge}>Hoàn thành</span>}
-        {!disabled && started && !completed && <span className={styles.newBadge}>{percent}%</span>}
+        {!disabled && started && !completed && !recommended && <span className={styles.newBadge}>{percent}%</span>}
       </div>
       <p>{module.description}</p>
       <ul className={styles.checklist}>
@@ -36,7 +37,7 @@ export default function LearningModuleCard({ module, progress }: { module: Learn
       </ul>
       <div className={styles.moduleProgress}>
         <span><b>{completedItems}</b>/{module.totalItems} mục</span>
-        <i><em style={{ width: `${percent}%` }} /></i>
+        <i><em data-motion-progress style={{ "--motion-progress": percent / 100 } as React.CSSProperties} /></i>
       </div>
       <footer className={styles.moduleFooter}>
         {disabled ? (

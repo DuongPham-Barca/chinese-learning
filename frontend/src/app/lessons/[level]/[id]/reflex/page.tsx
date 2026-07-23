@@ -125,7 +125,7 @@ export default function ReflexPage({ params }: { params: Promise<{ level: string
             <div className={styles.studyHeaderTitle}><strong>Phản xạ {current + 1} / {totalItems}</strong><span>Hoàn thành {progress}%</span></div>
             <span className={styles.iconButton}><SharedIcon name="translate" size={18} /></span>
           </div>
-          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+        <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
         </header>
 
         <StudySessionWorkspace

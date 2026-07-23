@@ -1,0 +1,83 @@
+/* Hallmark · design-system: design.md · ChineseDict learning product */
+:root {
+  --color-paper: oklch(98.5% 0.009 86);
+  --color-paper-2: oklch(96.7% 0.012 86);
+  --color-paper-3: oklch(94.8% 0.018 255);
+  --color-ink: oklch(23% 0.035 255);
+  --color-ink-2: oklch(42% 0.035 255);
+  --color-muted: oklch(53% 0.025 255);
+  --color-rule: oklch(89% 0.018 255);
+  --color-rule-strong: oklch(80% 0.04 255);
+  --color-accent: oklch(53% 0.2 259);
+  --color-accent-hover: oklch(47% 0.205 259);
+  --color-accent-soft: oklch(94.5% 0.035 259);
+  --color-accent-ink: oklch(100% 0 0);
+  --color-focus: oklch(43% 0.21 259);
+  --color-success: oklch(49% 0.14 153);
+  --color-success-soft: oklch(95% 0.035 153);
+  --color-warning: oklch(54% 0.13 72);
+  --color-warning-soft: oklch(96% 0.045 82);
+  --color-error: oklch(50% 0.19 25);
+  --color-error-soft: oklch(95% 0.035 25);
+  --color-seal: oklch(50% 0.19 25);
+  --color-overlay: oklch(23% 0.035 255 / 0.55);
+  --color-avatar-1: oklch(53% 0.2 259);
+  --color-avatar-2: oklch(62% 0.15 230);
+  --color-avatar-3: oklch(52% 0.18 300);
+  --color-avatar-4: oklch(53% 0.13 158);
+  --color-avatar-5: oklch(56% 0.16 48);
+  --color-avatar-6: oklch(53% 0.17 350);
+
+  --font-display: "Trebuchet MS", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: 7rem;
+
+  --text-2xs: 0.7rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.125rem;
+  --text-display: clamp(2rem, 4vw, 3.25rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-short: 140ms;
+  --dur-medium: 240ms;
+  --dur-long: 420ms;
+  --delay-step: 60ms;
+
+  --radius-input: 0.625rem;
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+  --radius-pill: 999px;
+  --rule-thin: 1px;
+  --shadow-card: 0 12px 32px oklch(28% 0.05 259 / 0.07);
+  --shadow-lift: 0 18px 44px oklch(28% 0.08 259 / 0.12);
+  --shadow-bottom-nav: 0 -0.75rem 2rem oklch(28% 0.05 259 / 0.06);
+  --app-sidebar-width: 12.75rem;
+  --app-topbar-height: 3.5rem;
+  --app-mobile-nav-height: 4rem;
+  --app-navbar-height: var(--app-topbar-height);
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sticky-nav: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}

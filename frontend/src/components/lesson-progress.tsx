@@ -24,7 +24,7 @@ export default function LessonProgress({
         </div>
         <div className={styles.percentPill} style={{ "--progress": `${progress}%` } as CSSProperties}><span>{progress}%</span></div>
       </div>
-      <div className={styles.largeTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+      <div className={styles.largeTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
       <div className={styles.timeline}>
         {steps.map((label, index) => {
           const percent = stepProgress[index] ?? 0

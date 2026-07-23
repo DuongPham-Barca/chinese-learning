@@ -365,3 +365,44 @@
     padding: 48px 24px;
   }
 }
+
+/* Hallmark · payment task surface */
+.overlay { z-index: var(--z-modal); padding: var(--space-sm); background: var(--color-overlay); }
+.modal { width: min(100%, 45rem); max-height: min(90dvh, 48rem); border: var(--rule-thin) solid var(--color-rule); border-radius: var(--radius-panel); color: var(--color-ink); background: var(--color-paper); box-shadow: var(--shadow-lift); font-family: var(--font-body); }
+.header { gap: var(--space-sm); padding: var(--space-lg) var(--space-lg) 0; }
+.header h2 { font-family: var(--font-display); letter-spacing: -0.025em; }
+.header p,
+.qrNote,
+.summaryItem span,
+.bankRow span:first-child,
+.successState p { color: var(--color-muted); }
+.closeBtn { width: 2.75rem; height: 2.75rem; border: var(--rule-thin) solid var(--color-rule); border-radius: var(--radius-control); color: var(--color-muted); background: var(--color-paper); }
+.body { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); padding: var(--space-lg); }
+.qrBox,
+.planSummary,
+.bankInfo { border-color: var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); }
+.summaryItem strong,
+.bankRow strong,
+.transferCode { color: var(--color-ink); }
+.summaryPrice { color: var(--color-accent) !important; }
+.transferCode { border-radius: var(--radius-input); background: var(--color-paper-2); font-family: var(--font-mono); }
+.copyBtn,
+.cancelBtn { min-height: 2.75rem; border-color: var(--color-rule-strong); border-radius: var(--radius-control); color: var(--color-accent); background: var(--color-paper); }
+.confirmBtn,
+.doneButton { min-height: 2.75rem; border-radius: var(--radius-control); color: var(--color-accent-ink); background: var(--color-accent); box-shadow: none; }
+.submitError { border: var(--rule-thin) solid var(--color-error); border-radius: var(--radius-input); color: var(--color-error); background: var(--color-error-soft); }
+.successIcon { color: var(--color-success); background: var(--color-success-soft); }
+.closeBtn:focus-visible,
+.copyBtn:focus-visible,
+.confirmBtn:focus-visible,
+.cancelBtn:focus-visible,
+.doneButton:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.closeBtn:active,
+.copyBtn:active,
+.confirmBtn:active,
+.cancelBtn:active,
+.doneButton:active { transform: translateY(1px); }
+
+@media (min-width: 48rem) {
+  .body { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+}

@@ -21,20 +21,36 @@ type StudySessionWorkspaceProps = {
 }
 
 export default function StudySessionWorkspace({ current, total, progress, metrics, stateLabel, stateTone = "neutral", children }: StudySessionWorkspaceProps) {
-  const completed = Math.min(total, Math.floor((Math.max(0, Math.min(progress, 100)) / 100) * total))
+  const safeProgress = Math.max(0, Math.min(progress, 100))
+  const completed = Math.min(total, Math.floor((safeProgress / 100) * total))
 
   return (
     <div className={styles.workspace}>
+      <section className={styles.mobileSummary} aria-label="Tóm tắt phiên học">
+        <div>
+          <span>Câu {current}/{total}</span>
+          <strong>{Math.round(safeProgress)}%</strong>
+        </div>
+        <div className={styles.mobileTrack} style={{ "--session-progress": `${safeProgress}%` } as React.CSSProperties}><i data-motion-progress style={{ "--motion-progress": safeProgress / 100 } as React.CSSProperties} /></div>
+        <span className={`${styles.mobileState} ${styles[stateTone]}`}><i />{stateLabel}</span>
+      </section>
+
       <aside className={styles.sidePanel} aria-label="Tiến độ phiên học">
-        <div className={styles.sideHeading}><span>Tiến độ phiên</span><strong>{Math.round(progress)}%</strong></div>
-        <div className={styles.progressTrack} style={{ "--session-progress": `${progress}%` } as React.CSSProperties}><i /></div>
+        <div className={styles.sideHeading}><span>Tiến độ phiên</span><strong>{Math.round(safeProgress)}%</strong></div>
+        <div className={styles.progressTrack} style={{ "--session-progress": `${safeProgress}%` } as React.CSSProperties}><i data-motion-progress style={{ "--motion-progress": safeProgress / 100 } as React.CSSProperties} /></div>
         <div className={styles.sessionSummary}>
           <span><small>Hiện tại</small><b>{current}/{total}</b></span>
           <span><small>Đã hoàn thành</small><b>{completed}</b></span>
         </div>
         <div className={styles.itemMap} aria-label="Vị trí các câu trong phiên">
           {Array.from({ length: total }, (_, index) => (
-            <span className={`${index < completed ? styles.itemDone : ""} ${index === current - 1 ? styles.itemCurrent : ""}`} key={index}>{index + 1}</span>
+            <span
+              aria-current={index === current - 1 ? "step" : undefined}
+              className={`${index < completed ? styles.itemDone : ""} ${index === current - 1 ? styles.itemCurrent : ""}`}
+              key={index}
+            >
+              {index + 1}
+            </span>
           ))}
         </div>
       </aside>

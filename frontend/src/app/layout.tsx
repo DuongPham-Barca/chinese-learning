@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import "../../tokens.css"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-provider"
 import { ProUpgradeProvider } from "@/lib/pro-upgrade-provider"

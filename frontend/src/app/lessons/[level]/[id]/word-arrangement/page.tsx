@@ -177,7 +177,7 @@ export default function SentenceSortingPage({ params }: { params: Promise<{ leve
             <div className={styles.studyHeaderTitle}><strong>Sắp xếp câu {current + 1} / {totalItems}</strong><span>Hoàn thành {progress}%</span></div>
             <span className={styles.iconButton}><SharedIcon name="keyboard" size={18} /></span>
           </div>
-          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+        <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
         </header>
 
         <StudySessionWorkspace

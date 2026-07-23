@@ -181,7 +181,7 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
             <div className={styles.studyHeaderTitle}><strong>Từ vựng {current + 1} / {vocab.length}</strong><span>Hoàn thành {progress}%</span></div>
             <button className={styles.iconButton} type="button" aria-label="Nghe phát âm mẫu" onClick={speak}><SharedIcon name="volume2" size={18} /></button>
           </div>
-          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+        <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
         </header>
 
         {saveNotice && <div className={flashStyles.saveNotice} role="status">{saveNotice}</div>}
@@ -189,7 +189,7 @@ export default function FlashcardPage({ params }: { params: Promise<{ level: str
         <div className={flashStyles.workspace}>
           <aside className={`${flashStyles.sidePanel} ${flashStyles.sessionPanel}`} aria-label="Tiến độ phiên học">
             <div className={flashStyles.sideHeading}><span>Tiến độ phiên</span><strong>{progress}%</strong></div>
-            <div className={flashStyles.sideProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+          <div className={flashStyles.sideProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
             <dl className={flashStyles.sessionStats}>
               <div><dt>Đang học</dt><dd>{current + 1}</dd></div>
               <div><dt>Đã qua</dt><dd>{current}</dd></div>

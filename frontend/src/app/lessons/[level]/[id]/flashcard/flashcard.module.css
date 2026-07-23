@@ -110,3 +110,37 @@
   .completionCard{padding:28px 18px}
   .completionSummary{grid-template-columns:1fr}
 }
+
+/* Hallmark · flashcard workspace alignment */
+.workspace { width: min(100% - 1.5rem, 72rem); gap: var(--space-sm); }
+.sidePanel,
+.cardFace,
+.savedPanel { border-color: var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); box-shadow: var(--shadow-card); }
+.sessionPanel { padding: var(--space-sm); }
+.sideHeading,
+.sessionStats dt,
+.savedState,
+.savedItem small { color: var(--color-muted); }
+.sideHeading strong,
+.savedItem span { color: var(--color-accent); }
+.sideProgress,
+.wordMap span { border-color: var(--color-rule); background: var(--color-paper-2); }
+.sideProgress i { background: var(--color-accent); }
+.sessionStats div { border-color: var(--color-rule); border-radius: var(--radius-input); background: var(--color-paper-2); }
+.sessionStats dd,
+.savedHeader span,
+.savedItem strong { color: var(--color-ink); }
+.wordMap span { color: var(--color-muted); }
+.wordMap .wordCurrent { border-color: var(--color-accent); color: var(--color-accent-ink); background: var(--color-accent); box-shadow: none; }
+.flashImageWrap,
+.flashBackImage { border-color: var(--color-rule); border-radius: var(--radius-input); background: var(--color-paper-2); }
+.saveButton { border-color: var(--color-rule); color: var(--color-muted); background: var(--color-paper); box-shadow: none; }
+.choiceButton { border-color: var(--color-rule); border-radius: var(--radius-control); background: var(--color-paper); }
+.savedHeader,
+.savedItem { border-color: var(--color-rule); }
+.savedItemActive { background: var(--color-accent-soft); }
+.saveNotice { z-index: var(--z-toast); top: calc(var(--app-navbar-height) + var(--space-sm)); border-color: var(--color-rule-strong); border-radius: var(--radius-control); color: var(--color-accent); background: var(--color-accent-soft); box-shadow: var(--shadow-card); }
+
+@media (min-width: 64rem) {
+  .sidePanel { position: sticky; top: calc(var(--app-navbar-height) + var(--space-sm)); }
+}

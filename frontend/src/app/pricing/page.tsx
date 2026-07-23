@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
 import SiteNavbar from "@/components/site-navbar"
 import LoadingSpinner from "@/components/loading-spinner"
 import QrPaymentModal from "@/components/qr-payment-modal"
@@ -107,16 +106,6 @@ function calcExpiry(months: number, currentExpiry?: string | null): string {
   return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const } },
-}
-
 export default function PricingPage() {
   const router = useRouter()
   const { user, loading } = useAuth()
@@ -164,38 +153,19 @@ export default function PricingPage() {
     <main className={styles.page}>
       <SiteNavbar />
       <QrPaymentModal open={paymentModalOpen} plan={selectedForModal} onClose={() => setPaymentModalOpen(false)} />
-      <motion.div
-        className={styles.hero}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div className={styles.heroIcon} variants={itemVariants}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m3 7 4.5 4L12 4l4.5 7L21 7l-2 11H5L3 7Z" />
-            <path d="M6 22h12" />
-          </svg>
-        </motion.div>
-        <motion.h1 variants={itemVariants}>Đăng ký gói Pro</motion.h1>
-        <motion.p variants={itemVariants}>
+      <div className={styles.hero} data-motion-page>
+        <h1>Đăng ký gói Pro</h1>
+        <p>
           Chọn thời hạn sử dụng phù hợp. Tất cả các gói đều mở khóa đầy đủ tính năng Pro.
-        </motion.p>
-      </motion.div>
+        </p>
+      </div>
 
-      <motion.div
-        className={styles.plans}
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
+      <div className={styles.plans} data-motion-page>
         {plans.map((plan) => {
           const isRegisteredPlan = activePlanId === plan.id
-          return <motion.div
+          return <div
             key={plan.id}
-            variants={itemVariants}
             className={`${styles.planCard} ${plan.popular ? styles.popularCard : ""}`}
-            whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(37,99,235,0.15)" }}
           >
             {plan.badge && <span className={styles.badge}>{plan.badge}</span>}
             <h3 className={styles.planTitle}>{plan.title}</h3>
@@ -229,20 +199,14 @@ export default function PricingPage() {
             >
               {isRegisteredPlan ? "Đã đăng ký gói" : plan.buttonLabel}
             </button>
-          </motion.div>
+          </div>
         })}
-      </motion.div>
+      </div>
 
 
-      <motion.section
-        className={styles.section}
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>So sánh Free vs Pro</motion.h2>
-        <motion.div variants={itemVariants} className={styles.comparison}>
+      <section className={styles.section} data-motion-page>
+        <h2 className={styles.sectionTitle}>So sánh Free vs Pro</h2>
+        <div className={styles.comparison}>
           <div className={styles.comparisonHeader}>
             <span>Tính năng</span>
             <span>Free</span>
@@ -255,18 +219,12 @@ export default function PricingPage() {
               <span className={styles.proCol}>{pro ? <i className={styles.checkInline}><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></i> : <span className={styles.dash}>&mdash;</span>}</span>
             </div>
           ))}
-        </motion.div>
-      </motion.section>
+        </div>
+      </section>
 
-      <motion.section
-        className={styles.section}
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>Cách kích hoạt Pro</motion.h2>
-        <motion.div variants={itemVariants} className={styles.steps}>
+      <section className={styles.section} data-motion-page>
+        <h2 className={styles.sectionTitle}>Cách kích hoạt Pro</h2>
+        <div className={styles.steps}>
           {steps.map(([title, description], index) => (
             <div className={styles.step} key={title}>
               <span className={styles.stepNumber}>{index + 1}</span>
@@ -274,37 +232,29 @@ export default function PricingPage() {
               {index < steps.length - 1 && <span className={styles.stepArrow}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></span>}
             </div>
           ))}
-        </motion.div>
-      </motion.section>
+        </div>
+      </section>
 
-      <motion.section
-        id="faq"
-        className={styles.section}
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.h2 variants={itemVariants} className={styles.sectionTitle}>Câu hỏi thường gặp</motion.h2>
-        <motion.div variants={itemVariants} className={styles.faqList}>
+      <section id="faq" className={styles.section} data-motion-page>
+        <h2 className={styles.sectionTitle}>Câu hỏi thường gặp</h2>
+        <div className={styles.faqList}>
           {faq.map(([question, answer], i) => (
             <div
               key={question}
               className={`${styles.faqItem} ${openFaq === i ? styles.faqOpen : ""}`}
-              onClick={() => setOpenFaq(openFaq === i ? null : i)}
             >
-              <div className={styles.faqQuestion}>
+              <button type="button" className={styles.faqQuestion} onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i}>
                 <span>{question}</span>
                 <i><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></i>
-              </div>
+              </button>
               {openFaq === i && <p className={styles.faqAnswer}>{answer}</p>}
             </div>
           ))}
-        </motion.div>
-        <motion.p variants={itemVariants} className={styles.faqFooter}>
-          Vẫn còn thắc mắc? <Link href="/#footer">Liên hệ chúng tôi</Link>
-        </motion.p>
-      </motion.section>
+        </div>
+        <p className={styles.faqFooter}>
+          Xem thêm thông tin trong <Link href="/terms">Điều khoản sử dụng</Link>.
+        </p>
+      </section>
 
     </main>
   )

@@ -1,0 +1,423 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Narrative Workflow + F4 Step Sequence
+ * theme: studied-DNA (source: supplied image) · tone: warm/playful · anchor: ChineseDict blue
+ * enrichment: Tier-B functional SVG path · nav: N3 persistent app rail · footer: none
+ * pre-emit critique: P5 H5 E5 S5 R5 V5
+ * contrast: pass (40–41) · slop: pass (42–45) · honest: pass (46) · chrome: pass (47)
+ * tokens: pass (48) · responsive: render pass (34, 49, 50–57; 6→2→1 columns) · icons: pass (30)
+ */
+.page {
+  min-height: 100dvh;
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+  font-family: var(--font-body);
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page a {
+  text-decoration: none;
+}
+
+.shell {
+  width: min(100% - 1rem, 78rem);
+  margin-inline: auto;
+  padding-block: var(--space-md) var(--space-xl);
+}
+
+.pageHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: end;
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+.pageHeader > div {
+  min-width: 0;
+}
+
+.pageHeader h1 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: clamp(var(--text-md), 2vw, var(--text-lg));
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.pageHeader p {
+  max-width: 65ch;
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-2xs);
+  line-height: 1.6;
+}
+
+.headerAction,
+.stepCard > a,
+.startGuide > a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
+  white-space: nowrap;
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.headerAction {
+  width: fit-content;
+  padding-inline: var(--space-sm);
+  border: var(--rule-thin) solid var(--color-accent);
+  border-radius: var(--radius-control);
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  transition: transform var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+}
+
+.roadmapViewport {
+  width: 100%;
+  min-width: 0;
+}
+
+.roadmapCanvas {
+  width: 100%;
+  min-width: 0;
+}
+
+.routeMap {
+  display: none;
+  width: 100%;
+  height: auto;
+  color: var(--color-accent);
+  overflow: visible;
+}
+
+.routeLine {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 1400;
+  stroke-dashoffset: 1400;
+  animation: route-draw var(--dur-long) var(--ease-out) forwards;
+}
+
+.routeArrow {
+  fill: var(--color-accent);
+}
+
+.routeNode {
+  opacity: 0;
+  transform: scale(0.86);
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: route-node-in var(--dur-medium) var(--ease-out) var(--dur-short) forwards;
+}
+
+.routeNode circle {
+  fill: var(--color-accent);
+}
+
+.routeNodeWarm circle {
+  fill: var(--color-warning);
+}
+
+.routeNode text {
+  fill: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  opacity: 0;
+  transform: translateY(var(--space-2xs));
+  animation: card-row-in var(--dur-long) var(--ease-out) var(--dur-short) forwards;
+}
+
+.stepCard {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-xs);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-card);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  text-align: center;
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+
+.character {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  margin-block-end: var(--space-2xs);
+}
+
+.character strong {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: var(--rule-thin) solid var(--color-ink-2);
+  border-radius: 50%;
+  background: var(--color-paper-2);
+  box-shadow: 0 var(--space-3xs) 0 var(--color-rule);
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.character small {
+  margin-block-start: var(--space-2xs);
+  color: var(--color-accent);
+  font-size: var(--text-2xs);
+  font-weight: 750;
+}
+
+.seal {
+  position: absolute;
+  inset-block-start: calc(0rem - var(--space-3xs));
+  inset-inline-end: calc(0rem - var(--space-2xs));
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  border-radius: var(--space-3xs);
+  color: var(--color-accent-ink);
+  background: var(--color-seal);
+  font-size: var(--text-2xs);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  transform: rotate(4deg);
+}
+
+.stepCard h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  line-height: 1.35;
+}
+
+.stepCard > p {
+  margin: var(--space-2xs) 0 var(--space-xs);
+  color: var(--color-ink-2);
+  font-size: var(--text-2xs);
+  line-height: 1.55;
+}
+
+.stepCard > a {
+  margin-block-start: auto;
+  color: var(--color-accent);
+}
+
+.startGuide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+  padding: var(--space-md);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+}
+
+.startGuide h2 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: 1.2;
+}
+
+.startGuide > div > p {
+  max-width: 65ch;
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-2xs);
+  line-height: 1.6;
+}
+
+.startGuide ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.startGuide li {
+  display: grid;
+  min-height: 3.25rem;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2xs);
+  border-block-end: var(--rule-thin) solid var(--color-rule-strong);
+}
+
+.startGuide li > span {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.startGuide li strong,
+.startGuide li small {
+  display: block;
+}
+
+.startGuide li strong {
+  font-size: var(--text-2xs);
+}
+
+.startGuide li small {
+  margin-block-start: var(--space-3xs);
+  color: var(--color-ink-2);
+  font-size: var(--text-2xs);
+  line-height: 1.45;
+}
+
+.startGuide > a {
+  width: fit-content;
+  padding-inline: var(--space-sm);
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-accent);
+  background: var(--color-paper);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.headerAction:focus-visible,
+.stepCard > a:focus-visible,
+.startGuide > a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.headerAction:active,
+.stepCard > a:active,
+.startGuide > a:active {
+  transform: translateY(1px);
+}
+
+.headerAction[aria-disabled="true"],
+.stepCard > a[aria-disabled="true"],
+.startGuide > a[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+@keyframes route-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes route-node-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-row-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .headerAction:hover {
+    background: var(--color-accent-hover);
+  }
+
+  .stepCard:hover {
+    border-color: var(--color-rule-strong);
+  }
+
+  .stepCard > a:hover,
+  .startGuide > a:hover {
+    text-decoration: underline;
+    text-underline-offset: var(--space-3xs);
+  }
+}
+
+@media (min-width: 40rem) {
+  .shell {
+    width: min(100% - 2rem, 78rem);
+    padding-block-start: var(--space-lg);
+  }
+
+  .pageHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .stepGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .startGuide {
+    grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+    align-items: center;
+  }
+
+  .startGuide > a {
+    grid-column: 1;
+  }
+}
+
+@media (min-width: 60rem) {
+  .routeMap {
+    display: block;
+  }
+
+  .stepGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .stepCard {
+    min-height: 14rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .headerAction,
+  .stepCard > a,
+  .startGuide > a {
+    min-height: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routeLine,
+  .routeNode,
+  .stepGrid {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}

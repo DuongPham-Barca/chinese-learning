@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { API_BASE_URL } from "@/lib/api"
 import styles from "./login.module.css"
@@ -29,27 +28,6 @@ export default function LoginPage() {
         </div>
 
         <div className={styles.heroContent}>
-          <div className={styles.illustrationWrap}>
-            <Image
-              className={styles.illustration}
-              src="/chinese-learning-hero.png"
-              alt="Bạn nhỏ đang học tiếng Trung"
-              fill
-              priority
-              sizes="420px"
-            />
-            <div className={`${styles.floatCard} ${styles.helloCard}`}>
-              <strong>你好</strong><small>nǐ hǎo · xin chào</small>
-            </div>
-            <div className={`${styles.floatCard} ${styles.studyCard}`}>
-              <strong>学习</strong><small>xué xí · học tập</small>
-            </div>
-            <div className={`${styles.floatCard} ${styles.listenCard}`}>
-              <span className={styles.headphone}>♬</span>
-              <span><strong>Luyện nghe</strong><small>HSK 1-6</small></span>
-            </div>
-          </div>
-
           <div className={styles.heroCopy}>
             <h1>Hành trình chinh phục tiếng Trung <span>bắt đầu từ đây.</span></h1>
             <p>Học từ vựng, luyện phát âm và ghi nhớ chữ Hán với phương pháp thông minh, cá nhân hóa theo trình độ của bạn.</p>

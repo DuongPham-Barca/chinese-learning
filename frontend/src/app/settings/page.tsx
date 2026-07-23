@@ -95,7 +95,7 @@ export default function SettingsPage() {
   return (
     <main className={styles.page}>
       <SiteNavbar />
-      <div className={styles.container}>
+      <div className={styles.container} data-motion-page>
         <header className={styles.heading}><span>TÀI KHOẢN</span><h1>Cài đặt</h1><p>Điều chỉnh mục tiêu học và quản lý dữ liệu tài khoản.</p></header>
 
         <div className={styles.layout}>

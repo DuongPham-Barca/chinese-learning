@@ -1,0 +1,10 @@
+{
+  "date": "2026-07-23",
+  "font_stack": "Inter/system UI; Trebuchet MS introduced for product display headings",
+  "palette": "Existing blue brand preserved and normalized into OKLCH learning tokens",
+  "motion": "Framer Motion installed; product motion limited to short transform and opacity",
+  "spacing": "Four-point semantic scale in frontend/tokens.css",
+  "framework": "Next.js 16 App Router with React 19 and CSS Modules",
+  "design_system": "design.md"
+}
+

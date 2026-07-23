@@ -162,7 +162,7 @@ export default function QuizStagePage({ params }: { params: Promise<{ level: str
             <div className={styles.studyHeaderTitle}><strong>Trắc nghiệm {current + 1} / {questions.length}</strong><span>Từ vựng & Câu ví dụ</span></div>
             <span className={styles.iconButton}><SharedIcon name="target" size={18} /></span>
           </div>
-          <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></div>
+        <div className={styles.studyProgress} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></div>
         </header>
 
         <StudySessionWorkspace

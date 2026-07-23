@@ -39,7 +39,7 @@ export default function TermsPage() {
   return (
     <div className={styles.page}>
       <SiteNavbar />
-      <header className={styles.hero}>
+      <header className={styles.hero} data-motion-page>
         <div className={styles.container}>
           <p className={styles.eyebrow}>Thông tin pháp lý</p>
           <h1>Điều khoản sử dụng</h1>
@@ -48,7 +48,7 @@ export default function TermsPage() {
         </div>
       </header>
 
-      <main className={`${styles.container} ${styles.layout}`}>
+      <main className={`${styles.container} ${styles.layout}`} data-motion-page>
         <nav className={styles.index} aria-label="Mục lục điều khoản">
           <strong>Nội dung</strong>
           {sections.map(([title], index) => (

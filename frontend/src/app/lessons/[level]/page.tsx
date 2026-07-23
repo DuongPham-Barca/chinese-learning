@@ -53,7 +53,7 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
           <small>Quyền truy cập</small>
           <strong>{accessPercent}%</strong>
           <span>{unlockedLessons} / {lessons.length || 0} bài học có thể học</span>
-          <div className={styles.progressTrack} style={{ "--progress": `${accessPercent}%` } as CSSProperties}><i /></div>
+          <div className={styles.progressTrack} style={{ "--progress": `${accessPercent}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": accessPercent / 100 } as CSSProperties} /></div>
         </motion.aside>
       </motion.section>
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import SiteNavbar from "@/components/site-navbar"
 import LoadingSpinner from "@/components/loading-spinner"
+import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-provider"
 import type { LeaderboardUser } from "@/types/api"
@@ -17,7 +18,14 @@ type Player = LeaderboardUser & {
   current: boolean
 }
 
-const avatarColors = ["#2563eb", "#0ea5e9", "#7c3aed", "#059669", "#ea580c", "#db2777"]
+const avatarColors = [
+  "var(--color-avatar-1)",
+  "var(--color-avatar-2)",
+  "var(--color-avatar-3)",
+  "var(--color-avatar-4)",
+  "var(--color-avatar-5)",
+  "var(--color-avatar-6)",
+]
 
 function playerColor(id: string): string {
   const hash = Array.from(id).reduce((sum, character) => sum + character.charCodeAt(0), 0)
@@ -28,21 +36,13 @@ function initials(username: string): string {
   return username.trim().split(/\s+/).map((part) => part[0]).slice(-2).join("").toUpperCase() || "U"
 }
 
-function RefreshIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v6h-6"/></svg>
-}
-
-function TrophyIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4"/></svg>
-}
-
 function Avatar({ player, large = false }: { player: Player; large?: boolean }) {
   return (
     <span
       className={`${styles.avatar} ${large ? styles.largeAvatar : ""}`}
       style={player.avatarUrl
         ? { backgroundImage: `url(${player.avatarUrl})`, backgroundPosition: "center", backgroundSize: "cover" }
-        : { background: `linear-gradient(145deg, ${player.color}, #bfdbfe)` }}
+        : { background: `linear-gradient(145deg, ${player.color}, var(--color-accent-soft))` }}
     >
       {!player.avatarUrl && player.initials}
     </span>
@@ -53,7 +53,7 @@ function PodiumMember({ player }: { player: Player }) {
   const isWinner = player.rank === 1
   return (
     <article className={`${styles.podiumMember} ${isWinner ? styles.winner : ""}`}>
-      {isWinner && <TrophyIcon />}
+      {isWinner && <SharedIcon name="crown" size={22} />}
       <div className={styles.avatarWrap}><Avatar player={player} large={isWinner} /><b>#{player.rank}</b></div>
       <h3>{player.username}</h3>
       <span>{player.level}</span>
@@ -69,7 +69,7 @@ function LeaderboardItem({ player }: { player: Player }) {
       <Avatar player={player} />
       <div className={styles.playerInfo}>
         <h3>{player.username} {player.current ? <span>BẠN</span> : <span>{player.level}</span>}</h3>
-        <i><em style={{ width: `${player.progress}%` }} /></i>
+        <i><em data-motion-progress style={{ "--motion-progress": player.progress / 100 } as React.CSSProperties} /></i>
       </div>
       <strong>{player.expPoints.toLocaleString("vi-VN")} EXP</strong>
     </article>
@@ -145,16 +145,16 @@ export default function LeaderboardPage() {
     <main className={styles.page}>
       <SiteNavbar active="leaderboard" />
       {loading ? <LoadingSpinner /> : (
-        <div className={styles.container}>
+        <div className={styles.container} data-motion-page>
           <header className={styles.heading}>
             <div><h1>Bảng xếp hạng</h1><p>Dữ liệu EXP thực tế từ người học</p></div>
-            <button type="button" className={refreshing ? styles.refreshing : ""} onClick={() => void refreshLeaderboard()} disabled={refreshing} aria-label="Làm mới"><RefreshIcon /></button>
+            <button type="button" className={refreshing ? styles.refreshing : ""} onClick={() => void refreshLeaderboard()} disabled={refreshing} aria-label="Làm mới"><SharedIcon name="rotateCcw" size={16} /></button>
           </header>
 
           <div className={styles.tabs}>{tabs.map(([key, label]) => <button type="button" className={period === key ? styles.activeTab : ""} onClick={() => { setPeriod(key); setShowAll(false) }} key={key}>{label}</button>)}</div>
 
-          {error ? <p style={{ padding: 24, color: "#dc2626", textAlign: "center" }}>{error}</p> : players.length === 0 ? (
-            <p style={{ padding: 32, color: "#64748b", textAlign: "center" }}>Chưa có dữ liệu EXP trong khoảng thời gian này.</p>
+          {error ? <p className={`${styles.stateMessage} ${styles.stateError}`}>{error}</p> : players.length === 0 ? (
+            <p className={styles.stateMessage}>Chưa có dữ liệu EXP trong khoảng thời gian này.</p>
           ) : (
             <>
               <section className={styles.podiumCard}>{podium.map((player) => <PodiumMember player={player} key={player.id} />)}</section>

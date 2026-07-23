@@ -9,7 +9,7 @@ import LessonLayout from "@/components/lesson-layout"
 import LessonProgress from "@/components/lesson-progress"
 import SharedIcon from "@/components/shared-icon"
 import api from "@/lib/api"
-import { getLessonPercent, lessonModuleOrder, useLessonProgress, type LessonModuleId } from "@/services/lesson-progress.service"
+import { getLessonPercent, getModulePercent, lessonModuleOrder, useLessonProgress, type LessonModuleId } from "@/services/lesson-progress.service"
 import type { LessonDetail } from "@/types/api"
 import styles from "../../lesson-flow.module.css"
 import { getLearningModules, lessonProgressSteps } from "./learning-modules"
@@ -26,7 +26,7 @@ function LessonHeader({ lesson, level, progress }: { lesson: LessonDetail; level
           <span>{level.toUpperCase()} - {lesson.vocabulary.length} từ vựng - {lesson.totalSentences} câu luyện tập</span>
         </div>
         <div className={styles.headerProgress}>
-          <span className={styles.miniTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i /></span>
+      <span className={styles.miniTrack} style={{ "--progress": `${progress}%` } as CSSProperties}><i data-motion-progress style={{ "--motion-progress": progress / 100 } as CSSProperties} /></span>
           <b>{progress}%</b>
         </div>
       </div>
@@ -81,6 +81,11 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
     return acc
   }, {} as Record<LessonModuleId, number>)
   const progress = getLessonPercent(savedProgress, totals)
+  const recommendedModule = modules.find((module) => (
+    module.status !== "coming_soon"
+    && module.totalItems > 0
+    && getModulePercent(savedProgress[module.id]) < 100
+  ))
   const stepProgress = lessonModuleOrder.map((moduleId) => {
     const total = totals[moduleId] || 0
     const completed = Math.min(savedProgress[moduleId]?.completed ?? 0, total)
@@ -92,6 +97,23 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
       <LessonHeader lesson={lesson} level={level} progress={progress} />
       <div className={styles.detailStack}>
         <LessonProgress steps={lessonProgressSteps} progress={progress} stepProgress={stepProgress} />
+        {recommendedModule && (
+          <section className={styles.nextStepCard} aria-labelledby="next-step-title">
+            <div className={styles.nextStepIcon}><SharedIcon name={recommendedModule.icon} size={25} /></div>
+            <div className={styles.nextStepCopy}>
+              <span>NÊN HỌC TIẾP</span>
+              <h2 id="next-step-title">{recommendedModule.title}</h2>
+              <p>{recommendedModule.description}</p>
+            </div>
+            <div className={styles.nextStepMeta}>
+              <small>{getModulePercent(savedProgress[recommendedModule.id])}% hoàn thành</small>
+              <Link href={recommendedModule.href}>
+                {getModulePercent(savedProgress[recommendedModule.id]) > 0 ? "Tiếp tục" : "Bắt đầu"}
+                <SharedIcon name="arrowRight" size={16} />
+              </Link>
+            </div>
+          </section>
+        )}
         <motion.section className={styles.infoCard} variants={itemVariants} initial="hidden" whileInView="visible" viewport={sectionViewport}>
           <div className={styles.infoIllustration}><SharedIcon name="bookOpen" size={32} /></div>
           <div>
@@ -100,7 +122,14 @@ export default function LessonDetailPage({ params }: { params: Promise<{ level: 
           </div>
         </motion.section>
         <motion.section className={styles.moduleGrid} variants={containerVariants} initial="hidden" animate="visible">
-          {modules.map((module) => <LearningModuleCard key={module.id} module={module} progress={savedProgress[module.id]} />)}
+          {modules.map((module) => (
+            <LearningModuleCard
+              key={module.id}
+              module={module}
+              progress={savedProgress[module.id]}
+              recommended={module.id === recommendedModule?.id}
+            />
+          ))}
         </motion.section>
       </div>
     </LessonLayout>
