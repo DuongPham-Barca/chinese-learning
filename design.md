@@ -62,6 +62,9 @@ named tokens for new UI and avoid one-off spacing values.
 - Marketing pages may use visual enrichment.
 - App pages must not use stock or marketing enrichment; learning content carries the page.
 - Dashboard may use a restrained CSS-only Chinese-character motif inside the primary lesson panel.
+- The HSK curriculum overview may use one course mascot and functional lesson,
+  vocabulary, and speaking illustrations to distinguish levels and make the
+  learning inventory easier to scan.
 - The dedicated `/beginner` module uses a Narrative Workflow with an F4 six-step sequence and a functional SVG progress path.
 - Beginner learning cards use a compact 14–16 px reading scale while preserving 44 px interactive targets.
 - Study pages may use only functional diagrams, vocabulary images, and audio controls.

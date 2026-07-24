@@ -75,6 +75,7 @@ export default function DashboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
   const [lessonPreviews, setLessonPreviews] = useState<Record<string, Vocabulary | null>>({})
   const [featuredLessonIndex, setFeaturedLessonIndex] = useState(0)
+  const [lessonDeckDirection, setLessonDeckDirection] = useState<1 | -1>(1)
   const [lessonDeckPaused, setLessonDeckPaused] = useState(false)
   const [lessonDeckManuallyPaused, setLessonDeckManuallyPaused] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -151,6 +152,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (prefersReducedMotion || lessonDeckPaused || lessonDeckManuallyPaused || featuredLessons.length < 2) return
     const timer = window.setInterval(() => {
+      setLessonDeckDirection(1)
       setFeaturedLessonIndex((index) => (index + 1) % featuredLessons.length)
     }, 5600)
     return () => window.clearInterval(timer)
@@ -213,13 +215,14 @@ export default function DashboardPage() {
   const currentHref = currentLesson ? `/lessons/${currentLesson.levelType.toLowerCase()}/${currentLesson.id}` : levelHref
   const showPreviousLesson = () => {
     if (featuredLessons.length < 2) return
+    setLessonDeckDirection(-1)
     setFeaturedLessonIndex((index) => (index - 1 + featuredLessons.length) % featuredLessons.length)
   }
   const showNextLesson = () => {
     if (featuredLessons.length < 2) return
+    setLessonDeckDirection(1)
     setFeaturedLessonIndex((index) => (index + 1) % featuredLessons.length)
   }
-
   if (authLoading || loading || !user) {
     return (
       <main className={styles.page}>
@@ -271,82 +274,94 @@ export default function DashboardPage() {
           <div className={styles.mainColumn}>
             <section className={styles.workbench} aria-label="Tiếp tục học">
               <div className={styles.focusCard}>
-            <div className={styles.focusTopline}>
-              <span><i />NÊN HỌC TIẾP</span>
-            </div>
-
-            <div className={styles.focusLayout}>
-              <AnimatePresence initial={false} mode="wait">
-                <motion.div
-                  className={styles.focusCopy}
-                  key={focusLesson?.id || "empty-lesson"}
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8 }}
-                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.36, ease: lessonDeckEase }}
-                >
-                {focusLesson ? (
-                  <>
-                    <div className={styles.focusBody}>
-                      <div className={styles.focusMeta}>
-                        <strong>{focusLesson.levelType}</strong>
-                        <span>Bài {focusLesson.lessonOrder.toString().padStart(2, "0")}</span>
-                      </div>
-                      <h2>{focusLesson.title}</h2>
-                      <p>{focusLesson._count.vocabulary} từ vựng và {focusLesson._count.sentences} câu luyện tập đang chờ bạn.</p>
-                    </div>
-                    <div className={styles.focusActions}>
-                      <Link className={styles.primaryAction} href={focusHref}>
-                        <SharedIcon name="play" size={18} />Bắt đầu học
-                      </Link>
-                      <Link className={styles.secondaryAction} href={`/lessons/${user.level.toLowerCase()}`}>
-                        Chọn bài khác
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.noLesson}>
-                    <h2>Chưa có bài học khả dụng</h2>
-                    <p>Giáo trình {user.level} đang được cập nhật. Bạn có thể chọn cấp độ khác để bắt đầu.</p>
-                    <Link className={styles.primaryAction} href={levelHref}>Chọn giáo trình</Link>
-                  </div>
-                )}
-                </motion.div>
-              </AnimatePresence>
-
-              <div
-                className={styles.lessonDeck}
-                role="region"
-                aria-label="Xem nhanh các bài học"
-                aria-roledescription="carousel"
-                onMouseEnter={() => setLessonDeckPaused(true)}
-                onMouseLeave={() => setLessonDeckPaused(false)}
-                onFocusCapture={() => setLessonDeckPaused(true)}
-                onBlurCapture={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                    setLessonDeckPaused(false)
-                  }
-                }}
-              >
-                <div className={styles.deckProgress}>
-                  <span><SharedIcon name="fire" size={22} />{streak} ngày</span>
-                  <div>
-                    <small>Hôm nay</small>
-                    <strong>{completedChallenges}/{dailyChallenges.length}</strong>
-                    <i><em data-motion-progress style={{ "--motion-progress": dailyChallengeProgress } as CSSProperties} /></i>
-                  </div>
+                <div className={styles.focusTopline}>
+                  <span><i />NÊN HỌC TIẾP</span>
+                  <small>
+                    {lessonDeckManuallyPaused || prefersReducedMotion
+                      ? "Chuyển bài thủ công"
+                      : "Tự chuyển sau vài giây"}
+                  </small>
                 </div>
 
-                <div className={styles.deckStage}>
-                  <AnimatePresence initial={false} mode="wait">
+                <div className={styles.focusLayout}>
+                  <AnimatePresence initial={false} mode="wait" custom={lessonDeckDirection}>
                     <motion.div
-                      className={styles.deckGroup}
-                      key={focusLesson?.id || "empty-deck"}
-                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8, rotate: 2, scale: 0.98 }}
-                      animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, rotate: -2, scale: 0.98 }}
-                      transition={{ duration: prefersReducedMotion ? 0.01 : 0.44, ease: lessonDeckEase }}
+                      className={styles.focusCopy}
+                      key={focusLesson?.id || "empty-lesson"}
+                      custom={lessonDeckDirection}
+                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: lessonDeckDirection * 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: lessonDeckDirection * -8 }}
+                      transition={{ duration: prefersReducedMotion ? 0.1 : 0.3, ease: lessonDeckEase }}
                     >
+                      {focusLesson ? (
+                        <>
+                          <div className={styles.focusBody}>
+                            <div className={styles.focusMeta}>
+                              <strong>{focusLesson.levelType}</strong>
+                              <span>Bài {focusLesson.lessonOrder.toString().padStart(2, "0")}</span>
+                            </div>
+                            <h2>{focusLesson.title}</h2>
+                            <p>{focusLesson._count.vocabulary} từ vựng và {focusLesson._count.sentences} câu luyện tập đang chờ bạn.</p>
+                          </div>
+                          <div className={styles.focusActions}>
+                            <Link className={styles.primaryAction} href={focusHref}>
+                              <SharedIcon name="play" size={18} />Bắt đầu học
+                            </Link>
+                            <Link className={styles.secondaryAction} href={`/lessons/${user.level.toLowerCase()}`}>
+                              Chọn bài khác
+                            </Link>
+                          </div>
+                        </>
+                      ) : (
+                        <div className={styles.noLesson}>
+                          <h2>Chưa có bài học khả dụng</h2>
+                          <p>Giáo trình {user.level} đang được cập nhật. Bạn có thể chọn cấp độ khác để bắt đầu.</p>
+                          <Link className={styles.primaryAction} href={levelHref}>Chọn giáo trình</Link>
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  <div
+                    className={styles.lessonDeck}
+                    role="region"
+                    aria-label="Xem nhanh các bài học"
+                    aria-roledescription="carousel"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowLeft") showPreviousLesson()
+                      if (event.key === "ArrowRight") showNextLesson()
+                    }}
+                    onMouseEnter={() => setLessonDeckPaused(true)}
+                    onMouseLeave={() => setLessonDeckPaused(false)}
+                    onFocusCapture={() => setLessonDeckPaused(true)}
+                    onBlurCapture={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                        setLessonDeckPaused(false)
+                      }
+                    }}
+                  >
+                    <div className={styles.deckProgress}>
+                      <span><SharedIcon name="fire" size={22} />{streak} ngày</span>
+                      <div>
+                        <small>Hôm nay</small>
+                        <strong>{completedChallenges}/{dailyChallenges.length}</strong>
+                        <i><em data-motion-progress style={{ "--motion-progress": dailyChallengeProgress } as CSSProperties} /></i>
+                      </div>
+                    </div>
+
+                    <div className={styles.deckStage}>
+                      <AnimatePresence initial={false} mode="wait" custom={lessonDeckDirection}>
+                        <motion.div
+                          className={styles.deckGroup}
+                          key={focusLesson?.id || "empty-deck"}
+                          custom={lessonDeckDirection}
+                          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: lessonDeckDirection * 8, rotate: lessonDeckDirection * 2, scale: 0.98 }}
+                          animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
+                          exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: lessonDeckDirection * -8, rotate: lessonDeckDirection * -2, scale: 0.98 }}
+                          transition={{ duration: prefersReducedMotion ? 0.1 : 0.4, ease: lessonDeckEase }}
+                        >
                       {deckLessons.slice().reverse().map((lesson) => {
                         const depth = deckLessons.findIndex((item) => item.id === lesson.id)
                         const vocabulary = lessonPreviews[lesson.id]
@@ -375,50 +390,50 @@ export default function DashboardPage() {
                           </article>
                         )
                       })}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
 
-                <div className={styles.deckControls}>
-                  <button
-                    type="button"
-                    aria-label="Xem bài trước"
-                    disabled={featuredLessons.length < 2}
-                    onClick={showPreviousLesson}
-                  >
-                    <SharedIcon name="arrowLeft" size={17} />
-                  </button>
-                  <div className={styles.deckPagination}>
-                    <span>{featuredLessons.length ? normalizedFeaturedLessonIndex + 1 : 0}/{featuredLessons.length}</span>
-                    <div className={styles.deckDots} aria-hidden="true">
-                      {featuredLessons.map((lesson, index) => (
-                        <i
-                          className={index === normalizedFeaturedLessonIndex ? styles.deckDotActive : undefined}
-                          key={lesson.id}
-                        />
-                      ))}
+                    <div className={styles.deckControls}>
+                      <button
+                        type="button"
+                        aria-label="Xem bài trước"
+                        disabled={featuredLessons.length < 2}
+                        onClick={showPreviousLesson}
+                      >
+                        <SharedIcon name="arrowLeft" size={17} />
+                      </button>
+                      <div className={styles.deckPagination}>
+                        <span>{featuredLessons.length ? normalizedFeaturedLessonIndex + 1 : 0}/{featuredLessons.length}</span>
+                        <div className={styles.deckDots} aria-hidden="true">
+                          {featuredLessons.map((lesson, index) => (
+                            <i
+                              className={index === normalizedFeaturedLessonIndex ? styles.deckDotActive : undefined}
+                              key={lesson.id}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Xem bài tiếp theo"
+                        disabled={featuredLessons.length < 2}
+                        onClick={showNextLesson}
+                      >
+                        <SharedIcon name="arrowRight" size={17} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={lessonDeckManuallyPaused ? "Tiếp tục tự chuyển bài" : "Tạm dừng tự chuyển bài"}
+                        aria-pressed={lessonDeckManuallyPaused}
+                        disabled={featuredLessons.length < 2 || Boolean(prefersReducedMotion)}
+                        onClick={() => setLessonDeckManuallyPaused((paused) => !paused)}
+                      >
+                        <SharedIcon name={lessonDeckManuallyPaused ? "play" : "pause"} size={17} />
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    aria-label="Xem bài tiếp theo"
-                    disabled={featuredLessons.length < 2}
-                    onClick={showNextLesson}
-                  >
-                    <SharedIcon name="arrowRight" size={17} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={lessonDeckManuallyPaused ? "Tiếp tục tự chuyển bài" : "Tạm dừng tự chuyển bài"}
-                    aria-pressed={lessonDeckManuallyPaused}
-                    disabled={featuredLessons.length < 2 || Boolean(prefersReducedMotion)}
-                    onClick={() => setLessonDeckManuallyPaused((paused) => !paused)}
-                  >
-                    <SharedIcon name={lessonDeckManuallyPaused ? "play" : "pause"} size={17} />
-                  </button>
                 </div>
-              </div>
-            </div>
               </div>
             </section>
 

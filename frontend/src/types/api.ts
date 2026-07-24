@@ -37,6 +37,48 @@ export interface LessonSummary {
   }
 }
 
+export interface CurriculumLevel {
+  id: string
+  type: string
+  name: string
+  slug: string
+  description: string | null
+  lessonCount: number
+}
+
+export interface CurriculumLesson extends LessonSummary {
+  description: string | null
+  imageUrl: string | null
+  completedModules: number
+  totalModules: number
+  progressPercent: number
+  status: "locked" | "completed" | "in_progress" | "not_started"
+}
+
+export interface CurriculumSummary {
+  totalLessons: number
+  completedLessons: number
+  totalVocabulary: number
+  totalSentences: number
+  completedModules: number
+  totalModules: number
+  progressPercent: number
+}
+
+export interface CurriculumResponse {
+  levels: CurriculumLevel[]
+  level: {
+    id: string
+    type: string
+    name: string
+    slug: string
+    description: string | null
+  }
+  lessons: CurriculumLesson[]
+  currentLessonId: string | null
+  summary: CurriculumSummary
+}
+
 export interface Vocabulary {
   id: string
   lessonId: string
