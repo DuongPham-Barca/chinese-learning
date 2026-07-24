@@ -28,9 +28,9 @@ active, progress, and focus states rather than tinting the whole page.
 
 ## Typography
 
-- Display: Trebuchet MS, weight 700, style normal.
-- Body: Inter/system UI, weight 400–700.
-- Mono: ui-monospace, weight 600.
+- UI and display: Inter/system UI, weight 400–800, style normal.
+- Headings, body copy, navigation, controls, and metrics use this single UI font stack.
+- Mono: ui-monospace, weight 600, reserved for functional codes and technical values.
 - Display tracking: -0.025em.
 - Type scale anchor: `--text-display = clamp(2rem, 4vw, 3.25rem)`.
 

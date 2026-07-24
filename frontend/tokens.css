@@ -30,8 +30,8 @@
   --color-avatar-5: oklch(56% 0.16 48);
   --color-avatar-6: oklch(53% 0.17 350);
 
-  --font-display: "Trebuchet MS", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-body);
   --font-mono: ui-monospace, "Cascadia Code", monospace;
 
   --space-3xs: 0.25rem;
