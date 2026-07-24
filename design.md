@@ -15,13 +15,16 @@ Modern-minimal learning product with a warm, encouraging and lightly playful voi
 
 ## Theme
 
+Warm cream paper is the default background. Sky blue is reserved for selected,
+active, progress, and focus states rather than tinting the whole page.
+
 - `--color-paper`: oklch(98.5% 0.009 86)
 - `--color-paper-2`: oklch(96.7% 0.012 86)
 - `--color-ink`: oklch(23% 0.035 255)
 - `--color-ink-2`: oklch(42% 0.035 255)
 - `--color-rule`: oklch(89% 0.018 255)
-- `--color-accent`: oklch(53% 0.2 259)
-- `--color-focus`: oklch(48% 0.21 259)
+- `--color-accent`: oklch(50% 0.16 235)
+- `--color-focus`: oklch(44% 0.18 235)
 
 ## Typography
 
@@ -51,7 +54,7 @@ named tokens for new UI and avoid one-off spacing values.
 
 ## CTA voice
 
-- Primary: solid blue, compact rounded rectangle, verb-first label.
+- Primary: solid accessible azure, compact rounded rectangle, verb-first label.
 - Secondary: paper surface with a visible rule, no gradient.
 
 ## Per-page allowances

@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import SharedIcon, { type SharedIconName } from "@/components/shared-icon"
 import SiteNavbar from "@/components/site-navbar"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-provider"
-import type { LeaderboardUser, LessonSummary } from "@/types/api"
+import type { LeaderboardUser, LessonSummary, Vocabulary } from "@/types/api"
 import styles from "./dashboard.module.css"
 
 type ProgressEntry = {
@@ -29,6 +30,8 @@ const quickModes: Array<{ label: string; detail: string; path: string; icon: Sha
   { label: "Phản xạ", detail: "Trả lời nhanh", path: "reflex", icon: "zap" },
   { label: "Trắc nghiệm", detail: "Kiểm tra ngắn", path: "quiz", icon: "target" },
 ]
+
+const lessonDeckEase = [0.16, 1, 0.3, 1] as const
 
 function calculateStreak(entries: ProgressEntry[]) {
   const days = new Set(entries.map((entry) => new Date(entry.createdAt).toISOString().slice(0, 10)))
@@ -70,8 +73,13 @@ export default function DashboardPage() {
   const [lessons, setLessons] = useState<LessonSummary[]>([])
   const [entries, setEntries] = useState<ProgressEntry[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [lessonPreviews, setLessonPreviews] = useState<Record<string, Vocabulary | null>>({})
+  const [featuredLessonIndex, setFeaturedLessonIndex] = useState(0)
+  const [lessonDeckPaused, setLessonDeckPaused] = useState(false)
+  const [lessonDeckManuallyPaused, setLessonDeckManuallyPaused] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (authLoading) return
@@ -110,6 +118,43 @@ export default function DashboardPage() {
       || lessons.find((lesson) => !lesson.isLocked)
       || null
   }, [currentLevel, entries, lessons])
+  const availableLessons = useMemo(() => lessons.filter((lesson) => !lesson.isLocked), [lessons])
+  const featuredLessons = useMemo(() => {
+    if (!currentLesson) return availableLessons.slice(0, 6)
+    return [
+      currentLesson,
+      ...availableLessons.filter((lesson) => lesson.id !== currentLesson.id),
+    ].slice(0, 6)
+  }, [availableLessons, currentLesson])
+
+  useEffect(() => {
+    if (featuredLessons.length === 0) return
+    let active = true
+
+    Promise.all(featuredLessons.map(async (lesson) => {
+      try {
+        const response = await api.get<{ vocabulary: Vocabulary[] }>(`/vocabulary/${lesson.id}`)
+        const vocabulary = response.data.vocabulary.find((item) => item.imageUrl)
+          || response.data.vocabulary[0]
+          || null
+        return [lesson.id, vocabulary] as const
+      } catch {
+        return [lesson.id, null] as const
+      }
+    })).then((previews) => {
+      if (active) setLessonPreviews(Object.fromEntries(previews))
+    })
+
+    return () => { active = false }
+  }, [featuredLessons])
+
+  useEffect(() => {
+    if (prefersReducedMotion || lessonDeckPaused || lessonDeckManuallyPaused || featuredLessons.length < 2) return
+    const timer = window.setInterval(() => {
+      setFeaturedLessonIndex((index) => (index + 1) % featuredLessons.length)
+    }, 5600)
+    return () => window.clearInterval(timer)
+  }, [featuredLessonIndex, featuredLessons.length, lessonDeckManuallyPaused, lessonDeckPaused, prefersReducedMotion])
 
   const streak = useMemo(() => calculateStreak(entries), [entries])
   const longestStreak = useMemo(() => calculateLongestStreak(entries), [entries])
@@ -136,13 +181,27 @@ export default function DashboardPage() {
       }
     })
   }, [entries])
-  const availableLessons = lessons.filter((lesson) => !lesson.isLocked)
   const dailyChallenges = [
     { label: "Hoàn thành hoạt động đầu tiên", icon: "play" as SharedIconName, value: Math.min(todayEntries.length, 1), target: 1 },
     { label: "Hoàn thành 3 hoạt động", icon: "target" as SharedIconName, value: Math.min(todayEntries.length, 3), target: 3 },
     { label: "Tích lũy 50 EXP hôm nay", icon: "zap" as SharedIconName, value: Math.min(todayExp, 50), target: 50 },
   ]
   const completedChallenges = dailyChallenges.filter((challenge) => challenge.value >= challenge.target).length
+  const normalizedFeaturedLessonIndex = featuredLessons.length
+    ? featuredLessonIndex % featuredLessons.length
+    : 0
+  const focusLesson = featuredLessons[normalizedFeaturedLessonIndex] || currentLesson
+  const focusHref = focusLesson
+    ? `/lessons/${focusLesson.levelType.toLowerCase()}/${focusLesson.id}`
+    : `/lessons/${user?.level.toLowerCase() || "hsk1"}`
+  const deckLessons = focusLesson
+    ? Array.from({ length: Math.min(3, featuredLessons.length) }, (_, offset) => (
+      featuredLessons[(normalizedFeaturedLessonIndex + offset) % featuredLessons.length]
+    ))
+    : []
+  const dailyChallengeProgress = dailyChallenges.length
+    ? completedChallenges / dailyChallenges.length
+    : 0
   const leaderboardRows = (() => {
     const topThree = leaderboard.slice(0, 3)
     const currentPlayer = leaderboard.find((player) => player.id === user?.id)
@@ -152,6 +211,14 @@ export default function DashboardPage() {
   })()
   const levelHref = `/lessons/${user?.level.toLowerCase() || "hsk1"}`
   const currentHref = currentLesson ? `/lessons/${currentLesson.levelType.toLowerCase()}/${currentLesson.id}` : levelHref
+  const showPreviousLesson = () => {
+    if (featuredLessons.length < 2) return
+    setFeaturedLessonIndex((index) => (index - 1 + featuredLessons.length) % featuredLessons.length)
+  }
+  const showNextLesson = () => {
+    if (featuredLessons.length < 2) return
+    setFeaturedLessonIndex((index) => (index + 1) % featuredLessons.length)
+  }
 
   if (authLoading || loading || !user) {
     return (
@@ -206,23 +273,30 @@ export default function DashboardPage() {
               <div className={styles.focusCard}>
             <div className={styles.focusTopline}>
               <span><i />NÊN HỌC TIẾP</span>
-              <small>Mục tiêu {user.dailyTarget} phút/ngày</small>
             </div>
 
             <div className={styles.focusLayout}>
-              <div>
-                {currentLesson ? (
+              <AnimatePresence initial={false} mode="wait">
+                <motion.div
+                  className={styles.focusCopy}
+                  key={focusLesson?.id || "empty-lesson"}
+                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8 }}
+                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.36, ease: lessonDeckEase }}
+                >
+                {focusLesson ? (
                   <>
                     <div className={styles.focusBody}>
-                      <div className={styles.lessonIndex}>{currentLesson.lessonOrder.toString().padStart(2, "0")}</div>
-                      <div>
-                        <span>{currentLesson.levelType} · Bài {currentLesson.lessonOrder}</span>
-                        <h2>{currentLesson.title}</h2>
-                        <p>{currentLesson._count.vocabulary} từ vựng và {currentLesson._count.sentences} câu luyện tập đang chờ bạn.</p>
+                      <div className={styles.focusMeta}>
+                        <strong>{focusLesson.levelType}</strong>
+                        <span>Bài {focusLesson.lessonOrder.toString().padStart(2, "0")}</span>
                       </div>
+                      <h2>{focusLesson.title}</h2>
+                      <p>{focusLesson._count.vocabulary} từ vựng và {focusLesson._count.sentences} câu luyện tập đang chờ bạn.</p>
                     </div>
                     <div className={styles.focusActions}>
-                      <Link className={styles.primaryAction} href={currentHref}>
+                      <Link className={styles.primaryAction} href={focusHref}>
                         <SharedIcon name="play" size={18} />Bắt đầu học
                       </Link>
                       <Link className={styles.secondaryAction} href={`/lessons/${user.level.toLowerCase()}`}>
@@ -237,11 +311,112 @@ export default function DashboardPage() {
                     <Link className={styles.primaryAction} href={levelHref}>Chọn giáo trình</Link>
                   </div>
                 )}
-              </div>
-              <div className={styles.focusVisual} aria-hidden="true">
-                <span>学</span>
-                <i>听</i>
-                <b>说</b>
+                </motion.div>
+              </AnimatePresence>
+
+              <div
+                className={styles.lessonDeck}
+                role="region"
+                aria-label="Xem nhanh các bài học"
+                aria-roledescription="carousel"
+                onMouseEnter={() => setLessonDeckPaused(true)}
+                onMouseLeave={() => setLessonDeckPaused(false)}
+                onFocusCapture={() => setLessonDeckPaused(true)}
+                onBlurCapture={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setLessonDeckPaused(false)
+                  }
+                }}
+              >
+                <div className={styles.deckProgress}>
+                  <span><SharedIcon name="fire" size={22} />{streak} ngày</span>
+                  <div>
+                    <small>Hôm nay</small>
+                    <strong>{completedChallenges}/{dailyChallenges.length}</strong>
+                    <i><em data-motion-progress style={{ "--motion-progress": dailyChallengeProgress } as CSSProperties} /></i>
+                  </div>
+                </div>
+
+                <div className={styles.deckStage}>
+                  <AnimatePresence initial={false} mode="wait">
+                    <motion.div
+                      className={styles.deckGroup}
+                      key={focusLesson?.id || "empty-deck"}
+                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 8, rotate: 2, scale: 0.98 }}
+                      animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
+                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, rotate: -2, scale: 0.98 }}
+                      transition={{ duration: prefersReducedMotion ? 0.01 : 0.44, ease: lessonDeckEase }}
+                    >
+                      {deckLessons.slice().reverse().map((lesson) => {
+                        const depth = deckLessons.findIndex((item) => item.id === lesson.id)
+                        const vocabulary = lessonPreviews[lesson.id]
+                        const depthClass = depth === 0
+                          ? styles.deckCardFront
+                          : depth === 1
+                            ? styles.deckCardMiddle
+                            : styles.deckCardBack
+                        return (
+                          <article
+                            className={`${styles.deckCard} ${depthClass}`}
+                            aria-hidden={depth > 0}
+                            key={lesson.id}
+                          >
+                            <strong>{vocabulary?.hanzi || lesson.title}</strong>
+                            <small>{vocabulary?.pinyin || `${lesson.levelType} · Bài ${lesson.lessonOrder}`}</small>
+                            <div
+                              className={styles.deckImage}
+                              role={depth === 0 ? "img" : undefined}
+                              aria-label={depth === 0 ? vocabulary?.meaningVi || lesson.title : undefined}
+                              style={vocabulary?.imageUrl ? { backgroundImage: `url(${vocabulary.imageUrl})` } : undefined}
+                            >
+                              {!vocabulary?.imageUrl && <SharedIcon name="bookOpen" size={34} />}
+                            </div>
+                            <span>{vocabulary?.meaningVi || lesson.title}</span>
+                          </article>
+                        )
+                      })}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <div className={styles.deckControls}>
+                  <button
+                    type="button"
+                    aria-label="Xem bài trước"
+                    disabled={featuredLessons.length < 2}
+                    onClick={showPreviousLesson}
+                  >
+                    <SharedIcon name="arrowLeft" size={17} />
+                  </button>
+                  <div className={styles.deckPagination}>
+                    <span>{featuredLessons.length ? normalizedFeaturedLessonIndex + 1 : 0}/{featuredLessons.length}</span>
+                    <div className={styles.deckDots} aria-hidden="true">
+                      {featuredLessons.map((lesson, index) => (
+                        <i
+                          className={index === normalizedFeaturedLessonIndex ? styles.deckDotActive : undefined}
+                          key={lesson.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Xem bài tiếp theo"
+                    disabled={featuredLessons.length < 2}
+                    onClick={showNextLesson}
+                  >
+                    <SharedIcon name="arrowRight" size={17} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={lessonDeckManuallyPaused ? "Tiếp tục tự chuyển bài" : "Tạm dừng tự chuyển bài"}
+                    aria-pressed={lessonDeckManuallyPaused}
+                    disabled={featuredLessons.length < 2 || Boolean(prefersReducedMotion)}
+                    onClick={() => setLessonDeckManuallyPaused((paused) => !paused)}
+                  >
+                    <SharedIcon name={lessonDeckManuallyPaused ? "play" : "pause"} size={17} />
+                  </button>
+                </div>
               </div>
             </div>
               </div>

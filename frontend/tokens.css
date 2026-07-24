@@ -1,18 +1,20 @@
-/* Hallmark · design-system: design.md · ChineseDict learning product */
+/* Hallmark · design-system: design.md · cream paper + sky-blue highlights
+ * pre-emit critique: P5 H5 E5 S5 R5 V4 · contrast: pass
+ */
 :root {
   --color-paper: oklch(98.5% 0.009 86);
   --color-paper-2: oklch(96.7% 0.012 86);
-  --color-paper-3: oklch(94.8% 0.018 255);
+  --color-paper-3: oklch(94.8% 0.025 235);
   --color-ink: oklch(23% 0.035 255);
   --color-ink-2: oklch(42% 0.035 255);
   --color-muted: oklch(53% 0.025 255);
   --color-rule: oklch(89% 0.018 255);
   --color-rule-strong: oklch(80% 0.04 255);
-  --color-accent: oklch(53% 0.2 259);
-  --color-accent-hover: oklch(47% 0.205 259);
-  --color-accent-soft: oklch(94.5% 0.035 259);
+  --color-accent: oklch(50% 0.16 235);
+  --color-accent-hover: oklch(44% 0.17 235);
+  --color-accent-soft: oklch(94% 0.05 235);
   --color-accent-ink: oklch(100% 0 0);
-  --color-focus: oklch(43% 0.21 259);
+  --color-focus: oklch(44% 0.18 235);
   --color-success: oklch(49% 0.14 153);
   --color-success-soft: oklch(95% 0.035 153);
   --color-warning: oklch(54% 0.13 72);
@@ -21,7 +23,7 @@
   --color-error-soft: oklch(95% 0.035 25);
   --color-seal: oklch(50% 0.19 25);
   --color-overlay: oklch(23% 0.035 255 / 0.55);
-  --color-avatar-1: oklch(53% 0.2 259);
+  --color-avatar-1: oklch(50% 0.16 235);
   --color-avatar-2: oklch(62% 0.15 230);
   --color-avatar-3: oklch(52% 0.18 300);
   --color-avatar-4: oklch(53% 0.13 158);
@@ -65,9 +67,9 @@
   --radius-panel: 1.25rem;
   --radius-pill: 999px;
   --rule-thin: 1px;
-  --shadow-card: 0 12px 32px oklch(28% 0.05 259 / 0.07);
-  --shadow-lift: 0 18px 44px oklch(28% 0.08 259 / 0.12);
-  --shadow-bottom-nav: 0 -0.75rem 2rem oklch(28% 0.05 259 / 0.06);
+  --shadow-card: 0 12px 32px oklch(28% 0.05 235 / 0.07);
+  --shadow-lift: 0 18px 44px oklch(28% 0.08 235 / 0.12);
+  --shadow-bottom-nav: 0 -0.75rem 2rem oklch(28% 0.05 235 / 0.06);
   --app-sidebar-width: 12.75rem;
   --app-topbar-height: 3.5rem;
   --app-mobile-nav-height: 4rem;

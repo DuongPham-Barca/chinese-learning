@@ -1,6 +1,30 @@
 [
   {
     "date": "2026-07-24",
+    "scope": "dashboard visual refinement",
+    "macrostructure": "Layered Study Workbench",
+    "theme": "Warm cream paper with sky-blue learning highlights",
+    "enrichment": "Functional vocabulary image deck",
+    "brief": "Refine dashboard hierarchy, replace repeated card surfaces with calmer grouped sections, and add restrained accessible motion"
+  },
+  {
+    "date": "2026-07-24",
+    "scope": "dashboard focus lesson",
+    "macrostructure": "Workbench focus hero with animated lesson deck",
+    "theme": "studied-DNA from user-owned lesson deck screenshots",
+    "enrichment": "Functional vocabulary image deck",
+    "brief": "Rebuild the dashboard focus card from the supplied cream-and-blue lesson reference with an accessible animated carousel between real lessons"
+  },
+  {
+    "date": "2026-07-24",
+    "scope": "app design system",
+    "macrostructure": "Unified client workbench",
+    "theme": "Warm cream paper with sky-blue highlights",
+    "enrichment": "none",
+    "brief": "Keep backgrounds warm cream and reserve pastel sky blue for selected, active, progress, and focus states"
+  },
+  {
+    "date": "2026-07-24",
     "scope": "client motion system",
     "macrostructure": "Unified client workbench",
     "theme": "ChineseDict learning blue",

@@ -1,5 +1,6 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Dashboard workbench · theme: studied-DNA (source: image) · tone: warm/playful · anchor: ChineseDict blue
- * pre-emit critique: P5 H5 E5 S5 R5 V4
+/* Hallmark · genre: modern-minimal · macrostructure: Layered Study Workbench · theme: studied-DNA (source: user-owned image) · design-system: design.md · designed-as-app
+ * tone: warm/playful · anchor: learning blue · motion: entrance + lesson deck + interaction feedback
+ * pre-emit critique: P5 H5 E5 S5 R5 V5
  * contrast: pass (40–41) · nav: persistent app rail · footer: none · slop: pass (42–45)
  * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30)
  * mobile: static pass (34, 49, 50–57) · rendered QA pending browser availability
@@ -1499,6 +1500,970 @@
   }
 
   .challengeRow b em {
+    transition-duration: 1ms;
+  }
+}
+
+/* Hallmark · component scope: animated focus lesson deck
+ * reference DNA: user-owned lesson-card stack · theme: cream paper + sky blue
+ * pre-emit critique: P5 H5 E5 S5 R5 V5 · contrast: pass
+ */
+.focusCard {
+  min-height: 24rem;
+  padding: var(--space-md);
+}
+
+.focusTopline > span {
+  min-height: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+}
+
+.focusTopline i {
+  width: 0.45rem;
+  height: 0.45rem;
+}
+
+.focusLayout {
+  height: auto;
+  min-height: 20rem;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.focusCopy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.focusBody {
+  display: block;
+  margin-block: var(--space-lg) var(--space-md);
+}
+
+.focusMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.focusMeta strong {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  padding-inline: var(--space-xs);
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-size: var(--text-sm);
+  font-weight: 850;
+}
+
+.focusMeta span {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.focusBody h2 {
+  max-width: 34rem;
+  margin: var(--space-xs) 0 var(--space-2xs);
+  font-size: clamp(1.85rem, 4vw, 2.75rem);
+}
+
+.focusBody p {
+  font-size: var(--text-md);
+}
+
+.lessonDeck {
+  position: relative;
+  min-width: 0;
+  min-height: 21rem;
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  isolation: isolate;
+}
+
+.lessonDeck::before {
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  inset: 52% auto auto 50%;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  content: "";
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+}
+
+.deckProgress {
+  position: absolute;
+  z-index: var(--z-raised);
+  display: flex;
+  inset-block-start: var(--space-sm);
+  inset-inline: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+}
+
+.deckProgress > span {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-3xs);
+  color: var(--color-warning);
+  font-size: var(--text-xs);
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.deckProgress > div {
+  display: grid;
+  min-width: 7.25rem;
+  min-height: 2.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+  font-variant-numeric: tabular-nums;
+}
+
+.deckProgress small {
+  color: var(--color-muted);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+}
+
+.deckProgress strong {
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+}
+
+.deckProgress i {
+  position: relative;
+  height: 0.3rem;
+  grid-column: 1 / -1;
+  overflow: clip;
+  margin-block-start: var(--space-3xs);
+  border-radius: var(--radius-pill);
+  background: var(--color-rule);
+}
+
+.deckProgress em {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+  font-style: normal;
+  transform: scaleX(var(--motion-progress, 0));
+  transform-origin: left center;
+  transition: transform var(--dur-long) var(--ease-out);
+}
+
+.deckStage {
+  position: absolute;
+  display: grid;
+  inset: 4.5rem 0 2.75rem;
+  place-items: center;
+}
+
+.deckGroup {
+  position: relative;
+  width: 10.75rem;
+  height: 13.75rem;
+}
+
+.deckCard {
+  position: absolute;
+  display: flex;
+  overflow: clip;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-xs);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-lift);
+  transform-origin: 50% 85%;
+}
+
+.deckCardFront {
+  z-index: 3;
+  transform: translate(-0.65rem, 0) rotate(-2deg);
+}
+
+.deckCardMiddle {
+  z-index: 2;
+  opacity: 0.82;
+  transform: translate(0.7rem, 0.4rem) rotate(3deg);
+}
+
+.deckCardBack {
+  z-index: 1;
+  opacity: 0.56;
+  transform: translate(1.45rem, 0.8rem) rotate(6deg);
+}
+
+.deckCard > strong {
+  width: 100%;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1.1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckCard > small {
+  width: 100%;
+  overflow: hidden;
+  margin-block-start: var(--space-3xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckImage {
+  display: grid;
+  width: 100%;
+  min-height: 6.5rem;
+  flex: 1;
+  margin-block: var(--space-2xs);
+  border-radius: var(--radius-input);
+  color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  place-items: center;
+}
+
+.deckCard > span {
+  width: 100%;
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  font-weight: 750;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckControls {
+  position: absolute;
+  z-index: var(--z-raised);
+  display: flex;
+  inset-block-end: var(--space-sm);
+  inset-inline-end: var(--space-sm);
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.deckControls button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  background: var(--color-paper);
+  cursor: pointer;
+  transition:
+    transform var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+  place-items: center;
+}
+
+.deckControls button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.deckControls button:active {
+  transform: translateY(1px);
+}
+
+.deckControls button:disabled {
+  border-color: var(--color-rule);
+  color: var(--color-muted);
+  background: var(--color-paper-2);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.deckControls > span {
+  min-width: 2.25rem;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .deckControls button:not(:disabled):hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  .focusCard {
+    padding: var(--space-sm);
+  }
+
+  .focusLayout {
+    gap: var(--space-sm);
+  }
+
+  .focusActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    flex: 1 1 9rem;
+  }
+
+  .lessonDeck {
+    min-height: 20rem;
+  }
+}
+
+@media (min-width: 40rem) {
+  .focusLayout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(15rem, 0.85fr);
+  }
+
+  .focusActions {
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 64rem) {
+  .focusCard {
+    padding: var(--space-lg);
+  }
+
+  .focusLayout {
+    grid-template-columns: minmax(0, 1.28fr) minmax(18rem, 0.72fr);
+    min-height: 21rem;
+  }
+
+  .lessonDeck {
+    min-height: 19.5rem;
+  }
+
+  .deckGroup {
+    width: 11.75rem;
+    height: 14.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deckProgress em {
+    transition-duration: 1ms;
+  }
+}
+
+/* Dashboard refinement · calm study desk with one primary surface */
+.shell {
+  width: min(100% - 2rem, 82rem);
+  padding-block: var(--space-lg) var(--space-3xl);
+}
+
+.welcome {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 0 var(--space-lg);
+  border-block-end: var(--rule-thin) solid var(--color-rule);
+}
+
+.welcome h1 {
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+}
+
+.welcome p {
+  max-width: 58ch;
+}
+
+.levelControl {
+  min-height: 3.5rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border-color: var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  box-shadow: none;
+}
+
+.levelControl span,
+.levelControl strong,
+.levelControl svg {
+  grid-row: 1;
+}
+
+.levelControl span {
+  grid-column: 1;
+}
+
+.levelControl strong {
+  grid-column: 2;
+  font-size: var(--text-md);
+}
+
+.levelControl svg {
+  grid-column: 3;
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.dashboardLayout {
+  gap: var(--space-lg);
+  padding-block-start: var(--space-lg);
+}
+
+.mainColumn {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.mainColumn .workbench,
+.statsGrid,
+.quickSection,
+.lessonSection {
+  margin: 0;
+}
+
+.focusCard {
+  min-height: 25rem;
+  padding: var(--space-sm);
+  border-color: var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.focusTopline > span {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+}
+
+.focusTopline i {
+  width: var(--space-2xs);
+  height: var(--space-2xs);
+}
+
+.focusLayout {
+  min-height: 21rem;
+  gap: var(--space-md);
+}
+
+.focusBody {
+  margin-block: var(--space-lg) var(--space-md);
+}
+
+.focusMeta {
+  gap: var(--space-sm);
+}
+
+.focusMeta strong {
+  min-height: 2.25rem;
+  padding-inline: var(--space-xs);
+  border-color: var(--color-rule);
+  background: var(--color-accent-soft);
+  font-size: var(--text-xs);
+}
+
+.focusMeta span {
+  font-size: var(--text-xs);
+}
+
+.focusBody h2 {
+  max-width: 30rem;
+  margin-block: var(--space-sm) var(--space-2xs);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+}
+
+.focusBody p {
+  max-width: 48ch;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+
+.focusActions {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.primaryAction,
+.secondaryAction {
+  min-height: 3rem;
+  line-height: 1;
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.lessonDeck {
+  min-height: 21rem;
+  border-radius: 0;
+  background: transparent;
+}
+
+.lessonDeck::before {
+  display: none;
+}
+
+.deckProgress {
+  inset-block-start: 0;
+  inset-inline: 0;
+}
+
+.deckProgress > span {
+  padding-inline: var(--space-xs);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-soft);
+}
+
+.deckProgress > div {
+  box-shadow: none;
+}
+
+.deckStage {
+  inset: 4rem 0 3.5rem;
+}
+
+.deckGroup {
+  width: 11.25rem;
+  height: 14.25rem;
+}
+
+.deckCard {
+  border-color: var(--color-rule);
+  box-shadow: none;
+}
+
+.deckCardFront {
+  box-shadow: var(--shadow-lift);
+  transform: translate(-0.75rem, 0) rotate(-2deg);
+}
+
+.deckCardMiddle {
+  opacity: 0.76;
+  transform: translate(0.65rem, 0.45rem) rotate(3deg);
+}
+
+.deckCardBack {
+  opacity: 0.42;
+  transform: translate(1.35rem, 0.9rem) rotate(6deg);
+}
+
+.deckControls {
+  inset-block-end: 0;
+  inset-inline: 0;
+  justify-content: center;
+}
+
+.deckControls button {
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.deckPagination {
+  display: grid;
+  min-width: 4.25rem;
+  gap: var(--space-3xs);
+  place-items: center;
+}
+
+.deckPagination > span {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.deckDots {
+  display: flex;
+  min-height: var(--space-2xs);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
+}
+
+.deckDots i {
+  width: var(--space-2xs);
+  height: var(--space-3xs);
+  border-radius: var(--radius-pill);
+  background: var(--color-rule-strong);
+  opacity: 0.65;
+  transform: scaleX(1);
+  transition:
+    opacity var(--dur-short) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+
+.deckDots .deckDotActive {
+  background: var(--color-accent);
+  opacity: 1;
+  transform: scaleX(1.8);
+}
+
+.deckControls button[aria-pressed="true"] {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  overflow: clip;
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: none;
+}
+
+.statsGrid article,
+.statsGrid > a {
+  min-height: 7rem;
+  padding: var(--space-sm);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.statsGrid article:nth-child(odd),
+.statsGrid > a:nth-child(odd) {
+  border-inline-end: var(--rule-thin) solid var(--color-rule);
+}
+
+.statsGrid article:nth-child(n + 3),
+.statsGrid > a:nth-child(n + 3) {
+  border-block-start: var(--rule-thin) solid var(--color-rule);
+}
+
+.statsGrid strong {
+  font-size: var(--text-xl);
+}
+
+.statsGrid small {
+  line-height: 1.45;
+}
+
+.quickSection,
+.lessonSection {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sectionHeading {
+  margin-block-end: var(--space-md);
+}
+
+.sectionHeading h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-lg);
+}
+
+.sectionHeading p {
+  max-width: 58ch;
+  font-size: var(--text-sm);
+}
+
+.sectionHeading > a svg,
+.quickCard > svg,
+.lessonRow > svg {
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.sectionHeading > a,
+.railHeading > a,
+.railFooterLink,
+.deckControls button {
+  line-height: 1;
+}
+
+.quickGrid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+}
+
+.quickCard {
+  min-height: 4.75rem;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-content: center;
+  padding: var(--space-xs) var(--space-sm);
+  border-color: var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  transition: none;
+}
+
+.quickCard > i,
+.quickCard:nth-child(2) > i,
+.quickCard:nth-child(3) > i,
+.quickCard:nth-child(4) > i {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-accent);
+  background: transparent;
+}
+
+.lessonSection {
+  padding-block-start: var(--space-xl);
+  border-block-start: var(--rule-thin) solid var(--color-rule);
+}
+
+.lessonRail {
+  gap: 0;
+  overflow: clip;
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+}
+
+.lessonRow {
+  min-height: 4.5rem;
+  padding: var(--space-xs) var(--space-sm);
+  border-block-start: var(--rule-thin) solid var(--color-rule);
+  background: transparent;
+  transition: none;
+}
+
+.lessonRow:first-child {
+  border-block-start: 0;
+}
+
+.lessonRow > span:first-child {
+  border-radius: var(--radius-pill);
+}
+
+.rightRail {
+  gap: 0;
+  overflow: clip;
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-paper);
+  box-shadow: none;
+}
+
+.rightRail > section {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.rightRail > section + section {
+  border-block-start: var(--rule-thin) solid var(--color-rule);
+}
+
+.rightRail .todayPanel,
+.challengeCard,
+.leaderboardCard {
+  padding: var(--space-md);
+}
+
+.railHeading {
+  min-height: 2.75rem;
+}
+
+.streakFlame {
+  border-color: var(--color-rule);
+}
+
+.challengeRow > i {
+  background: transparent;
+}
+
+.currentPlayer {
+  border: 0;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.currentPlayer > div strong {
+  color: var(--color-ink);
+}
+
+.currentPlayer > em {
+  color: var(--color-accent);
+}
+
+.welcome {
+  animation-delay: 0ms;
+}
+
+.workbench {
+  animation-delay: var(--delay-step);
+}
+
+.rightRail {
+  animation-delay: calc(var(--delay-step) * 2);
+}
+
+.statsGrid {
+  animation-delay: calc(var(--delay-step) * 3);
+}
+
+.quickSection {
+  animation-delay: calc(var(--delay-step) * 4);
+}
+
+.lessonSection {
+  animation-delay: calc(var(--delay-step) * 5);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .levelControl:hover svg,
+  .sectionHeading > a:hover svg,
+  .quickCard:hover > svg,
+  .lessonRow:hover > svg {
+    transform: translateX(var(--space-3xs));
+  }
+
+  .primaryAction:hover,
+  .secondaryAction:hover {
+    transform: translateY(calc(var(--space-3xs) / -2));
+  }
+
+  .primaryAction:hover {
+    background: var(--color-accent);
+  }
+
+  .secondaryAction:hover,
+  .quickCard:hover,
+  .lessonRow:hover {
+    border-color: var(--color-rule);
+    background: var(--color-paper);
+  }
+
+  .deckControls button:not(:disabled):hover {
+    border-color: var(--color-rule-strong);
+    background: var(--color-paper);
+    transform: translateY(calc(var(--space-3xs) / -2));
+  }
+}
+
+@media (min-width: 40rem) {
+  .welcome {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.34fr);
+  }
+
+  .focusCard {
+    padding: var(--space-md);
+  }
+
+  .focusLayout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+  }
+
+  .focusActions {
+    align-items: center;
+  }
+
+  .quickGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .statsGrid {
+    grid-template-columns: 1.15fr 0.85fr 0.85fr 1.15fr;
+  }
+
+  .statsGrid article,
+  .statsGrid > a {
+    border-block-start: 0;
+    border-inline-end: 0;
+  }
+
+  .statsGrid article + article,
+  .statsGrid article + a,
+  .statsGrid > a + article,
+  .statsGrid > a + a {
+    border-inline-start: var(--rule-thin) solid var(--color-rule);
+  }
+
+  .rightRail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rightRail > section + section {
+    border-block-start: 0;
+    border-inline-start: var(--rule-thin) solid var(--color-rule);
+  }
+}
+
+@media (min-width: 80rem) {
+  .dashboardLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(18.5rem, 0.34fr);
+  }
+
+  .focusCard {
+    padding: var(--space-lg);
+  }
+
+  .focusLayout {
+    grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr);
+  }
+
+  .rightRail {
+    position: sticky;
+    top: calc(var(--app-topbar-height) + var(--space-lg));
+    grid-template-columns: minmax(0, 1fr);
+    z-index: var(--z-base);
+  }
+
+  .rightRail > section + section {
+    border-block-start: var(--rule-thin) solid var(--color-rule);
+    border-inline-start: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .levelControl svg,
+  .sectionHeading > a svg,
+  .quickCard > svg,
+  .lessonRow > svg,
+  .deckDots i {
     transition-duration: 1ms;
   }
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 html {
-  font-size: 125%;
+  font-size: 100%;
   overflow-x: clip;
 }
 
