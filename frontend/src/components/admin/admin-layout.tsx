@@ -167,12 +167,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     document.addEventListener("click", handleLinkClick, true)
     window.addEventListener("popstate", handlePopState)
-    window.addEventListener("pagehide", endAdminSession)
 
     return () => {
       document.removeEventListener("click", handleLinkClick, true)
       window.removeEventListener("popstate", handlePopState)
-      window.removeEventListener("pagehide", endAdminSession)
     }
   }, [pathname])
 

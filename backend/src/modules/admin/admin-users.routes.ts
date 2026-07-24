@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs'
 import { Router } from 'express'
 import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
+import { issueAdminSession } from '../../lib/auth-session'
+import { addCalendarMonthsClamped } from '../../lib/date'
 import { prisma } from '../../lib/prisma'
 
 const router = Router()
@@ -218,8 +220,7 @@ router.patch('/users/:id/premium', asyncHandler(async (req, res) => {
     const extensionBase = target.subscriptionUntil && target.subscriptionUntil > startedAt
       ? target.subscriptionUntil
       : startedAt
-    const expiresAt = new Date(extensionBase)
-    expiresAt.setMonth(expiresAt.getMonth() + planMonths(planId))
+    const expiresAt = addCalendarMonthsClamped(extensionBase, planMonths(planId))
     await tx.subscription.create({ data: { userId: target.id, planId, amount: planAmount(planId), status: SubStatus.CONFIRMED, transferContent: `ADMIN_UNLOCK_${target.id}`, startedAt, expiresAt, confirmedAt: startedAt, confirmedBy: admin.id } })
     return tx.user.update({ where: { id: target.id }, data: { isPremium: true, subscriptionUntil: expiresAt }, include: userInclude })
   })
@@ -234,15 +235,22 @@ router.patch('/profile/password', asyncHandler(async (req, res) => {
   }).safeParse(req.body)
   if (!parsed.success) return invalid(res, parsed)
 
-  const admin = res.locals.admin as { id: string; passwordHash: string | null }
+  const admin = res.locals.admin as { id: string; email: string | null; passwordHash: string | null }
   if (!admin.passwordHash || !(await bcrypt.compare(parsed.data.currentPassword, admin.passwordHash))) {
     return error(res, 400, 'Mật khẩu hiện tại không đúng', { currentPassword: 'Mật khẩu hiện tại không đúng' })
   }
 
-  await prisma.user.update({
-    where: { id: admin.id },
-    data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 12) },
+  const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12)
+  const updatedAdmin = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: admin.id },
+      data: { passwordHash },
+      select: { id: true, email: true },
+    })
+    await tx.session.deleteMany({ where: { userId: admin.id } })
+    return updated
   })
+  await issueAdminSession(res, updatedAdmin)
   return success(res, { changed: true }, 'Đổi mật khẩu thành công')
 }))
 

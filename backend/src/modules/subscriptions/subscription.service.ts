@@ -1,6 +1,7 @@
 import { Prisma, SubStatus, SubscriptionPlan } from '@prisma/client'
 import { sendEmail } from '../../lib/mail'
 import { prisma } from '../../lib/prisma'
+import { addCalendarMonthsClamped } from '../../lib/date'
 
 export type SubscriptionPlanId = '2months' | '6months' | '12months'
 
@@ -20,12 +21,6 @@ function getPlanConfig(planId: SubscriptionPlanId) {
   const config = planConfig[planId]
   if (!config) throw new Error('Invalid subscription plan')
   return config
-}
-
-function addMonths(date: Date, months: number) {
-  const next = new Date(date)
-  next.setMonth(next.getMonth() + months)
-  return next
 }
 
 function sendEmailInBackground(to: string | null, subject: string, html: string, context: string) {
@@ -102,7 +97,7 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
     const extensionBase = user.subscriptionUntil && user.subscriptionUntil > startedAt
       ? user.subscriptionUntil
       : startedAt
-    const expiresAt = addMonths(extensionBase, plan.months)
+    const expiresAt = addCalendarMonthsClamped(extensionBase, plan.months)
 
     const confirmed = await tx.subscription.update({ where: { id }, data: { expiresAt } })
 

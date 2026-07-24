@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "test": "tsx --test src/**/*.test.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
@@ -12,9 +13,6 @@
     "db:migrate": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio"
-  },
-  "prisma": {
-    "seed": "node --import tsx prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1080.0",
@@ -28,7 +26,7 @@
     "node-telegram-bot-api": "^1.1.2",
     "nodemailer": "^9.0.3",
     "nodemon": "^3.1.14",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.24.3"
   },
   "devDependencies": {
@@ -47,5 +45,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "pnpm": {
+    "overrides": {
+      "body-parser": "1.20.6"
+    }
+  },
   "packageManager": "pnpm@10.33.0"
 }

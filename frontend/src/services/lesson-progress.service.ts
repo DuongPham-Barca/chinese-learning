@@ -1,5 +1,14 @@
 import { useSyncExternalStore } from "react"
 import api from "@/lib/api"
+import {
+  GUEST_PROGRESS_SCOPE,
+  getLessonIdFromProgressKey,
+  getProgressKey,
+  getProgressPrefix,
+  getProgressScope,
+  listKeys,
+  migrateLegacyProgress,
+} from "./lesson-progress-storage"
 
 export type LessonModuleId = "flashcard" | "dictation" | "word-arrangement" | "reflex" | "speaking" | "quiz"
 
@@ -13,12 +22,45 @@ export type LessonProgressState = Partial<Record<LessonModuleId, LessonModulePro
 
 export const lessonModuleOrder: LessonModuleId[] = ["flashcard", "dictation", "word-arrangement", "reflex", "speaking", "quiz"]
 
+let activeProgressScope = GUEST_PROGRESS_SCOPE
+const syncing = new Set<string>()
+
 function progressKey(lessonId: string) {
-  return `lesson-progress-v2:${lessonId}`
+  return getProgressKey(activeProgressScope, lessonId)
 }
 
-const progressPrefix = "lesson-progress-v2:"
-const syncing = new Set<string>()
+function notifyProgressChanged() {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent("lesson-progress:update"))
+}
+
+export function setLessonProgressScope(userId: string | null) {
+  if (typeof window !== "undefined" && userId) {
+    migrateLegacyProgress(window.localStorage, userId)
+  }
+
+  const nextScope = getProgressScope(userId)
+  if (nextScope === activeProgressScope) return
+
+  activeProgressScope = nextScope
+  cachedKey = ""
+  cachedRaw = ""
+  cachedState = {}
+  syncing.clear()
+  notifyProgressChanged()
+}
+
+export function useLessonProgressScope() {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => undefined
+      window.addEventListener("lesson-progress:update", onStoreChange)
+      return () => window.removeEventListener("lesson-progress:update", onStoreChange)
+    },
+    () => activeProgressScope,
+    () => GUEST_PROGRESS_SCOPE,
+  )
+}
 
 async function syncModuleCompletion(lessonId: string, moduleId: LessonModuleId) {
   const key = `${lessonId}:${moduleId}`
@@ -148,11 +190,12 @@ export function getLessonPercent(progress: LessonProgressState, totals: Record<L
 export async function syncLocalLessonProgress() {
   if (typeof window === "undefined") return
   const tasks: Promise<void>[] = []
+  const prefix = getProgressPrefix(activeProgressScope)
 
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index)
-    if (!key?.startsWith(progressPrefix)) continue
-    const lessonId = key.slice(progressPrefix.length)
+  for (const key of listKeys(window.localStorage)) {
+    if (!key.startsWith(prefix)) continue
+    const lessonId = getLessonIdFromProgressKey(activeProgressScope, key)
+    if (!lessonId) continue
     const state = readLessonProgress(lessonId)
     for (const moduleId of lessonModuleOrder) {
       const progress = state[moduleId]
@@ -167,16 +210,11 @@ export async function syncLocalLessonProgress() {
 
 export function clearLocalLessonProgress() {
   if (typeof window === "undefined") return
-  const keys: string[] = []
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index)
-    if (key?.startsWith(progressPrefix) || key?.startsWith("lesson-stage-progress:") || key?.startsWith("lesson-practice-progress:")) {
-      keys.push(key)
-    }
-  }
+  const prefix = getProgressPrefix(activeProgressScope)
+  const keys = listKeys(window.localStorage).filter((key) => key.startsWith(prefix))
   keys.forEach((key) => window.localStorage.removeItem(key))
   cachedKey = ""
   cachedRaw = ""
   cachedState = {}
-  window.dispatchEvent(new CustomEvent("lesson-progress:update"))
+  notifyProgressChanged()
 }

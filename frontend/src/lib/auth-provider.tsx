@@ -2,6 +2,7 @@
 
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import api from "@/lib/api"
+import { setLessonProgressScope } from "@/services/lesson-progress.service"
 import type { AuthUser } from "@/types/api"
 
 interface AuthContextValue {
@@ -20,8 +21,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       const response = await api.get<{ user: AuthUser }>("/auth/me")
+      setLessonProgressScope(response.data.user.id)
       setUser(response.data.user)
     } catch {
+      setLessonProgressScope(null)
       setUser(null)
     } finally {
       setLoading(false)
@@ -33,10 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     api.get<{ user: AuthUser }>("/auth/me")
       .then((response) => {
-        if (active) setUser(response.data.user)
+        if (active) {
+          setLessonProgressScope(response.data.user.id)
+          setUser(response.data.user)
+        }
       })
       .catch(() => {
-        if (active) setUser(null)
+        if (active) {
+          setLessonProgressScope(null)
+          setUser(null)
+        }
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -48,8 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
-    await api.post("/auth/logout")
-    setUser(null)
+    try {
+      await api.post("/auth/logout")
+    } finally {
+      setLessonProgressScope(null)
+      setUser(null)
+    }
   }, [])
 
   const value = useMemo(() => ({ user, loading, refresh, logout }), [user, loading, refresh, logout])

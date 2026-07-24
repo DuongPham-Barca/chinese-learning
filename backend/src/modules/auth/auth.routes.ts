@@ -21,6 +21,11 @@ import {
 import { asyncHandler } from '../../lib/async-handler'
 import { adminGuard } from '../../lib/admin-guard'
 import {
+  clearAdminLoginFailures,
+  getAdminLoginLimit,
+  recordAdminLoginFailure,
+} from '../../lib/admin-login-rate-limit'
+import {
   AvatarUploadError,
   isAvatarContentType,
   uploadAvatar,
@@ -206,8 +211,16 @@ function clearTemporaryCookies(res: import('express').Response): void {
 }
 
 router.post('/admin/login', asyncHandler(async (req, res) => {
+  const clientKey = req.ip || req.socket.remoteAddress || 'unknown'
+  const currentLimit = getAdminLoginLimit(clientKey)
+  if (currentLimit.blocked) {
+    res.set('Retry-After', String(currentLimit.retryAfterSeconds))
+    return res.status(429).json({ error: 'Too many login attempts. Please try again later.' })
+  }
+
   const credentials = adminLoginSchema.safeParse(req.body)
   if (!credentials.success) {
+    recordAdminLoginFailure(clientKey)
     return res.status(401).json({ error: 'Invalid username or password' })
   }
 
@@ -221,9 +234,11 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
     || !user.passwordHash
     || !(await bcrypt.compare(credentials.data.password, user.passwordHash))
   ) {
+    recordAdminLoginFailure(clientKey)
     return res.status(401).json({ error: 'Invalid username or password' })
   }
 
+  clearAdminLoginFailures(clientKey)
   await revokeAdminSession(req, res)
   await issueAdminSession(res, user)
   res.json({
@@ -235,7 +250,7 @@ router.post('/admin/login', asyncHandler(async (req, res) => {
   })
 }))
 
-router.get('/admin/session', adminGuard, (req, res) => {
+router.get('/admin/session', adminGuard, (_req, res) => {
   const admin = res.locals.admin as { id: string; username: string; role: Role }
   res.set('Cache-Control', 'no-store')
   res.json({

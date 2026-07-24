@@ -1,12 +1,13 @@
 import { LevelType, Prisma } from '@prisma/client'
-import { Router } from 'express'
+import { Router, type RequestHandler } from 'express'
 import multer from 'multer'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
 import { asyncHandler } from '../../lib/async-handler'
+import { ImageUploadError, uploadImage } from '../../lib/cloudflare-r2'
 import { FREE_LESSON_LIMIT } from '../../lib/lesson-access'
 import { prisma } from '../../lib/prisma'
-import { uploadImage } from '../../lib/cloudflare-r2'
+import { downloadRemoteImage } from '../../lib/remote-image'
 
 const router = Router()
 const importUpload = multer({
@@ -19,9 +20,30 @@ const imageUpload = multer({
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (allowed.includes(file.mimetype)) return cb(null, true)
-    cb(new Error('Chỉ chấp nhận file ảnh JPEG, PNG, WEBP, GIF'))
+    cb(new ImageUploadError('Only JPEG, PNG, WebP, and GIF images are supported'))
   },
 })
+
+const parseImageUpload: RequestHandler = (req, res, next) => {
+  imageUpload.single('image')(req, res, (uploadError: unknown) => {
+    if (uploadError instanceof multer.MulterError) {
+      const message = uploadError.code === 'LIMIT_FILE_SIZE'
+        ? 'Image must be 5MB or smaller'
+        : 'Invalid image upload'
+      res.status(400).json({ success: false, message })
+      return
+    }
+    if (uploadError instanceof ImageUploadError) {
+      res.status(400).json({ success: false, message: uploadError.message })
+      return
+    }
+    if (uploadError) {
+      next(uploadError)
+      return
+    }
+    next()
+  })
+}
 
 const levelTypes = Object.values(LevelType)
 const url = z.preprocess((v) => v === '' ? null : v, z.string().url().nullable().optional())
@@ -772,12 +794,13 @@ router.post('/lessons/:lessonId/import', importUpload.single('file'), asyncHandl
   }
 }))
 
-router.post('/upload', imageUpload.single('image'), asyncHandler(async (req, res) => {
+router.post('/upload', parseImageUpload, asyncHandler(async (req, res) => {
   if (!req.file) return error(res, 400, 'Chọn file ảnh để upload', { file: 'File is required' })
   try {
     const url = await uploadImage('vocab', req.file.buffer, req.file.mimetype)
     return success(res, { url }, 'Upload ảnh thành công', 201)
   } catch (e) {
+    if (e instanceof ImageUploadError) return error(res, 400, e.message)
     return error(res, 500, 'Không thể upload ảnh lên server')
   }
 }))
@@ -786,7 +809,9 @@ async function fetchImageUrls(query: string): Promise<string[]> {
   const url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+    signal: AbortSignal.timeout(10_000),
   })
+  if (!res.ok) return []
   const html = await res.text()
   const images: string[] = []
 
@@ -796,7 +821,9 @@ async function fetchImageUrls(query: string): Promise<string[]> {
   const apiUrl = `https://duckduckgo.com/i.js?q=${encodeURIComponent(query)}&vqd=${vqdMatch[1]}&f=,,,&o=json`
   const apiRes = await fetch(apiUrl, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+    signal: AbortSignal.timeout(10_000),
   })
+  if (!apiRes.ok) return images
   const data = await apiRes.json() as { results?: Array<{ image: string }> }
   if (data.results) {
     for (const r of data.results) {
@@ -815,10 +842,7 @@ router.post('/vocabularies/fetch-image', asyncHandler(async (req, res) => {
 
   for (const imageUrl of urls) {
     try {
-      const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) })
-      if (!imgRes.ok) continue
-      const buffer = Buffer.from(await imgRes.arrayBuffer())
-      const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+      const { buffer, contentType } = await downloadRemoteImage(imageUrl)
       if (buffer.length < 1024) continue
       const url = await uploadImage('vocab', buffer, contentType)
       return success(res, { url, source: imageUrl }, 'Tìm ảnh thành công', 201)
@@ -849,10 +873,7 @@ router.post('/vocabularies/fetch-images-bulk', asyncHandler(async (req, res) => 
       let uploadedUrl: string | null = null
       for (const imageUrl of urls) {
         try {
-          const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) })
-          if (!imgRes.ok) continue
-          const buffer = Buffer.from(await imgRes.arrayBuffer())
-          const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+          const { buffer, contentType } = await downloadRemoteImage(imageUrl)
           if (buffer.length < 1024) continue
           uploadedUrl = await uploadImage('vocab', buffer, contentType)
           break
