@@ -222,7 +222,7 @@ export default function NotFound() {
             Quay lại Trang chủ
           </Link>
           <a
-            href="mailto:support@chinesedict.com"
+            href="mailto:support@Hana.com"
             className="inline-flex items-center justify-center gap-2.5 h-12 sm:h-[50px] px-7 sm:px-8 w-full sm:w-auto rounded-[999px] bg-white border border-[#DCE7FF] text-[#2563EB] text-[15px] font-bold hover:bg-[#EEF6FF] hover:scale-[1.02] transition-all duration-250"
           >
             <FlagIcon />

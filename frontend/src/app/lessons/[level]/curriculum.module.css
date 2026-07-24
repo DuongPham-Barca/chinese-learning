@@ -57,7 +57,7 @@
   padding: var(--space-md) var(--space-sm) var(--space-lg);
   border-color: transparent;
   border-radius: var(--radius-panel);
-  background: var(--color-avatar-2);
+  background: var(--color-accent-soft);
 }
 
 .overviewCopy[data-level="HSK2"] {
@@ -479,8 +479,8 @@
   padding-inline: var(--space-md);
   border: var(--rule-thin) solid var(--color-accent);
   border-radius: var(--radius-control);
-  color: var(--color-accent-ink);
-  background: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
   white-space: nowrap;
   font-size: var(--text-sm);
   font-weight: 800;
@@ -529,12 +529,12 @@
 
 .levelTabs .levelTabActive {
   border-color: var(--color-accent);
-  color: var(--color-accent-ink);
-  background: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .levelTabs .levelTabActive small {
-  color: var(--color-accent-ink);
+  color: var(--color-accent);
 }
 
 .curriculumHeading {
@@ -898,7 +898,8 @@
 
   .continueButton:hover,
   .statePanel button:hover {
-    background: var(--color-accent-hover);
+    color: var(--color-accent-hover);
+    background: var(--color-paper-3);
     transform: translateY(-1px);
   }
 
@@ -910,7 +911,8 @@
 
   .levelTabs .levelTabActive:hover {
     border-color: var(--color-accent-hover);
-    background: var(--color-accent-hover);
+    color: var(--color-accent-hover);
+    background: var(--color-paper-3);
   }
 
   .stageList button:hover {

@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
             <ShieldIcon />
           </span>
           <h1>Admin Panel</h1>
-          <p>Trang quản trị ChineseDict. Vui lòng đăng nhập để tiếp tục.</p>
+          <p>Trang quản trị Hana. Vui lòng đăng nhập để tiếp tục.</p>
         </div>
       </section>
 

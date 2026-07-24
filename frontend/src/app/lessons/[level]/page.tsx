@@ -93,7 +93,7 @@ export default function LessonListPage({ params }: { params: Promise<{ level: st
           <section className={styles.statePanel} aria-live="polite">
             <span className={styles.loadingMark} />
             <strong>Đang chuẩn bị giáo trình {level.toUpperCase()}…</strong>
-            <p>ChineseDict đang lấy các bài học và tiến độ gần nhất của bạn.</p>
+            <p>Hana đang lấy các bài học và tiến độ gần nhất của bạn.</p>
           </section>
         )}
 

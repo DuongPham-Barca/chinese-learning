@@ -4,14 +4,14 @@ import SiteNavbar from "@/components/site-navbar"
 import styles from "../terms/legal.module.css"
 
 export const metadata: Metadata = {
-  title: "Chính sách quyền riêng tư | ChineseDict",
-  description: "Chính sách thu thập và sử dụng dữ liệu của ChineseDict.",
+  title: "Chính sách quyền riêng tư | Hana",
+  description: "Chính sách thu thập và sử dụng dữ liệu của Hana.",
 }
 
 const sections = [
   [
     "Dữ liệu được thu thập",
-    "ChineseDict lưu thông tin tài khoản và hồ sơ như tên, email, ảnh đại diện; lịch sử học, tiến độ và điểm kinh nghiệm; trạng thái gói, yêu cầu thanh toán và ngày hết hạn; cùng dữ liệu kỹ thuật cần thiết để đăng nhập, bảo mật và vận hành dịch vụ.",
+    "Hana lưu thông tin tài khoản và hồ sơ như tên, email, ảnh đại diện; lịch sử học, tiến độ và điểm kinh nghiệm; trạng thái gói, yêu cầu thanh toán và ngày hết hạn; cùng dữ liệu kỹ thuật cần thiết để đăng nhập, bảo mật và vận hành dịch vụ.",
   ],
   [
     "Mục đích sử dụng",
@@ -19,7 +19,7 @@ const sections = [
   ],
   [
     "Thanh toán",
-    "ChineseDict chỉ lưu thông tin cần thiết để đối chiếu yêu cầu nâng cấp như gói đã chọn, số tiền, nội dung chuyển khoản và trạng thái xác nhận. Hệ thống không yêu cầu hoặc lưu mật khẩu ngân hàng, mã OTP hay thông tin đăng nhập ngân hàng của bạn.",
+    "Hana chỉ lưu thông tin cần thiết để đối chiếu yêu cầu nâng cấp như gói đã chọn, số tiền, nội dung chuyển khoản và trạng thái xác nhận. Hệ thống không yêu cầu hoặc lưu mật khẩu ngân hàng, mã OTP hay thông tin đăng nhập ngân hàng của bạn.",
   ],
   [
     "Dịch vụ hỗ trợ",
@@ -27,7 +27,7 @@ const sections = [
   ],
   [
     "Lưu trữ và bảo mật",
-    "Dữ liệu được lưu trong thời gian tài khoản hoạt động hoặc lâu hơn khi cần để giải quyết giao dịch, ngăn gian lận và thực hiện nghĩa vụ hợp pháp. ChineseDict áp dụng kiểm soát truy cập và các biện pháp kỹ thuật hợp lý, nhưng không hệ thống trực tuyến nào có thể bảo đảm an toàn tuyệt đối.",
+    "Dữ liệu được lưu trong thời gian tài khoản hoạt động hoặc lâu hơn khi cần để giải quyết giao dịch, ngăn gian lận và thực hiện nghĩa vụ hợp pháp. Hana áp dụng kiểm soát truy cập và các biện pháp kỹ thuật hợp lý, nhưng không hệ thống trực tuyến nào có thể bảo đảm an toàn tuyệt đối.",
   ],
   [
     "Quyền của bạn",
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
         <div className={styles.container}>
           <p className={styles.eyebrow}>Thông tin pháp lý</p>
           <h1>Chính sách quyền riêng tư</h1>
-          <p>Cách ChineseDict thu thập, sử dụng và bảo vệ dữ liệu của người học.</p>
+          <p>Cách Hana thu thập, sử dụng và bảo vệ dữ liệu của người học.</p>
           <time dateTime="2026-07-16">Cập nhật ngày 16/07/2026</time>
         </div>
       </header>
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
 
         <article className={styles.content}>
           <p className={styles.intro}>
-            Chính sách này áp dụng cho dữ liệu được xử lý khi bạn truy cập và sử dụng ChineseDict.
+            Chính sách này áp dụng cho dữ liệu được xử lý khi bạn truy cập và sử dụng Hana.
           </p>
           {sections.map(([title, body], index) => (
             <section id={`privacy-${index + 1}`} key={title}>

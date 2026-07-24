@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import AccountDropdown from "@/components/account-dropdown"
@@ -46,11 +47,17 @@ export default function SiteNavbar({}: { active?: string }) {
   return (
     <div className={styles.nav} data-client-shell>
       <aside className={styles.sidebar}>
-        <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark}>中</span>
-          <span>
-            <strong>ChineseDict</strong>
-            <small>Học tiếng Trung chủ động</small>
+        <Link href="/" className={styles.brand} aria-label="Hana – Học tiếng Trung chủ động">
+          <span className={styles.brandArtwork} aria-hidden="true">
+            <Image
+              className={styles.brandLogo}
+              src="/hana-logo.png"
+              alt=""
+              width={335}
+              height={128}
+              sizes="172px"
+              loading="eager"
+            />
           </span>
         </Link>
 
@@ -91,8 +98,18 @@ export default function SiteNavbar({}: { active?: string }) {
       </aside>
 
       <header className={styles.topbar}>
-        <Link href="/" className={styles.mobileBrand} aria-label="ChineseDict">
-          <span className={styles.brandMark}>中</span>
+        <Link href="/" className={styles.mobileBrand} aria-label="Hana – Học tiếng Trung chủ động">
+          <span className={styles.mobileBrandArtwork} aria-hidden="true">
+            <Image
+              className={styles.mobileBrandLogo}
+              src="/hana-logo.png"
+              alt=""
+              width={234}
+              height={90}
+              sizes="118px"
+              loading="eager"
+            />
+          </span>
         </Link>
 
         <div className={styles.topbarLead}>
@@ -134,7 +151,7 @@ export default function SiteNavbar({}: { active?: string }) {
                 <Link href="/profile">Hồ sơ</Link>
                 <Link href="/settings">Cài đặt</Link>
                 {upgradeUser.isPro
-                  ? <span className={styles.mobilePro}>ChineseDict Pro</span>
+                  ? <span className={styles.mobilePro}>Hana Pro</span>
                   : <ProUpgradeTrigger className={styles.mobileUpgrade} />}
               </>
             ) : (

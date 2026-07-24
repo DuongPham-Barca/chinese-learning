@@ -118,7 +118,7 @@ export default function SettingsPage() {
 
             <section id="account" className={styles.section}>
               <div className={styles.sectionTitle}><i><SharedIcon name="user" size={21} /></i><div><h2>Tài khoản</h2><p>Phiên đăng nhập và thông tin nhận diện hiện tại.</p></div></div>
-              <dl className={styles.accountInfo}><div><dt>Tên hiển thị</dt><dd>{user.username}</dd></div><div><dt>Email</dt><dd>{user.email || "Chưa có email"}</dd></div><div><dt>Gói tài khoản</dt><dd>{user.isPremium ? "ChineseDict Pro" : "Free"}</dd></div></dl>
+              <dl className={styles.accountInfo}><div><dt>Tên hiển thị</dt><dd>{user.username}</dd></div><div><dt>Email</dt><dd>{user.email || "Chưa có email"}</dd></div><div><dt>Gói tài khoản</dt><dd>{user.isPremium ? "Hana Pro" : "Free"}</dd></div></dl>
               <div className={styles.sectionActions}><button className={styles.secondaryButton} type="button" onClick={() => router.push("/profile")}>Chỉnh sửa hồ sơ</button><button className={styles.secondaryButton} type="button" onClick={() => void logout().finally(() => router.replace("/login"))}>Đăng xuất</button></div>
             </section>
 

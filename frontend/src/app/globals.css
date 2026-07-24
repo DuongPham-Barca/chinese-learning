@@ -14,7 +14,7 @@ body {
 }
 
 /* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
-/* Hallmark · genre: modern-minimal · macrostructure: Unified client workbench · theme: ChineseDict learning blue · enrichment: none */
+/* Hallmark · genre: modern-minimal · macrostructure: Unified client workbench · theme: Hana learning blue · enrichment: none */
 [data-motion-page] {
   opacity: 0;
   transform: translateY(var(--space-2xs));

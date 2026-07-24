@@ -1,4 +1,4 @@
-# ChineseDict - Trạng thái triển khai
+# Hana - Trạng thái triển khai
 
 > Cập nhật: 16/07/2026. Kế hoạch ban đầu đã hoàn tất và được thay bằng checklist vận hành dưới đây.
 

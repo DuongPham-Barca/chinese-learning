@@ -39,7 +39,7 @@ Border Radius:
 **Prompt:**
 
 ```
-Design a modern landing page for "ChineseDict" — a Chinese language learning app with dictation and flashcard features.
+Design a modern landing page for "Hana" — a Chinese language learning app with dictation and flashcard features.
 
 Layout:
 - Hero section: A clean hero with a warm illustration of Chinese language elements (lanterns, calligraphy, or a person studying). Headline: "Học tiếng Trung chủ động — Flashcard & Dictation trong tay bạn". Subheadline explaining the app. Two CTA buttons: "Bắt đầu học miễn phí" (primary red) and "Xem giáo trình" (outline).
@@ -59,7 +59,7 @@ Make it responsive — desktop grid layout, mobile stacks vertically.
 **Prompt:**
 
 ```
-Design a login and registration page for a Chinese learning app called "ChineseDict".
+Design a login and registration page for a Chinese learning app called "Hana".
 
 Layout:
 - Split screen: Left side has a decorative Chinese-themed illustration (minimal bamboo or ink wash painting style) with the app logo and tagline.

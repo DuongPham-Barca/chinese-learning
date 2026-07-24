@@ -22,7 +22,7 @@ function emailFrom() {
 function brevoSender() {
   return {
     email: optionalEnv('BREVO_SENDER_EMAIL') || emailFrom(),
-    name: optionalEnv('BREVO_SENDER_NAME') || 'ChineseDict',
+    name: optionalEnv('BREVO_SENDER_NAME') || 'Hana – Học tiếng Trung chủ động',
   }
 }
 

@@ -35,28 +35,25 @@
   display: inline-flex;
   min-height: 2.75rem;
   align-items: center;
-  gap: var(--space-2xs);
   color: var(--color-ink);
   white-space: nowrap;
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
 }
 
-.brandMark {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  place-items: center;
+.brandArtwork {
+  display: block;
+  width: 10.75rem;
+  height: 4.25rem;
+  overflow: clip;
   border-radius: var(--radius-control);
-  color: var(--color-accent-ink);
-  background: var(--color-accent);
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 800;
 }
 
-.brand strong {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  letter-spacing: -0.025em;
+.brandLogo {
+  display: block;
+  width: 13.9rem;
+  max-width: none;
+  height: auto;
+  transform: translate(-1.9rem, -0.55rem);
 }
 
 .context {
@@ -326,8 +323,30 @@
 
 .mobileBrand {
   display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
   color: var(--color-ink);
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+}
+
+.mobileBrandArtwork {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  overflow: clip;
+  border-radius: var(--radius-control);
+}
+
+.mobileBrandLogo {
+  display: block;
+  width: 7.32rem;
+  max-width: none;
+  height: auto;
+  transform: translate(-1.025rem, -0.35rem);
 }
 
 .topbarLead {
@@ -486,20 +505,7 @@
 
   .sidebar > .brand {
     display: inline-flex;
-    min-height: 3.25rem;
-    padding-inline: var(--space-2xs);
-  }
-
-  .brand > span:last-child,
-  .brand small {
-    display: block;
-  }
-
-  .brand small {
-    margin-block-start: var(--space-3xs);
-    color: var(--color-muted);
-    font-size: 0.66rem;
-    font-weight: 650;
+    min-height: 4.75rem;
   }
 
   .sideLabel {
@@ -649,6 +655,11 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .brand:hover,
+  .mobileBrand:hover {
+    opacity: 0.84;
+  }
+
   .sidebarFooter a:hover,
   .sidebar .modeLink:not(.modeActive):hover {
     color: var(--color-accent);
@@ -656,6 +667,7 @@
   }
 }
 
+.brand:active,
 .mobileBrand:active,
 .sidebarFooter a:active {
   transform: translateY(1px);

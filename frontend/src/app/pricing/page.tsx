@@ -93,9 +93,9 @@ const steps: [string, string][] = [
 
 const faq: [string, string][] = [
   ["Khi nào tài khoản được kích hoạt?", "Tài khoản sẽ được kích hoạt trong vòng 24 giờ sau khi nhận được thanh toán. Bạn sẽ nhận được email xác nhận."],
-  ["Có thể gia hạn không?", "Có. Sau khi hết hạn, bạn có thể mua gói mới để tiếp tục sử dụng ChineseDict Pro."],
+  ["Có thể gia hạn không?", "Có. Sau khi hết hạn, bạn có thể mua gói mới để tiếp tục sử dụng Hana Pro."],
   ["Có hoàn tiền không?", "Chúng tôi có chính sách hoàn tiền trong vòng 7 ngày nếu bạn không hài lòng với dịch vụ."],
-  ["Thanh toán bằng hình thức nào?", "ChineseDict nhận thanh toán qua chuyển khoản VietinBank bằng thông tin hoặc mã VietQR hiển thị trong ứng dụng."],
+  ["Thanh toán bằng hình thức nào?", "Hana nhận thanh toán qua chuyển khoản VietinBank bằng thông tin hoặc mã VietQR hiển thị trong ứng dụng."],
 ]
 
 function calcExpiry(months: number, currentExpiry?: string | null): string {

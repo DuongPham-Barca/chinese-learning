@@ -120,7 +120,7 @@ export async function confirmSubscription(id: string, confirmedBy: string) {
     `<p>Hello ${sub.user.username},</p>
      <p>Your Pro upgrade request has been confirmed.</p>
      <p>Expires at: ${confirmed.expiresAt?.toLocaleDateString('vi-VN')}</p>
-     <p>Thank you for using ChineseDict.</p>`,
+     <p>Thank you for using Hana.</p>`,
     'subscription confirmation',
   )
 

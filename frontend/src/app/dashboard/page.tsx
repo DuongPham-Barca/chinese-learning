@@ -231,7 +231,7 @@ export default function DashboardPage() {
           <div className={styles.loadingState} aria-live="polite">
             <span className={styles.loadingMark} />
             <strong>Đang chuẩn bị buổi học của bạn…</strong>
-            <p>ChineseDict đang lấy bài học và tiến độ gần nhất.</p>
+            <p>Hana đang lấy bài học và tiến độ gần nhất.</p>
           </div>
         </div>
       </main>

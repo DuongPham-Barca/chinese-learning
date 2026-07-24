@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { API_BASE_URL } from "@/lib/api"
 import styles from "./login.module.css"
@@ -18,13 +19,17 @@ function GoogleIcon() {
 export default function LoginPage() {
   return (
     <main className={styles.page}>
-      <section className={styles.hero} aria-label="Giới thiệu ChineseDict">
+      <section className={styles.hero} aria-label="Giới thiệu Hana">
         <div className={styles.brand}>
-          <span className={styles.brandIcon}>中</span>
-          <span>
-            <strong>ChineseDict</strong>
-            <small>Học tiếng Trung dễ hơn mỗi ngày</small>
-          </span>
+          <Image
+            className={styles.brandLogo}
+            src="/hana-logo.png"
+            alt="Hana – Học tiếng Trung chủ động"
+            width={377}
+            height={144}
+            sizes="216px"
+            loading="eager"
+          />
         </div>
 
         <div className={styles.heroContent}>
@@ -39,7 +44,7 @@ export default function LoginPage() {
         <div className={styles.authArea}>
           <div className={styles.authCard}>
             <header className={styles.formHeader}>
-              <h2>Chào mừng đến với ChineseDict</h2>
+              <h2>Chào mừng đến với Hana</h2>
               <p>Đăng nhập bằng tài khoản Google để tiếp tục hành trình học tiếng Trung.</p>
             </header>
 
@@ -53,7 +58,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-        <p className={styles.terms}>Bằng cách tiếp tục, bạn đồng ý với <Link href="/terms">Điều khoản sử dụng</Link> và <Link href="/privacy">Chính sách bảo mật</Link> của ChineseDict.</p>
+        <p className={styles.terms}>Bằng cách tiếp tục, bạn đồng ý với <Link href="/terms">Điều khoản sử dụng</Link> và <Link href="/privacy">Chính sách bảo mật</Link> của Hana.</p>
         </div>
       </section>
     </main>

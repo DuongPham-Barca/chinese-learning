@@ -4,14 +4,14 @@ import SiteNavbar from "@/components/site-navbar"
 import styles from "./legal.module.css"
 
 export const metadata: Metadata = {
-  title: "Điều khoản sử dụng | ChineseDict",
-  description: "Điều khoản sử dụng nền tảng học tiếng Trung ChineseDict.",
+  title: "Điều khoản sử dụng | Hana",
+  description: "Điều khoản sử dụng nền tảng học tiếng Trung Hana.",
 }
 
 const sections = [
   [
     "Phạm vi dịch vụ",
-    "ChineseDict cung cấp bài học, từ vựng, câu mẫu và các bài luyện tập tiếng Trung. Người chưa có gói Pro còn hiệu lực được học miễn phí 3 bài đầu của từng cấp HSK. Khi gói Pro được kích hoạt, toàn bộ bài học đang xuất bản được mở đến ngày hết hạn; sau thời điểm đó, các bài ngoài phạm vi miễn phí sẽ tự động khóa lại.",
+    "Hana cung cấp bài học, từ vựng, câu mẫu và các bài luyện tập tiếng Trung. Người chưa có gói Pro còn hiệu lực được học miễn phí 3 bài đầu của từng cấp HSK. Khi gói Pro được kích hoạt, toàn bộ bài học đang xuất bản được mở đến ngày hết hạn; sau thời điểm đó, các bài ngoài phạm vi miễn phí sẽ tự động khóa lại.",
   ],
   [
     "Tài khoản",
@@ -23,15 +23,15 @@ const sections = [
   ],
   [
     "Sử dụng hợp lệ",
-    "Bạn không được can thiệp vào hệ thống, vượt cơ chế phân quyền, tự động thu thập nội dung, phát tán mã độc hoặc sử dụng dịch vụ theo cách gây ảnh hưởng đến người dùng khác. ChineseDict có thể giới hạn hoặc chấm dứt quyền truy cập khi phát hiện hành vi lạm dụng.",
+    "Bạn không được can thiệp vào hệ thống, vượt cơ chế phân quyền, tự động thu thập nội dung, phát tán mã độc hoặc sử dụng dịch vụ theo cách gây ảnh hưởng đến người dùng khác. Hana có thể giới hạn hoặc chấm dứt quyền truy cập khi phát hiện hành vi lạm dụng.",
   ],
   [
     "Nội dung và quyền sở hữu",
-    "Nội dung học tập, giao diện và tài nguyên do ChineseDict cung cấp chỉ dành cho mục đích học tập cá nhân, trừ khi có thỏa thuận khác. Việc mua gói không chuyển giao quyền sở hữu hoặc quyền phân phối lại nội dung.",
+    "Nội dung học tập, giao diện và tài nguyên do Hana cung cấp chỉ dành cho mục đích học tập cá nhân, trừ khi có thỏa thuận khác. Việc mua gói không chuyển giao quyền sở hữu hoặc quyền phân phối lại nội dung.",
   ],
   [
     "Tính sẵn sàng và thay đổi",
-    "Dịch vụ có thể tạm gián đoạn để bảo trì, xử lý sự cố hoặc cập nhật nội dung. ChineseDict có thể điều chỉnh tính năng và điều khoản khi cần; phiên bản mới sẽ được công bố tại trang này cùng ngày cập nhật.",
+    "Dịch vụ có thể tạm gián đoạn để bảo trì, xử lý sự cố hoặc cập nhật nội dung. Hana có thể điều chỉnh tính năng và điều khoản khi cần; phiên bản mới sẽ được công bố tại trang này cùng ngày cập nhật.",
   ],
 ] as const
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
         <div className={styles.container}>
           <p className={styles.eyebrow}>Thông tin pháp lý</p>
           <h1>Điều khoản sử dụng</h1>
-          <p>Quy định về tài khoản, quyền truy cập bài học và gói ChineseDict Pro.</p>
+          <p>Quy định về tài khoản, quyền truy cập bài học và gói Hana Pro.</p>
           <time dateTime="2026-07-16">Cập nhật ngày 16/07/2026</time>
         </div>
       </header>
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
         <article className={styles.content}>
           <p className={styles.intro}>
-            Bằng việc đăng nhập hoặc sử dụng ChineseDict, bạn đồng ý tuân thủ các điều khoản dưới đây.
+            Bằng việc đăng nhập hoặc sử dụng Hana, bạn đồng ý tuân thủ các điều khoản dưới đây.
           </p>
           {sections.map(([title, body], index) => (
             <section id={`term-${index + 1}`} key={title}>
@@ -69,7 +69,7 @@ export default function TermsPage() {
           <section>
             <h2>7. Quyền riêng tư và xóa tài khoản</h2>
             <p>
-              Cách ChineseDict thu thập và sử dụng dữ liệu được mô tả trong <Link href="/privacy">Chính sách quyền riêng tư</Link>. Bạn có thể yêu cầu xóa tài khoản và dữ liệu liên quan từ phần Cài đặt tài khoản.
+              Cách Hana thu thập và sử dụng dữ liệu được mô tả trong <Link href="/privacy">Chính sách quyền riêng tư</Link>. Bạn có thể yêu cầu xóa tài khoản và dữ liệu liên quan từ phần Cài đặt tài khoản.
             </p>
           </section>
         </article>

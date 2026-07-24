@@ -1,4 +1,4 @@
-# Design — ChineseDict Learning Product
+# Design — Hana Learning Product
 
 A locked design system for the learning application. Product pages optimize
 learning clarity and task completion before visual decoration.
@@ -72,7 +72,7 @@ named tokens for new UI and avoid one-off spacing values.
 
 ## What pages MUST share
 
-- ChineseDict wordmark.
+- Hana wordmark and “Học tiếng Trung chủ động” tagline.
 - Accent blue used mainly for the current task and focus.
 - Display/body type pairing.
 - Button height, focus treatment, and progress language.

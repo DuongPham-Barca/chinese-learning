@@ -5,7 +5,7 @@ import { AuthProvider } from "@/lib/auth-provider"
 import { ProUpgradeProvider } from "@/lib/pro-upgrade-provider"
 
 export const metadata: Metadata = {
-  title: "ChineseDict",
+  title: "Hana",
   description: "Học tiếng Trung qua Flashcard và Dictation",
 }
 

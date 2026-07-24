@@ -1,4 +1,4 @@
-# Backend Status - ChineseDict
+# Backend Status - Hana
 
 > Cập nhật: 16/07/2026. Tài liệu này phản ánh trạng thái đã triển khai, không phải danh sách tính năng còn thiếu.
 
@@ -11,16 +11,16 @@
 
 ## Chức năng đã có
 
-| Module | Trạng thái |
-| --- | --- |
-| Auth, cập nhật hồ sơ, xóa tài khoản | Hoàn thành |
-| Danh sách/cụ thể bài học, từ vựng, câu mẫu | Hoàn thành |
-| Tiến độ, EXP, xóa/reset tiến độ | Hoàn thành |
-| Bảng xếp hạng all/week/month | Hoàn thành |
+| Module                                                   | Trạng thái |
+| -------------------------------------------------------- | ---------- |
+| Auth, cập nhật hồ sơ, xóa tài khoản                      | Hoàn thành |
+| Danh sách/cụ thể bài học, từ vựng, câu mẫu               | Hoàn thành |
+| Tiến độ, EXP, xóa/reset tiến độ                          | Hoàn thành |
+| Bảng xếp hạng all/week/month                             | Hoàn thành |
 | Admin dashboard, user, lesson, vocabulary, sentence CRUD | Hoàn thành |
-| Import Excel và quản lý nội dung luyện tập | Hoàn thành |
-| Tạo, xác nhận, từ chối và gia hạn subscription | Hoàn thành |
-| Xác nhận payment từ admin và Telegram | Hoàn thành |
+| Import Excel và quản lý nội dung luyện tập               | Hoàn thành |
+| Tạo, xác nhận, từ chối và gia hạn subscription           | Hoàn thành |
+| Xác nhận payment từ admin và Telegram                    | Hoàn thành |
 
 ## Quy tắc truy cập bài học
 

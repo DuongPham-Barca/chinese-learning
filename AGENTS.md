@@ -87,7 +87,7 @@ Before visual work:
 
 Hallmark implementation requirements:
 
-- Preserve the ChineseDict wordmark, learning-blue accent, display/body
+- Preserve the Hana wordmark, learning-blue accent, display/body
   pairing, focus treatment, progress language, and app-first Workbench family.
 - Prefer learning clarity and task completion over decoration.
 - Do not fabricate metrics, testimonials, rankings, rewards, or product claims.

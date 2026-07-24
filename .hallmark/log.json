@@ -3,7 +3,7 @@
     "date": "2026-07-25",
     "scope": "HSK1-6 illustrated curriculum hero",
     "macrostructure": "Course Scene with illustrated learning inventory",
-    "theme": "Studied-DNA adapted to ChineseDict sky blue with per-level learning marks",
+    "theme": "Studied-DNA adapted to Hana sky blue with per-level learning marks",
     "enrichment": "Generated panda mascot and functional lesson, vocabulary, and speaking art",
     "brief": "Match the supplied lively HSK curriculum reference more closely and vary the hero across HSK1-6"
   },
@@ -59,7 +59,7 @@
     "date": "2026-07-24",
     "scope": "client motion system",
     "macrostructure": "Unified client workbench",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "none",
     "brief": "Apply restrained page entrance, press feedback, and progress-fill motion across learner-facing surfaces while preserving admin"
   },
@@ -67,7 +67,7 @@
     "date": "2026-07-24",
     "scope": "dashboard support rail",
     "macrostructure": "Workbench with a dedicated right-side activity rail",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "none",
     "brief": "Add streak, daily challenges, and a compact leaderboard to the dashboard; remove leaderboard from sidebar navigation"
   },
@@ -75,7 +75,7 @@
     "date": "2026-07-24",
     "scope": "client beginner module",
     "macrostructure": "Narrative Workflow with F4 six-step sequence",
-    "theme": "studied-DNA from supplied wavy learning path in ChineseDict blue",
+    "theme": "studied-DNA from supplied wavy learning path in Hana blue",
     "enrichment": "Tier-B functional SVG progress path",
     "brief": "Move beginner guidance into its own compact module and rename Overview to Dashboard"
   },
@@ -83,7 +83,7 @@
     "date": "2026-07-24",
     "scope": "dashboard module",
     "macrostructure": "F4 six-step beginner sequence with supporting study guide",
-    "theme": "studied-DNA from supplied beginner roadmap in ChineseDict blue",
+    "theme": "studied-DNA from supplied beginner roadmap in Hana blue",
     "enrichment": "CSS-only Hanzi learning marks",
     "brief": "Add a useful beginner-from-zero module and clarify the learning path below it"
   },
@@ -91,7 +91,7 @@
     "date": "2026-07-24",
     "scope": "app",
     "macrostructure": "Dashboard workbench with persistent learning rail",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "CSS-only Chinese character study motif",
     "brief": "Apply the attached learning-dashboard DNA across client chrome while preserving admin"
   },
@@ -99,7 +99,7 @@
     "date": "2026-07-24",
     "scope": "app",
     "macrostructure": "Unified client workbench",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "none",
     "brief": "Redesign every client-facing surface around the app shell while preserving admin"
   },
@@ -107,7 +107,7 @@
     "date": "2026-07-24",
     "scope": "app",
     "macrostructure": "Workbench with horizontal mode bar",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "none",
     "brief": "Replace the marketing homepage with a direct learning workspace"
   },
@@ -115,7 +115,7 @@
     "date": "2026-07-23",
     "scope": "app",
     "macrostructure": "Workbench",
-    "theme": "ChineseDict learning blue",
+    "theme": "Hana learning blue",
     "enrichment": "none",
     "brief": "Make the core Chinese-learning flow friendly and focused like a modern study product"
   }
