@@ -51,7 +51,7 @@ export default function SiteNavbar({}: { active?: string }) {
           <span className={styles.brandArtwork} aria-hidden="true">
             <Image
               className={styles.brandLogo}
-              src="/hana-logo.png"
+              src="/hana-logo-harmonized.png"
               alt=""
               width={335}
               height={128}
@@ -102,7 +102,7 @@ export default function SiteNavbar({}: { active?: string }) {
           <span className={styles.mobileBrandArtwork} aria-hidden="true">
             <Image
               className={styles.mobileBrandLogo}
-              src="/hana-logo.png"
+              src="/hana-logo-harmonized.png"
               alt=""
               width={234}
               height={90}

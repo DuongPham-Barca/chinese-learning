@@ -23,7 +23,7 @@ export default function LoginPage() {
         <div className={styles.brand}>
           <Image
             className={styles.brandLogo}
-            src="/hana-logo.png"
+            src="/hana-logo-harmonized.png"
             alt="Hana – Học tiếng Trung chủ động"
             width={377}
             height={144}
